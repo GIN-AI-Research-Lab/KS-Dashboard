@@ -39,3 +39,14 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# database
+/prisma/dev.db
+/prisma/dev.db-journal
+
+# claude code plugin local state
+/claude-code-plugin/**/.ks-dashboard-state/
+
+# claude code local settings
+/.claude/settings.local.json
+

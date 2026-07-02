@@ -1,0 +1,140 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  DEPARTMENT_HEAD
+  TEAM_LEAD
+  MEMBER
+}
+
+enum SessionStatus {
+  ACTIVE
+  IDLE
+  ENDED
+}
+
+enum ToolCallStatus {
+  STARTED
+  SUCCESS
+  ERROR
+}
+
+model Department {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+
+  teams Team[]
+  users User[]
+}
+
+model Team {
+  id           String     @id @default(cuid())
+  name         String
+  departmentId String
+  department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
+
+  users User[]
+
+  @@unique([departmentId, name])
+}
+
+model User {
+  id           String      @id @default(cuid())
+  email        String      @unique
+  passwordHash String
+  name         String
+  role         Role        @default(MEMBER)
+  apiKey       String      @unique
+  image        String?
+  departmentId String?
+  department   Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  teamId       String?
+  team         Team?       @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  createdAt    DateTime    @default(now())
+
+  sessions  ClaudeSession[]
+  turns     Turn[]
+  toolCalls ToolCall[]
+}
+
+model ClaudeSession {
+  id           String        @id @default(cuid())
+  externalId   String        @unique // Claude Code session_id
+  userId       String
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cwd          String?
+  projectLabel String?
+  source       String? // startup | resume | clear | compact
+  model        String?
+  status       SessionStatus @default(ACTIVE)
+  startedAt    DateTime      @default(now())
+  endedAt      DateTime?
+  lastEventAt  DateTime      @default(now())
+
+  inputTokens        Int @default(0)
+  outputTokens       Int @default(0)
+  cacheCreationTokens Int @default(0)
+  cacheReadTokens    Int @default(0)
+  costUsd            Float @default(0)
+  turnCount          Int @default(0)
+  toolCallCount      Int @default(0)
+  promptCount        Int @default(0)
+
+  transcriptOffset Int @default(0) // bytes already parsed from transcript, used by plugin
+
+  turns     Turn[]
+  toolCalls ToolCall[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([startedAt])
+}
+
+model Turn {
+  id         String        @id @default(cuid())
+  sessionId  String
+  session    ClaudeSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  model      String
+  inputTokens         Int @default(0)
+  outputTokens        Int @default(0)
+  cacheCreationTokens Int @default(0)
+  cacheReadTokens     Int @default(0)
+  costUsd             Float @default(0)
+  stopReason String?
+  createdAt  DateTime      @default(now())
+
+  @@index([sessionId])
+  @@index([userId])
+  @@index([createdAt])
+  @@index([model])
+}
+
+model ToolCall {
+  id         String         @id @default(cuid())
+  sessionId  String
+  session    ClaudeSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  toolName   String
+  summary    String? // short human-readable description, e.g. truncated command
+  status     ToolCallStatus @default(STARTED)
+  startedAt  DateTime       @default(now())
+  endedAt    DateTime?
+  durationMs Int?
+
+  @@index([sessionId])
+  @@index([userId])
+  @@index([toolName])
+  @@index([startedAt])
+}

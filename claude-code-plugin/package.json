@@ -1,0 +1,9 @@
+{
+  "name": "ks-dashboard-telemetry-plugin",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Claude Code plugin that reports usage telemetry to KS Dashboard",
+  "engines": {
+    "node": ">=18"
+  }
+}

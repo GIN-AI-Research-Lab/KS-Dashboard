@@ -1,0 +1,74 @@
+import { z } from "zod";
+
+// Contract between the KS Dashboard Claude Code plugin and POST /api/ingest.
+// Deliberately independent of Claude Code's own (unstable) hook / transcript
+// field names -- the plugin script is responsible for adapting hook stdin +
+// transcript JSONL into this shape before it POSTs.
+
+const base = {
+  sessionId: z.string().min(1),
+  timestamp: z.string().datetime().optional(),
+};
+
+export const sessionStartSchema = z.object({
+  type: z.literal("session_start"),
+  ...base,
+  cwd: z.string().optional(),
+  projectLabel: z.string().optional(),
+  source: z.string().optional(),
+  model: z.string().optional(),
+});
+
+export const promptSchema = z.object({
+  type: z.literal("prompt"),
+  ...base,
+});
+
+export const toolStartSchema = z.object({
+  type: z.literal("tool_start"),
+  ...base,
+  callId: z.string(),
+  toolName: z.string(),
+  summary: z.string().optional(),
+});
+
+export const toolEndSchema = z.object({
+  type: z.literal("tool_end"),
+  ...base,
+  callId: z.string(),
+  toolName: z.string(),
+  status: z.enum(["SUCCESS", "ERROR"]).default("SUCCESS"),
+});
+
+export const turnSchema = z.object({
+  type: z.literal("turn"),
+  ...base,
+  model: z.string(),
+  inputTokens: z.number().int().nonnegative().default(0),
+  outputTokens: z.number().int().nonnegative().default(0),
+  cacheCreationTokens: z.number().int().nonnegative().default(0),
+  cacheReadTokens: z.number().int().nonnegative().default(0),
+  costUsd: z.number().nonnegative().optional(),
+  stopReason: z.string().optional(),
+});
+
+export const sessionEndSchema = z.object({
+  type: z.literal("session_end"),
+  ...base,
+  reason: z.string().optional(),
+});
+
+export const ingestEventSchema = z.discriminatedUnion("type", [
+  sessionStartSchema,
+  promptSchema,
+  toolStartSchema,
+  toolEndSchema,
+  turnSchema,
+  sessionEndSchema,
+]);
+
+export const ingestRequestSchema = z.object({
+  events: z.array(ingestEventSchema).min(1).max(500),
+});
+
+export type IngestEvent = z.infer<typeof ingestEventSchema>;

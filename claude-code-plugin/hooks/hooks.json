@@ -1,0 +1,73 @@
+{
+  "description": "KS Dashboard telemetry — reports sessions, tokens, cost and tool calls",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/ingest.js\" session_start \"${user_config.api_endpoint}\" \"${user_config.api_key}\"",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/ingest.js\" prompt \"${user_config.api_endpoint}\" \"${user_config.api_key}\"",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/ingest.js\" tool_start \"${user_config.api_endpoint}\" \"${user_config.api_key}\"",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/ingest.js\" tool_end \"${user_config.api_endpoint}\" \"${user_config.api_key}\"",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/ingest.js\" stop \"${user_config.api_endpoint}\" \"${user_config.api_key}\"",
+            "timeout": 20
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/ingest.js\" session_end \"${user_config.api_endpoint}\" \"${user_config.api_key}\"",
+            "timeout": 20
+          }
+        ]
+      }
+    ]
+  }
+}

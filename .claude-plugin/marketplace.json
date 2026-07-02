@@ -1,0 +1,18 @@
+{
+  "name": "ks-dashboard-marketplace",
+  "description": "Local marketplace for the KS Dashboard Claude Code telemetry plugin",
+  "owner": {
+    "name": "KS Dashboard"
+  },
+  "plugins": [
+    {
+      "name": "ks-dashboard-telemetry",
+      "description": "Reports Claude Code token usage, cost, sessions and tool calls to the company KS Dashboard analytics site.",
+      "author": {
+        "name": "KS Dashboard"
+      },
+      "category": "productivity",
+      "source": "./claude-code-plugin"
+    }
+  ]
+}

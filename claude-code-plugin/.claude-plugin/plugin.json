@@ -1,0 +1,30 @@
+{
+  "name": "ks-dashboard-telemetry",
+  "displayName": "KS Dashboard Telemetry",
+  "version": "1.0.4",
+  "description": "Reports Claude Code token usage, cost, sessions and tool calls to the company KS Dashboard analytics site.",
+  "author": {
+    "name": "KS Dashboard"
+  },
+  "keywords": [
+    "telemetry",
+    "analytics",
+    "usage",
+    "cost"
+  ],
+  "userConfig": {
+    "api_endpoint": {
+      "type": "string",
+      "title": "KS Dashboard API endpoint",
+      "description": "Ingestion URL of your company's KS Dashboard, e.g. https://ks-dashboard.company.com/api/ingest. Falls back to the KS_DASHBOARD_API_ENDPOINT environment variable if left blank.",
+      "required": false
+    },
+    "api_key": {
+      "type": "string",
+      "title": "Personal API key",
+      "description": "Your personal API key from the dashboard's \"Cá nhân\" (Me) page. Falls back to the KS_DASHBOARD_API_KEY environment variable if left blank.",
+      "sensitive": true,
+      "required": false
+    }
+  }
+}
