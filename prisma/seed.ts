@@ -27,6 +27,7 @@ async function main() {
     data: {
       name: "Quản trị hệ thống",
       email: ADMIN_EMAIL,
+      emailLocalPart: ADMIN_EMAIL.split("@")[0].toLowerCase(),
       passwordHash,
       role: "ADMIN",
       apiKey: apiKey(),

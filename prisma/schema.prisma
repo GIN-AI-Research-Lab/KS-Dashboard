@@ -49,8 +49,12 @@ model Team {
 
 model User {
   id           String      @id @default(cuid())
-  email        String      @unique
-  passwordHash String
+  email        String      @unique // canonical email, typically the one synced from AMIS
+  emailLocalPart String    @unique // lowercased part before "@" -- lets SSO logins and the
+                                    // Claude Code plugin match this user from *any* allowed
+                                    // company domain (e.g. tuent@sint.co.jp and
+                                    // tuent@kstns.biz both resolve to the same account)
+  passwordHash String?     // null for accounts that only ever sign in via SSO
   name         String
   role         Role        @default(MEMBER)
   apiKey       String      @unique
@@ -60,6 +64,9 @@ model User {
   teamId       String?
   team         Team?       @relation(fields: [teamId], references: [id], onDelete: SetNull)
   createdAt    DateTime    @default(now())
+
+  amisEmployeeCode String?   @unique // upsert key for AMIS sync, when available
+  lastAmisSyncAt   DateTime?
 
   sessions  ClaudeSession[]
   turns     Turn[]
