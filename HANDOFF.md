@@ -139,5 +139,6 @@ tích hợp MISA AMIS (đồng bộ user/phòng ban) + đăng nhập SSO Microso
   cần chạy `npm install && npx prisma db push && npx prisma db seed` (hoặc `npm run db:seed`) để có DB
   mới với admin account (email/password giống hệt, nhưng API key sẽ SINH MỚI — khác với API key đã
   test trên máy này).
-- API key admin hiện tại trên máy này (chỉ có ý nghĩa tại máy này, sẽ khác khi seed lại):
-  `ksd_00940d6558688e2b78de36c54581f7c5a1956ed3e4890a5c`
+- API key admin hiện tại đã dùng để test trên máy này **không ghi vào đây** (tránh lộ credential khi
+  push lên GitHub) — lấy lại bằng cách đăng nhập `admin@company.com` rồi vào trang `/me`, hoặc query
+  trực tiếp `SELECT apiKey FROM User WHERE email='admin@company.com'` trong `prisma/dev.db`.
