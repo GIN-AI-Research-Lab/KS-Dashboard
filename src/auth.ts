@@ -1,6 +1,7 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import MicrosoftEntraID from "next-auth/providers/microsoft-entra-id";
+import type { Provider } from "next-auth/providers";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
 import { findUserByIdentity, isAllowedEmailDomain } from "@/lib/identity";
@@ -32,7 +33,7 @@ interface AppTokenFields {
   departmentId: string | null;
 }
 
-const providers = [
+const providers: Provider[] = [
   Credentials({
     name: "credentials",
     credentials: {
@@ -79,6 +80,10 @@ if (process.env.AUTH_MICROSOFT_ENTRA_ID_ID && process.env.AUTH_MICROSOFT_ENTRA_I
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  // The dashboard is reached over multiple hostnames (localhost + a
+  // <ip>.nip.io host so other machines on the LAN can view it), so don't pin
+  // auth to a single origin. Safe here because it sits on a trusted network.
+  trustHost: true,
   session: { strategy: "jwt" },
   pages: { signIn: "/login" },
   providers,

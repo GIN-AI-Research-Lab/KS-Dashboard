@@ -23,6 +23,14 @@ function dayKey(d: Date) {
   return d.toISOString().slice(0, 10);
 }
 
+// Percentage change of `current` vs `previous`. Returns null when there is no
+// usable baseline (previous period had zero) so callers can hide the delta
+// rather than show a meaningless "+∞%".
+function pctDelta(current: number, previous: number): number | null {
+  if (previous <= 0) return null;
+  return ((current - previous) / previous) * 100;
+}
+
 export async function getOverviewStats(range: RangeKey) {
   const since = rangeToDate(range);
   const where = since ? { createdAt: { gte: since } } : {};
@@ -83,8 +91,42 @@ export async function getOverviewStats(range: RangeKey) {
     prisma.claudeSession.count({ where: { status: { in: ["ACTIVE", "IDLE"] } } }),
   ]);
 
+  // Period-over-period deltas: compare the current window with the immediately
+  // preceding window of the same length. Only meaningful when a range is set
+  // (the "all" range has no "previous period").
+  let deltas: {
+    totalTokens: number | null;
+    costUsd: number | null;
+    turnCount: number | null;
+    sessionCount: number | null;
+  } | null = null;
+  if (since) {
+    const windowMs = Date.now() - since.getTime();
+    const prevSince = new Date(since.getTime() - windowMs);
+    const [prevTurns, prevSessionCount] = await Promise.all([
+      prisma.turn.aggregate({
+        where: { createdAt: { gte: prevSince, lt: since } },
+        _sum: { inputTokens: true, outputTokens: true, costUsd: true },
+        _count: true,
+      }),
+      prisma.claudeSession.count({ where: { startedAt: { gte: prevSince, lt: since } } }),
+    ]);
+    const prevTokens = (prevTurns._sum.inputTokens ?? 0) + (prevTurns._sum.outputTokens ?? 0);
+    deltas = {
+      totalTokens: pctDelta(totalInput + totalOutput, prevTokens),
+      costUsd: pctDelta(totalCost, prevTurns._sum.costUsd ?? 0),
+      turnCount: pctDelta(turns.length, prevTurns._count),
+      sessionCount: pctDelta(sessionCount, prevSessionCount),
+    };
+  }
+
   const daily = Array.from(dailyMap.values()).sort((a, b) => a.date.localeCompare(b.date));
   const byModel = Array.from(modelMap.values()).sort((a, b) => b.totalTokens - a.totalTokens);
+
+  // Cache hit ratio: share of "read" input that was served from the prompt
+  // cache instead of billed as fresh input tokens.
+  const cacheDenominator = totalCacheRead + totalInput;
+  const cacheHitRatio = cacheDenominator > 0 ? totalCacheRead / cacheDenominator : 0;
 
   return {
     totals: {
@@ -92,6 +134,7 @@ export async function getOverviewStats(range: RangeKey) {
       outputTokens: totalOutput,
       cacheCreationTokens: totalCacheCreate,
       cacheReadTokens: totalCacheRead,
+      cacheHitRatio,
       totalTokens: totalInput + totalOutput,
       costUsd: totalCost,
       turnCount: turns.length,
@@ -100,6 +143,7 @@ export async function getOverviewStats(range: RangeKey) {
       activeUserCount: activeUserIds.size,
       activeSessionCount,
     },
+    deltas,
     daily,
     byModel,
   };
@@ -309,4 +353,145 @@ export async function getRecentSessions(limit = 50) {
       toolCalls: { orderBy: { startedAt: "desc" }, take: 8 },
     },
   });
+}
+
+export type ToolStatRow = {
+  toolName: string;
+  total: number;
+  success: number;
+  error: number;
+  started: number;
+  errorRate: number; // 0..1
+  avgDurationMs: number | null;
+};
+
+export async function getToolStats(range: RangeKey) {
+  const since = rangeToDate(range);
+  const toolCalls = await prisma.toolCall.findMany({
+    where: since ? { startedAt: { gte: since } } : undefined,
+    select: { toolName: true, status: true, durationMs: true },
+  });
+
+  const map = new Map<
+    string,
+    { toolName: string; total: number; success: number; error: number; started: number; durationSum: number; durationCount: number }
+  >();
+
+  let total = 0;
+  let errorTotal = 0;
+  let durationSum = 0;
+  let durationCount = 0;
+
+  for (const tc of toolCalls) {
+    total += 1;
+    const b =
+      map.get(tc.toolName) ??
+      { toolName: tc.toolName, total: 0, success: 0, error: 0, started: 0, durationSum: 0, durationCount: 0 };
+    b.total += 1;
+    if (tc.status === "SUCCESS") b.success += 1;
+    else if (tc.status === "ERROR") {
+      b.error += 1;
+      errorTotal += 1;
+    } else b.started += 1;
+    if (tc.durationMs != null) {
+      b.durationSum += tc.durationMs;
+      b.durationCount += 1;
+      durationSum += tc.durationMs;
+      durationCount += 1;
+    }
+    map.set(tc.toolName, b);
+  }
+
+  const tools: ToolStatRow[] = Array.from(map.values())
+    .map((b) => ({
+      toolName: b.toolName,
+      total: b.total,
+      success: b.success,
+      error: b.error,
+      started: b.started,
+      errorRate: b.total > 0 ? b.error / b.total : 0,
+      avgDurationMs: b.durationCount > 0 ? b.durationSum / b.durationCount : null,
+    }))
+    .sort((a, b) => b.total - a.total);
+
+  return {
+    totals: {
+      total,
+      errorTotal,
+      errorRate: total > 0 ? errorTotal / total : 0,
+      avgDurationMs: durationCount > 0 ? durationSum / durationCount : null,
+      uniqueTools: map.size,
+    },
+    tools,
+  };
+}
+
+// 7 x 24 grid of turn counts, bucketed by weekday (Mon..Sun) and hour of day.
+// Uses the server runtime's local time -- fine for a single-region company.
+export async function getActivityHeatmap(range: RangeKey) {
+  const since = rangeToDate(range);
+  const turns = await prisma.turn.findMany({
+    where: since ? { createdAt: { gte: since } } : undefined,
+    select: { createdAt: true },
+  });
+
+  const grid: number[][] = Array.from({ length: 7 }, () => new Array<number>(24).fill(0));
+  let max = 0;
+  for (const t of turns) {
+    const d = t.createdAt;
+    const weekdayMon0 = (d.getDay() + 6) % 7; // JS 0=Sun -> our 0=Mon
+    const hour = d.getHours();
+    const v = ++grid[weekdayMon0][hour];
+    if (v > max) max = v;
+  }
+  return { grid, max };
+}
+
+export async function getIngestionHealth() {
+  const users = await prisma.user.findMany({
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      sessions: { select: { lastEventAt: true }, orderBy: { lastEventAt: "desc" }, take: 1 },
+      _count: { select: { sessions: true, turns: true } },
+    },
+  });
+
+  const now = Date.now();
+  const SILENT_MS = 7 * 24 * 60 * 60 * 1000;
+
+  const rows = users
+    .map((u) => {
+      const last = u.sessions[0]?.lastEventAt ?? null;
+      return {
+        userId: u.id,
+        name: u.name,
+        email: u.email,
+        lastEventAt: last ? last.toISOString() : null,
+        sessionCount: u._count.sessions,
+        turnCount: u._count.turns,
+        noData: u._count.turns === 0,
+        silent: !last || now - last.getTime() > SILENT_MS,
+      };
+    })
+    .sort((a, b) => (b.lastEventAt ? Date.parse(b.lastEventAt) : 0) - (a.lastEventAt ? Date.parse(a.lastEventAt) : 0));
+
+  const [activeSessions, lastOverall, errorCount] = await Promise.all([
+    prisma.claudeSession.count({ where: { status: { in: ["ACTIVE", "IDLE"] } } }),
+    prisma.claudeSession.findFirst({ orderBy: { lastEventAt: "desc" }, select: { lastEventAt: true } }),
+    prisma.toolCall.count({ where: { status: "ERROR" } }),
+  ]);
+
+  return {
+    rows,
+    summary: {
+      totalUsers: rows.length,
+      reporting: rows.filter((r) => !r.noData).length,
+      silent: rows.filter((r) => r.silent).length,
+      activeSessions,
+      lastEventAt: lastOverall?.lastEventAt ? lastOverall.lastEventAt.toISOString() : null,
+      errorCount,
+    },
+  };
 }

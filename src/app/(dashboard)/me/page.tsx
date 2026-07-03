@@ -5,7 +5,6 @@ import { Card } from "@/components/ui/Card";
 import { StatCard } from "@/components/ui/StatCard";
 import { RangeSelector } from "@/components/RangeSelector";
 import { TrendChart } from "@/components/charts/TrendChart";
-import { ApiKeyBox } from "@/components/ApiKeyBox";
 import { Tag } from "@/components/ui/Badge";
 import { formatNumber, formatUsd } from "@/lib/format";
 import { ROLE_LABELS } from "@/lib/access";
@@ -55,29 +54,19 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
         />
       </Card>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <Card title="Công cụ dùng nhiều nhất">
-          {stats.topTools.length === 0 ? (
-            <p className="text-sm text-[var(--text-muted)]">Chưa có dữ liệu</p>
-          ) : (
-            <div className="flex flex-wrap gap-2">
-              {stats.topTools.map((t, i) => (
-                <Tag key={t.toolName} color={colorForIndex(i)}>
-                  {t.toolName} · {t.count}
-                </Tag>
-              ))}
-            </div>
-          )}
-        </Card>
-
-        <Card title="Kết nối Claude Code plugin">
-          <p className="mb-3 text-sm text-[var(--text-secondary)]">
-            Dùng API key này khi cấu hình <code>ks-dashboard-plugin</code> để phiên làm việc Claude Code của bạn
-            được ghi nhận vào dashboard.
-          </p>
-          <ApiKeyBox initialKey={user.apiKey} />
-        </Card>
-      </div>
+      <Card title="Công cụ dùng nhiều nhất">
+        {stats.topTools.length === 0 ? (
+          <p className="text-sm text-[var(--text-muted)]">Chưa có dữ liệu</p>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {stats.topTools.map((t, i) => (
+              <Tag key={t.toolName} color={colorForIndex(i)}>
+                {t.toolName} · {t.count}
+              </Tag>
+            ))}
+          </div>
+        )}
+      </Card>
     </div>
   );
 }

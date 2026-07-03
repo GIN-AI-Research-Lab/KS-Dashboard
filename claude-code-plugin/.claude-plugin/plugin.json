@@ -1,7 +1,7 @@
 {
   "name": "ks-dashboard-telemetry",
   "displayName": "KS Dashboard Telemetry",
-  "version": "1.0.4",
+  "version": "1.0.7",
   "description": "Reports Claude Code token usage, cost, sessions and tool calls to the company KS Dashboard analytics site.",
   "author": {
     "name": "KS Dashboard"
@@ -21,8 +21,8 @@
     },
     "api_key": {
       "type": "string",
-      "title": "Personal API key",
-      "description": "Your personal API key from the dashboard's \"Cá nhân\" (Me) page. Falls back to the KS_DASHBOARD_API_KEY environment variable if left blank.",
+      "title": "API key",
+      "description": "Either your personal API key from the dashboard's \"Cá nhân\" (Me) page, or the one company-wide shared token from IT (in which case the dashboard identifies you by your Windows username). Falls back to the KS_DASHBOARD_API_KEY environment variable if left blank.",
       "sensitive": true,
       "required": false
     }

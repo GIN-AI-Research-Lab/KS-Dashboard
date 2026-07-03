@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireRole } from "@/lib/api-helpers";
 import { prisma } from "@/lib/db";
 import { generateApiKey } from "@/lib/api-key";
+import { emailLocalPart } from "@/lib/identity";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 
@@ -42,12 +43,15 @@ export async function POST(req: NextRequest) {
   const parsed = createSchema.safeParse(await req.json());
   if (!parsed.success) return NextResponse.json({ error: "Invalid payload", issues: parsed.error.issues }, { status: 422 });
 
-  const { password, ...rest } = parsed.data;
+  const { password, departmentId, teamId, ...rest } = parsed.data;
   const passwordHash = await bcrypt.hash(password, 10);
 
   const user = await prisma.user.create({
     data: {
       ...rest,
+      emailLocalPart: emailLocalPart(rest.email),
+      departmentId: departmentId ?? null,
+      teamId: teamId ?? null,
       passwordHash,
       apiKey: generateApiKey(),
     },

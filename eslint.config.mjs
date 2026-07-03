@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Standalone CommonJS Node scripts invoked directly by Claude Code hooks
+    // (`node script.js`), not part of the Next.js/TypeScript app.
+    "claude-code-plugin/**",
   ]),
 ]);
 

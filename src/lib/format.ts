@@ -13,6 +13,12 @@ export function formatUsd(n: number) {
   return `$${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
+// ratio is a 0..1 fraction, e.g. 0.42 -> "42.0%"
+export function formatPercent(ratio: number, digits = 1) {
+  if (!isFinite(ratio)) return "—";
+  return `${(ratio * 100).toFixed(digits)}%`;
+}
+
 export function formatDuration(ms: number) {
   if (ms < 0) ms = 0;
   const seconds = Math.floor(ms / 1000);

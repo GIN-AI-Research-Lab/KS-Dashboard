@@ -3,12 +3,43 @@ import { prisma } from "@/lib/db";
 import { computeCostUsd } from "@/lib/pricing";
 import { ingestRequestSchema, type IngestEvent } from "@/lib/ingest-schema";
 import { liveBus } from "@/lib/live-bus";
+import { findUserByIdentity } from "@/lib/identity";
 
-async function resolveUser(req: NextRequest) {
-  const authHeader = req.headers.get("authorization") ?? "";
-  const apiKey = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : null;
-  if (!apiKey) return null;
-  return prisma.user.findUnique({ where: { apiKey } });
+type ResolveResult =
+  | { user: NonNullable<Awaited<ReturnType<typeof prisma.user.findUnique>>> }
+  | { error: string; status: number };
+
+// Two auth modes share the same Bearer header:
+// 1. The shared company-wide token (KS_DASHBOARD_INGEST_TOKEN) -- the sending
+//    user is resolved from, in order of preference: (a) the real logged-in
+//    account email Claude Code's own OTel export reported for this session
+//    (see /api/otel/logs), when available, or (b) the `identity` field
+//    (Windows username) the plugin always sends as a fallback. Never
+//    auto-creates a user.
+// 2. A legacy personal API key (`user.apiKey`) -- kept for backward
+//    compatibility with keys already issued to employees.
+async function resolveUser(
+  token: string | null,
+  identity: string | undefined,
+  sessionId: string | undefined,
+): Promise<ResolveResult> {
+  if (!token) return { error: "Invalid or missing API key", status: 401 };
+
+  const sharedToken = process.env.KS_DASHBOARD_INGEST_TOKEN;
+  if (sharedToken && token === sharedToken) {
+    const sessionIdentity = sessionId
+      ? await prisma.sessionIdentity.findUnique({ where: { sessionId } })
+      : null;
+    const effectiveIdentity = sessionIdentity?.email ?? identity;
+    if (!effectiveIdentity) return { error: "Missing identity for shared-token auth", status: 400 };
+    const user = await findUserByIdentity(effectiveIdentity);
+    if (!user) return { error: `No user found matching identity "${effectiveIdentity}"`, status: 400 };
+    return { user };
+  }
+
+  const user = await prisma.user.findUnique({ where: { apiKey: token } });
+  if (!user) return { error: "Invalid or missing API key", status: 401 };
+  return { user };
 }
 
 async function handleEvent(userId: string, event: IngestEvent) {
@@ -147,11 +178,6 @@ async function handleEvent(userId: string, event: IngestEvent) {
 }
 
 export async function POST(req: NextRequest) {
-  const user = await resolveUser(req);
-  if (!user) {
-    return NextResponse.json({ error: "Invalid or missing API key" }, { status: 401 });
-  }
-
   let body: unknown;
   try {
     body = await req.json();
@@ -163,6 +189,16 @@ export async function POST(req: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid payload", issues: parsed.error.issues }, { status: 422 });
   }
+
+  const authHeader = req.headers.get("authorization") ?? "";
+  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : null;
+  // All events in one request come from the same plugin hook invocation, so
+  // they always share one Claude Code session -- using the first is enough.
+  const resolved = await resolveUser(token, parsed.data.identity, parsed.data.events[0]?.sessionId);
+  if ("error" in resolved) {
+    return NextResponse.json({ error: resolved.error }, { status: resolved.status });
+  }
+  const { user } = resolved;
 
   const results = await Promise.allSettled(
     parsed.data.events.map((event) => handleEvent(user.id, event)),

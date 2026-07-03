@@ -108,6 +108,8 @@ model ClaudeSession {
 
 model Turn {
   id         String        @id @default(cuid())
+  externalId String?       @unique // OTel api_request.request_id -- idempotency key so
+                                    // retried/duplicate OTel batches don't double-count a turn
   sessionId  String
   session    ClaudeSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   userId     String
@@ -144,4 +146,15 @@ model ToolCall {
   @@index([userId])
   @@index([toolName])
   @@index([startedAt])
+}
+
+// Populated by the OTel receiver (/api/otel/logs) from Claude Code's own
+// telemetry export, keyed by Claude Code's session id (same value the plugin
+// sends as ClaudeSession.externalId). Lets /api/ingest's resolveUser() prefer
+// the real logged-in account email over the Windows-username guess, without
+// changing the plugin or the hooks pipeline itself -- see HANDOFF.md.
+model SessionIdentity {
+  sessionId String   @id
+  email     String
+  updatedAt DateTime @updatedAt
 }

@@ -12,6 +12,7 @@ const ICONS: Record<string, string> = {
   me: "👤",
   rankings: "🏆",
   models: "🤖",
+  tools: "🛠️",
   live: "🟢",
   admin: "⚙️",
   org: "🏢",
@@ -56,6 +57,7 @@ export function Sidebar({ orgTree, role }: { orgTree: OrgTree; role: Role }) {
         <NavLink href="/me" label="Cá nhân" icon={ICONS.me} />
         <NavLink href="/rankings" label="Xếp hạng" icon={ICONS.rankings} />
         <NavLink href="/models" label="Model" icon={ICONS.models} />
+        <NavLink href="/tools" label="Công cụ" icon={ICONS.tools} />
         <NavLink href="/live" label="Phiên trực tuyến" icon={ICONS.live} />
 
         <button

@@ -17,11 +17,20 @@ token usage) and POSTs it to your dashboard's `/api/ingest` endpoint. Hooks run
 asynchronously and always exit `0` — a dashboard outage or network hiccup never
 blocks or slows down your actual Claude Code session.
 
-## 1. Get your API key
+## 1. Get an API key
 
-Log into the dashboard, open **Cá nhân** (Me), and copy your personal API key
-(starts with `ksd_`). Each employee has their own key so usage is attributed
-correctly.
+Two ways to authenticate, both use the same `api_key` field:
+
+- **Company-wide shared token (recommended, no per-person setup):** ask IT for
+  the one `KS_DASHBOARD_INGEST_TOKEN` value they generated for the whole
+  company. With this token, the dashboard identifies you by your **Windows
+  username** (matched against your email's local-part, e.g. Windows user
+  `tuent` matches `tuent@sint.co.jp` / `tuent@kstns.biz`) — nothing else to
+  configure. This only works if your account already exists on the dashboard
+  (created by an admin or by the AMIS sync); it will never auto-create one.
+- **Personal API key (legacy, still supported):** log into the dashboard, open
+  **Cá nhân** (Me), and copy your personal key (starts with `ksd_`). Usage is
+  attributed to your account directly, no identity matching involved.
 
 ## 2. Configure the endpoint + key
 
@@ -33,7 +42,7 @@ pass through to the hook scripts. Add this to your **user-level**
 {
   "env": {
     "KS_DASHBOARD_API_ENDPOINT": "https://ks-dashboard.your-company.com/api/ingest",
-    "KS_DASHBOARD_API_KEY": "ksd_your_personal_key_here"
+    "KS_DASHBOARD_API_KEY": "the shared company token, or your personal ksd_... key"
   }
 }
 ```
@@ -98,6 +107,10 @@ Common issues:
   Claude Code from a shell that doesn't have them exported.
 - `failed to send telemetry: ... 401` — your API key is wrong or was
   regenerated on the dashboard; copy the current one from your Me page.
+- `failed to send telemetry: ... 400` (shared-token mode only) — the
+  dashboard couldn't match your Windows username to an existing account. Ask
+  an admin to check that your account exists there under an email whose
+  local-part equals your Windows username, or switch to a personal API key.
 - Nothing at all — check that `~/.claude/settings.json` is valid JSON (a
   trailing comma will silently break hook loading).
 

@@ -21,6 +21,8 @@ export default auth((req) => {
 
 export const config = {
   matcher: [
-    "/((?!api/ingest|api/auth|_next/static|_next/image|favicon.ico).*)",
+    // api/otel/logs receives Claude Code's own OTel export (no session cookie
+    // -- see HANDOFF.md).
+    "/((?!api/ingest|api/otel/logs|api/auth|_next/static|_next/image|favicon.ico).*)",
   ],
 };

@@ -68,6 +68,10 @@ export const ingestEventSchema = z.discriminatedUnion("type", [
 ]);
 
 export const ingestRequestSchema = z.object({
+  // Only required when authenticating with the shared company-wide token
+  // (KS_DASHBOARD_INGEST_TOKEN) -- resolves the sending user by local-part
+  // match (Windows username or email). Ignored for personal API-key auth.
+  identity: z.string().min(1).optional(),
   events: z.array(ingestEventSchema).min(1).max(500),
 });
 

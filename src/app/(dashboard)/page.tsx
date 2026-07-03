@@ -1,11 +1,12 @@
-import { getOverviewStats, getRankings, type RangeKey } from "@/lib/stats";
+import { getOverviewStats, getRankings, getActivityHeatmap, type RangeKey } from "@/lib/stats";
 import { Card } from "@/components/ui/Card";
 import { StatCard } from "@/components/ui/StatCard";
 import { RangeSelector } from "@/components/RangeSelector";
 import { TrendChart } from "@/components/charts/TrendChart";
 import { ModelDonut } from "@/components/charts/ModelDonut";
 import { RankBarChart } from "@/components/charts/RankBarChart";
-import { formatNumber, formatUsd } from "@/lib/format";
+import { ActivityHeatmap } from "@/components/charts/ActivityHeatmap";
+import { formatNumber, formatUsd, formatPercent } from "@/lib/format";
 
 export default async function OverviewPage({
   searchParams,
@@ -15,10 +16,11 @@ export default async function OverviewPage({
   const { range } = await searchParams;
   const r = (range ?? "30d") as RangeKey;
 
-  const [stats, topTokenUsers, topCostUsers] = await Promise.all([
+  const [stats, topTokenUsers, topCostUsers, heatmap] = await Promise.all([
     getOverviewStats(r),
     getRankings("totalTokens", r, 6),
     getRankings("costUsd", r, 6),
+    getActivityHeatmap(r),
   ]);
 
   return (
@@ -34,12 +36,36 @@ export default async function OverviewPage({
       </div>
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
-        <StatCard label="Tổng token" value={formatNumber(stats.totals.totalTokens)} accent="#2a78d6" icon="Σ" />
+        <StatCard label="Tổng token" value={formatNumber(stats.totals.totalTokens)} accent="#2a78d6" icon="Σ" deltaPct={stats.deltas?.totalTokens} />
         <StatCard label="Input token" value={formatNumber(stats.totals.inputTokens)} accent="#1baf7a" icon="→" />
         <StatCard label="Output token" value={formatNumber(stats.totals.outputTokens)} accent="#eb6834" icon="←" />
-        <StatCard label="Chi phí ước tính" value={formatUsd(stats.totals.costUsd)} accent="#e34948" icon="$" />
-        <StatCard label="Số phiên" value={formatNumber(stats.totals.sessionCount)} accent="#4a3aa7" icon="◧" />
+        <StatCard label="Chi phí ước tính" value={formatUsd(stats.totals.costUsd)} accent="#e34948" icon="$" deltaPct={stats.deltas?.costUsd} />
+        <StatCard label="Số phiên" value={formatNumber(stats.totals.sessionCount)} accent="#4a3aa7" icon="◧" deltaPct={stats.deltas?.sessionCount} />
         <StatCard label="Đang hoạt động" value={formatNumber(stats.totals.activeSessionCount)} accent="#0ca30c" icon="●" />
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <StatCard
+          label="Cache hit ratio"
+          value={formatPercent(stats.totals.cacheHitRatio)}
+          hint="Phần input được phục vụ từ cache"
+          accent="#008300"
+          icon="⚡"
+        />
+        <StatCard
+          label="Token đọc từ cache"
+          value={formatNumber(stats.totals.cacheReadTokens)}
+          hint="Không tính phí như input mới"
+          accent="#1baf7a"
+          icon="⇐"
+        />
+        <StatCard
+          label="Token tạo cache"
+          value={formatNumber(stats.totals.cacheCreationTokens)}
+          hint="Chi phí ghi cache ban đầu"
+          accent="#eda100"
+          icon="⇒"
+        />
       </div>
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
@@ -79,6 +105,10 @@ export default async function OverviewPage({
           </div>
         </Card>
       </div>
+
+      <Card title="Nhịp độ hoạt động theo giờ (turns)">
+        <ActivityHeatmap grid={heatmap.grid} max={heatmap.max} />
+      </Card>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card title="Top 6 · Tổng token">

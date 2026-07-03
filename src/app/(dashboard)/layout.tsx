@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { Sidebar } from "@/components/Sidebar";
 import { Topbar } from "@/components/Topbar";
+import { AutoRefresh } from "@/components/AutoRefresh";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -14,6 +15,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-[var(--page)]">
+      <AutoRefresh />
       <Sidebar orgTree={departments} role={user.role} />
       <div className="flex min-w-0 flex-1 flex-col">
         <Topbar name={user.name} role={user.role} />

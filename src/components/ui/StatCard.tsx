@@ -6,13 +6,18 @@ export function StatCard({
   hint,
   accent,
   icon,
+  deltaPct,
 }: {
   label: string;
   value: string;
   hint?: string;
   accent?: string;
   icon?: ReactNode;
+  deltaPct?: number | null;
 }) {
+  const hasDelta = typeof deltaPct === "number" && isFinite(deltaPct);
+  const up = hasDelta && (deltaPct as number) >= 0;
+
   return (
     <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
       <div className="flex items-center justify-between">
@@ -31,6 +36,14 @@ export function StatCard({
       <div className="mt-2 text-2xl font-semibold tabular-nums text-[var(--text-primary)]">
         {value}
       </div>
+      {hasDelta && (
+        <div className="mt-1 flex items-center gap-1 text-xs">
+          <span className={up ? "text-[#0ca30c]" : "text-[#e34948]"}>
+            {up ? "▲" : "▼"} {Math.abs(deltaPct as number).toFixed(1)}%
+          </span>
+          <span className="text-[var(--text-muted)]">vs kỳ trước</span>
+        </div>
+      )}
       {hint && <div className="mt-1 text-xs text-[var(--text-secondary)]">{hint}</div>}
     </div>
   );

@@ -36,7 +36,7 @@ function looksLikeError(toolResponse) {
   return false;
 }
 
-async function postEvents(apiEndpoint, apiKey, events) {
+async function postEvents(apiEndpoint, apiKey, identity, events) {
   if (events.length === 0) return;
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 8000);
@@ -47,7 +47,7 @@ async function postEvents(apiEndpoint, apiKey, events) {
         "Content-Type": "application/json",
         Authorization: `Bearer ${apiKey}`,
       },
-      body: JSON.stringify({ events }),
+      body: JSON.stringify({ identity, events }),
       signal: controller.signal,
     });
   } catch (err) {
@@ -59,7 +59,7 @@ async function postEvents(apiEndpoint, apiKey, events) {
 
 async function main() {
   const eventName = process.argv[2];
-  const { apiEndpoint, apiKey } = resolveConfig(process.argv);
+  const { apiEndpoint, apiKey, identity } = resolveConfig(process.argv);
   const input = readStdin();
   const sessionId = input.session_id;
 
@@ -177,7 +177,7 @@ async function main() {
       process.exit(0);
   }
 
-  await postEvents(apiEndpoint, apiKey, events);
+  await postEvents(apiEndpoint, apiKey, identity, events);
 
   if (eventName === "session_end") {
     clearState(sessionId);
