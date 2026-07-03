@@ -8,6 +8,7 @@ const updateSchema = z.object({
   role: z.enum(["ADMIN", "DEPARTMENT_HEAD", "TEAM_LEAD", "MEMBER"]).optional(),
   departmentId: z.string().nullable().optional(),
   teamId: z.string().nullable().optional(),
+  note: z.string().max(1000).nullable().optional(),
 });
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -18,7 +19,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const parsed = updateSchema.safeParse(await req.json());
   if (!parsed.success) return NextResponse.json({ error: "Invalid payload" }, { status: 422 });
 
-  const user = await prisma.user.update({ where: { id }, data: parsed.data });
+  const data = { ...parsed.data };
+  if ("note" in data) data.note = data.note?.trim() || null;
+
+  const user = await prisma.user.update({ where: { id }, data });
   return NextResponse.json({ user: { ...user, passwordHash: undefined } });
 }
 

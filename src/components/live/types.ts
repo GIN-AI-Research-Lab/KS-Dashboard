@@ -1,7 +1,6 @@
 export interface LiveToolCall {
   id: string;
   toolName: string;
-  summary: string | null;
   status: "STARTED" | "SUCCESS" | "ERROR";
   startedAt: string;
   endedAt: string | null;

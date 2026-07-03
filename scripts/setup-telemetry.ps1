@@ -15,7 +15,8 @@ $ErrorActionPreference = "Stop"
 
 # The dashboard's OTLP logs endpoint. Change this if the dashboard moves
 # (new IP / a cloudflared tunnel / a real domain).
-$ENDPOINT = "http://192.168.1.93.nip.io:4000/api/otel/logs"
+$ENDPOINT = "http://192.168.50.55.nip.io:4000/api/otel/logs"
+$METRICS_ENDPOINT = $ENDPOINT -replace '/logs$', '/metrics'
 
 $dir = Join-Path $HOME ".claude"
 $path = Join-Path $dir "settings.json"
@@ -32,10 +33,14 @@ if (-not $settings.PSObject.Properties.Match("env").Count) {
 }
 
 $vars = @{
-  "CLAUDE_CODE_ENABLE_TELEMETRY"      = "1"
-  "OTEL_LOGS_EXPORTER"                = "otlp"
-  "OTEL_EXPORTER_OTLP_PROTOCOL"       = "http/json"
-  "OTEL_EXPORTER_OTLP_LOGS_ENDPOINT"  = $ENDPOINT
+  "CLAUDE_CODE_ENABLE_TELEMETRY"                       = "1"
+  "OTEL_LOG_USER_PROMPTS"                              = "0"
+  "OTEL_LOGS_EXPORTER"                                 = "otlp"
+  "OTEL_METRICS_EXPORTER"                              = "otlp"
+  "OTEL_EXPORTER_OTLP_PROTOCOL"                        = "http/json"
+  "OTEL_EXPORTER_OTLP_LOGS_ENDPOINT"                   = $ENDPOINT
+  "OTEL_EXPORTER_OTLP_METRICS_ENDPOINT"               = $METRICS_ENDPOINT
+  "OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE" = "delta"
 }
 foreach ($k in $vars.Keys) {
   $settings.env | Add-Member -NotePropertyName $k -NotePropertyValue $vars[$k] -Force

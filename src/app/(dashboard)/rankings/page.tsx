@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/Card";
 import { RangeSelector } from "@/components/RangeSelector";
 import { MetricTabs } from "@/components/MetricTabs";
 import { LeaderboardTable } from "@/components/LeaderboardTable";
+import { ExportLink } from "@/components/ExportLink";
 import { formatNumber, formatUsd, formatDuration } from "@/lib/format";
 
 const METRICS: { key: RankingMetric; label: string; unit: string; formatter: (n: number) => string }[] = [
@@ -40,7 +41,10 @@ export default async function RankingsPage({
         defaultValue={METRICS[0].key}
       />
 
-      <Card title={activeMetric.label}>
+      <Card
+        title={activeMetric.label}
+        action={<ExportLink href={`/api/export/rankings?metric=${activeMetric.key}&range=${r}`} />}
+      >
         <LeaderboardTable rows={rows} valueLabel={activeMetric.unit} valueFormatter={activeMetric.formatter} />
       </Card>
     </div>

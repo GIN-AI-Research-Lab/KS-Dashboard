@@ -6,8 +6,9 @@ const nextConfig: NextConfig = {
   // a <ip>.nip.io host so other machines on the LAN can view it and log in, so
   // allow nip.io hosts. Dev-only; ignored by `next start`.
   // Must list the EXACT host — a wildcard like "*.nip.io" does NOT match a
-  // multi-label subdomain such as "192.168.1.93.nip.io".
-  allowedDevOrigins: ["192.168.1.93.nip.io", "*.nip.io"],
+  // multi-label subdomain such as "192.168.50.55.nip.io".
+  // Add a new entry here whenever the LAN IP changes (e.g. after switching WiFi).
+  allowedDevOrigins: ["192.168.50.55.nip.io", "192.168.1.93.nip.io", "*.nip.io"],
 };
 
 export default nextConfig;

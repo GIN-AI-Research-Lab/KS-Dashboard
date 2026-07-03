@@ -1,4 +1,6 @@
-import { getOverviewStats, getRankings, getActivityHeatmap, type RangeKey } from "@/lib/stats";
+import Link from "next/link";
+import { auth } from "@/auth";
+import { getOverviewStats, getRankings, getActivityHeatmap, getTeamScorecards, getLibraryFeed, getCodeStats, type RangeKey } from "@/lib/stats";
 import { Card } from "@/components/ui/Card";
 import { StatCard } from "@/components/ui/StatCard";
 import { RangeSelector } from "@/components/RangeSelector";
@@ -6,7 +8,9 @@ import { TrendChart } from "@/components/charts/TrendChart";
 import { ModelDonut } from "@/components/charts/ModelDonut";
 import { RankBarChart } from "@/components/charts/RankBarChart";
 import { ActivityHeatmap } from "@/components/charts/ActivityHeatmap";
-import { formatNumber, formatUsd, formatPercent } from "@/lib/format";
+import { Badge } from "@/components/ui/Badge";
+import { KIND_LABEL, KIND_VARIANT } from "@/lib/library";
+import { formatNumber, formatUsd, formatPercent, formatRelativeTime } from "@/lib/format";
 
 export default async function OverviewPage({
   searchParams,
@@ -15,13 +19,26 @@ export default async function OverviewPage({
 }) {
   const { range } = await searchParams;
   const r = (range ?? "30d") as RangeKey;
+  const session = await auth();
+  const viewerId = session!.user.id;
 
-  const [stats, topTokenUsers, topCostUsers, heatmap] = await Promise.all([
+  const [stats, topTokenUsers, topCostUsers, heatmap, teamScore, libNew, libReactions, libComments, code] = await Promise.all([
     getOverviewStats(r),
     getRankings("totalTokens", r, 6),
     getRankings("costUsd", r, 6),
     getActivityHeatmap(r),
+    getTeamScorecards(r),
+    getLibraryFeed({ sort: "new", viewerId, limit: 5 }),
+    getLibraryFeed({ sort: "reactions", viewerId, limit: 5 }),
+    getLibraryFeed({ sort: "comments", viewerId, limit: 5 }),
+    getCodeStats(r),
   ]);
+
+  const libSections = [
+    { title: "Mới nhất", items: libNew, metric: (it: (typeof libNew)[number]) => formatRelativeTime(it.createdAt) },
+    { title: "Nhiều react nhất", items: libReactions, metric: (it: (typeof libReactions)[number]) => `⚡ ${it.counts.reactions}` },
+    { title: "Nhiều comment nhất", items: libComments, metric: (it: (typeof libComments)[number]) => `💬 ${it.counts.comments}` },
+  ];
 
   return (
     <div className="flex flex-col gap-6">
@@ -68,6 +85,51 @@ export default async function OverviewPage({
         />
       </div>
 
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <StatCard label="Dòng code thêm" value={formatNumber(code.linesAdded)} hint="Từ Claude Code (OTel)" accent="#008300" icon="＋" />
+        <StatCard label="Dòng code xoá" value={formatNumber(code.linesRemoved)} accent="#e34948" icon="－" />
+        <StatCard
+          label="Tỷ lệ chấp nhận sửa"
+          value={code.editsAccepted + code.editsRejected > 0 ? formatPercent(code.acceptanceRate) : "—"}
+          hint={`${code.editsAccepted}/${code.editsAccepted + code.editsRejected} gợi ý sửa`}
+          accent="#2a78d6"
+          icon="✓"
+        />
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+            Thư viện · Prompt &amp; Skill
+          </h2>
+          <Link href="/library" className="text-xs font-medium text-[#2a78d6] hover:underline">
+            Xem tất cả →
+          </Link>
+        </div>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          {libSections.map((sec) => (
+            <Card key={sec.title} title={sec.title}>
+              {sec.items.length === 0 ? (
+                <p className="text-sm text-[var(--text-muted)]">Chưa có bài</p>
+              ) : (
+                <ol className="flex flex-col gap-2.5">
+                  {sec.items.map((it, i) => (
+                    <li key={it.id} className="flex items-center gap-2 text-sm">
+                      <span className="w-4 shrink-0 text-xs font-semibold text-[var(--text-muted)]">{i + 1}</span>
+                      <Badge variant={KIND_VARIANT[it.kind]}>{KIND_LABEL[it.kind]}</Badge>
+                      <Link href={`/library/${it.id}`} className="min-w-0 flex-1 truncate hover:underline">
+                        {it.title}
+                      </Link>
+                      <span className="shrink-0 text-xs text-[var(--text-muted)]">{sec.metric(it)}</span>
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </Card>
+          ))}
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         <Card title="Token theo ngày" className="xl:col-span-2">
           <TrendChart
@@ -109,6 +171,53 @@ export default async function OverviewPage({
       <Card title="Nhịp độ hoạt động theo giờ (turns)">
         <ActivityHeatmap grid={heatmap.grid} max={heatmap.max} />
       </Card>
+
+      {teamScore.rows.length > 0 && (
+        <Card
+          title="Bảng điểm theo nhóm"
+          action={
+            <span className="text-xs text-[var(--text-muted)]">
+              Trung vị: {formatNumber(teamScore.medianTokensPerMember)} token/người
+            </span>
+          }
+        >
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[640px] text-sm">
+              <thead>
+                <tr className="border-b border-[var(--border)] text-left text-xs uppercase tracking-wide text-[var(--text-muted)]">
+                  <th className="py-2 pr-4 font-medium">Nhóm</th>
+                  <th className="py-2 pr-4 text-right font-medium">Thành viên</th>
+                  <th className="py-2 pr-4 text-right font-medium">Độ phủ</th>
+                  <th className="py-2 pr-4 text-right font-medium">Token/người</th>
+                  <th className="py-2 pr-4 text-right font-medium">Chi phí/người dùng</th>
+                  <th className="py-2 text-right font-medium">Tổng chi phí</th>
+                </tr>
+              </thead>
+              <tbody>
+                {teamScore.rows.map((t) => {
+                  const above = t.tokensPerMember >= teamScore.medianTokensPerMember;
+                  return (
+                    <tr key={t.teamId} className="border-b border-[var(--border)] last:border-0">
+                      <td className="py-2 pr-4 font-medium">{t.name}</td>
+                      <td className="py-2 pr-4 text-right tabular-nums">{t.members}</td>
+                      <td className="py-2 pr-4 text-right tabular-nums text-[var(--text-secondary)]">
+                        {t.activeUsers}/{t.members} · {formatPercent(t.coverage)}
+                      </td>
+                      <td className="py-2 pr-4 text-right tabular-nums">
+                        <span className={above ? "text-[#0ca30c]" : "text-[var(--text-secondary)]"}>
+                          {above ? "▲" : "▼"} {formatNumber(t.tokensPerMember)}
+                        </span>
+                      </td>
+                      <td className="py-2 pr-4 text-right tabular-nums text-[var(--text-secondary)]">{formatUsd(t.costPerActiveUser)}</td>
+                      <td className="py-2 text-right tabular-nums">{formatUsd(t.costUsd)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card title="Top 6 · Tổng token">

@@ -10,6 +10,10 @@
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
+    "db:export": "tsx scripts/db-export.ts",
+    "db:import": "tsx scripts/db-import.ts",
+    "db:phase2": "tsx scripts/db-phase2-setup.ts",
+    "db:refresh-views": "tsx scripts/db-refresh-views.ts",
     "sync:amis": "tsx scripts/amis-sync.ts",
     "postinstall": "prisma generate"
   },

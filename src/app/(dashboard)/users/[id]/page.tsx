@@ -1,12 +1,15 @@
 import { notFound } from "next/navigation";
+import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
-import { getUserStats, type RangeKey } from "@/lib/stats";
+import { getUserStats, getUserGamification, getUserCodeStats, type RangeKey } from "@/lib/stats";
 import { Card } from "@/components/ui/Card";
 import { StatCard } from "@/components/ui/StatCard";
 import { RangeSelector } from "@/components/RangeSelector";
 import { TrendChart } from "@/components/charts/TrendChart";
 import { Tag } from "@/components/ui/Badge";
-import { formatNumber, formatUsd } from "@/lib/format";
+import { UserNoteEditor } from "@/components/UserNoteEditor";
+import { BadgeGrid } from "@/components/BadgeGrid";
+import { formatNumber, formatUsd, formatPercent } from "@/lib/format";
 import { ROLE_LABELS } from "@/lib/access";
 import { colorForIndex } from "@/lib/chart-colors";
 
@@ -21,13 +24,14 @@ export default async function UserPage({
   const { range } = await searchParams;
   const r = (range ?? "30d") as RangeKey;
 
-  const user = await prisma.user.findUnique({
-    where: { id },
-    include: { team: true, department: true },
-  });
+  const [session, user] = await Promise.all([
+    auth(),
+    prisma.user.findUnique({ where: { id }, include: { team: true, department: true } }),
+  ]);
   if (!user) notFound();
+  const isAdmin = session!.user.role === "ADMIN";
 
-  const stats = await getUserStats(id, r);
+  const [stats, gami, code] = await Promise.all([getUserStats(id, r), getUserGamification(id), getUserCodeStats(id, r)]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -50,6 +54,25 @@ export default async function UserPage({
         <StatCard label="Chi phí" value={formatUsd(stats.totals.costUsd)} accent="#e34948" icon="$" />
       </div>
 
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+        <StatCard label="Dòng code thêm" value={formatNumber(code.linesAdded)} accent="#008300" icon="＋" />
+        <StatCard label="Dòng code xoá" value={formatNumber(code.linesRemoved)} accent="#e34948" icon="－" />
+        <StatCard
+          label="Tỷ lệ chấp nhận sửa"
+          value={code.editsAccepted + code.editsRejected > 0 ? formatPercent(code.acceptanceRate) : "—"}
+          hint={`${code.editsAccepted}/${code.editsAccepted + code.editsRejected} gợi ý`}
+          accent="#2a78d6"
+          icon="✓"
+        />
+      </div>
+
+      {/* Ghi chú nội bộ là annotation của quản trị -> chỉ admin xem/sửa. */}
+      {isAdmin && (
+        <Card title="Ghi chú nội bộ (chỉ admin)">
+          <UserNoteEditor userId={user.id} initialNote={user.note} />
+        </Card>
+      )}
+
       <Card title="Token theo ngày">
         <TrendChart
           data={stats.daily}
@@ -58,6 +81,10 @@ export default async function UserPage({
             { key: "outputTokens", label: "Output", color: "#eb6834" },
           ]}
         />
+      </Card>
+
+      <Card title="Huy hiệu">
+        <BadgeGrid badges={gami.badges} earnedCount={gami.earnedCount} totalCount={gami.totalCount} />
       </Card>
 
       <Card title="Công cụ dùng nhiều nhất">

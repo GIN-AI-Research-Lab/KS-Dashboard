@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/Card";
 import { StatCard } from "@/components/ui/StatCard";
 import { RangeSelector } from "@/components/RangeSelector";
 import { RankBarChart } from "@/components/charts/RankBarChart";
+import { ExportLink } from "@/components/ExportLink";
 import { formatNumber, formatPercent, formatDuration } from "@/lib/format";
 
 export default async function ToolsPage({
@@ -52,7 +53,11 @@ export default async function ToolsPage({
           />
         </Card>
 
-        <Card title="Chi tiết theo công cụ" className="xl:col-span-2">
+        <Card
+          title="Chi tiết theo công cụ"
+          className="xl:col-span-2"
+          action={<ExportLink href={`/api/export/tools?range=${r}`} />}
+        >
           {tools.length === 0 ? (
             <p className="text-sm text-[var(--text-muted)]">Chưa có dữ liệu</p>
           ) : (

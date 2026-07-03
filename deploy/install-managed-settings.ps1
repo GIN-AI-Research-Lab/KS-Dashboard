@@ -22,7 +22,8 @@ param(
 $ErrorActionPreference = "Stop"
 
 # --- Change this endpoint for real deployment (stable domain/tunnel, not a LAN IP) ---
-$ENDPOINT = "http://192.168.1.93.nip.io:4000/api/otel/logs"
+$ENDPOINT = "http://192.168.50.55.nip.io:4000/api/otel/logs"
+$METRICS_ENDPOINT = $ENDPOINT -replace '/logs$', '/metrics'  # lines-of-code, acceptance, etc.
 
 # --- Single source of truth for the managed-settings.json content ---
 $json = @"
@@ -30,9 +31,13 @@ $json = @"
   "wslInheritsWindowsSettings": true,
   "env": {
     "CLAUDE_CODE_ENABLE_TELEMETRY": "1",
+    "OTEL_LOG_USER_PROMPTS": "0",
     "OTEL_LOGS_EXPORTER": "otlp",
+    "OTEL_METRICS_EXPORTER": "otlp",
     "OTEL_EXPORTER_OTLP_PROTOCOL": "http/json",
-    "OTEL_EXPORTER_OTLP_LOGS_ENDPOINT": "$ENDPOINT"
+    "OTEL_EXPORTER_OTLP_LOGS_ENDPOINT": "$ENDPOINT",
+    "OTEL_EXPORTER_OTLP_METRICS_ENDPOINT": "$METRICS_ENDPOINT",
+    "OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE": "delta"
   }
 }
 "@

@@ -13,6 +13,13 @@ const ICONS: Record<string, string> = {
   rankings: "🏆",
   models: "🤖",
   tools: "🛠️",
+  adoption: "📈",
+  roi: "💰",
+  projects: "📁",
+  insights: "🔬",
+  sessions: "📚",
+  library: "💡",
+  integrate: "🔌",
   live: "🟢",
   admin: "⚙️",
   org: "🏢",
@@ -58,6 +65,13 @@ export function Sidebar({ orgTree, role }: { orgTree: OrgTree; role: Role }) {
         <NavLink href="/rankings" label="Xếp hạng" icon={ICONS.rankings} />
         <NavLink href="/models" label="Model" icon={ICONS.models} />
         <NavLink href="/tools" label="Công cụ" icon={ICONS.tools} />
+        <NavLink href="/adoption" label="Áp dụng" icon={ICONS.adoption} />
+        <NavLink href="/roi" label="Hiệu quả & Chi phí" icon={ICONS.roi} />
+        <NavLink href="/projects" label="Dự án" icon={ICONS.projects} />
+        <NavLink href="/insights" label="Phân tích sâu" icon={ICONS.insights} />
+        <NavLink href="/sessions" label="Thư viện phiên" icon={ICONS.sessions} />
+        <NavLink href="/library" label="Thư viện" icon={ICONS.library} />
+        <NavLink href="/integrate" label="Tích hợp Claude" icon={ICONS.integrate} />
         <NavLink href="/live" label="Phiên trực tuyến" icon={ICONS.live} />
 
         <button

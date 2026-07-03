@@ -15,18 +15,16 @@ function readStdin() {
   }
 }
 
-function summarizeToolInput(toolName, toolInput) {
-  if (!toolInput || typeof toolInput !== "object") return undefined;
-  const raw =
-    toolInput.command ||
-    toolInput.file_path ||
-    toolInput.path ||
-    toolInput.pattern ||
-    toolInput.url ||
-    toolInput.description ||
-    JSON.stringify(toolInput);
-  const str = String(raw);
-  return str.length > 140 ? `${str.slice(0, 140)}…` : str;
+// PRIVACY: we intentionally do NOT read or send tool input/output content
+// (commands, file paths, patterns, URLs, diffs, prompts). Only tool NAME +
+// status + timing are ever transmitted. See PRIVACY.md.
+
+// Only the LAST folder name of cwd is sent (project label) -- never the full
+// working-directory path, so directory structure isn't leaked.
+function folderName(p) {
+  if (!p || typeof p !== "string") return undefined;
+  const parts = p.split(/[\\/]/).filter(Boolean);
+  return parts.length ? parts[parts.length - 1] : undefined;
 }
 
 function looksLikeError(toolResponse) {
@@ -104,7 +102,7 @@ async function main() {
       type: "session_start",
       sessionId,
       timestamp,
-      cwd: input.cwd,
+      projectLabel: folderName(input.cwd),
       source: input.source,
       model: input.model,
     });
@@ -117,7 +115,7 @@ async function main() {
         type: "session_start",
         sessionId,
         timestamp,
-        cwd: input.cwd,
+        projectLabel: folderName(input.cwd),
         source: input.source,
         model: input.model,
       });
@@ -143,7 +141,6 @@ async function main() {
         timestamp,
         callId,
         toolName,
-        summary: summarizeToolInput(toolName, input.tool_input),
       });
       break;
     }

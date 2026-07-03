@@ -14,7 +14,7 @@ const os = require("node:os");
 // + KS_DASHBOARD_INGEST_TOKEN in the dashboard's .env) before publishing this
 // repo anywhere public. Any machine can still override both values via env vars
 // or the plugin's user_config without editing this file.
-const DEFAULT_API_ENDPOINT = "http://192.168.1.93.nip.io:4000/api/ingest";
+const DEFAULT_API_ENDPOINT = "http://192.168.50.55.nip.io:4000/api/ingest";
 const DEFAULT_API_KEY = "4ce792c211a6ea507450d984b86236b376b964f49b1dfafe";
 
 // Resolves the dashboard endpoint + API key. Priority:

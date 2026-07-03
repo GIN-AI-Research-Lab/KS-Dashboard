@@ -21,8 +21,9 @@ export default auth((req) => {
 
 export const config = {
   matcher: [
-    // api/otel/logs receives Claude Code's own OTel export (no session cookie
-    // -- see HANDOFF.md).
-    "/((?!api/ingest|api/otel/logs|api/auth|_next/static|_next/image|favicon.ico).*)",
+    // api/otel/* receives Claude Code's own OTel export (logs + metrics), which
+    // carries no session cookie and authenticates by user.email attribute
+    // instead -- see HANDOFF.md. api/ingest is the plugin hook pipeline.
+    "/((?!api/ingest|api/otel|api/auth|_next/static|_next/image|favicon.ico).*)",
   ],
 };

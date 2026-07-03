@@ -149,6 +149,8 @@ export async function POST(req: NextRequest) {
           const cacheCreationTokens = num(m["cache_creation_tokens"]);
           const cacheReadTokens = num(m["cache_read_tokens"]);
           const costUsd = num(m["cost_usd"]);
+          const durationMs = m["duration_ms"] !== undefined ? Math.round(num(m["duration_ms"])) : null;
+          const ttftMs = m["ttft_ms"] !== undefined ? Math.round(num(m["ttft_ms"])) : null;
 
           const turn = await prisma.turn.create({
             data: {
@@ -161,6 +163,8 @@ export async function POST(req: NextRequest) {
               cacheCreationTokens,
               cacheReadTokens,
               costUsd,
+              durationMs,
+              ttftMs,
               createdAt: ts,
             },
           });
@@ -218,7 +222,35 @@ export async function POST(req: NextRequest) {
           break;
         }
 
-        // assistant_response, tool_decision, hook_execution_* -- not needed for /live.
+        case "tool_decision": {
+          // Claude Code emits accept/reject when you approve or decline an edit.
+          const decision = (str(m["decision"]) ?? "").toLowerCase();
+          const accepted = decision.startsWith("accept");
+          const rejected = decision.startsWith("reject");
+          if (!accepted && !rejected) break;
+          const { session, created } = await ensureSession(sessionId, user.id, ts, model);
+          if (created) liveBus.publish({ kind: "session_start", userId: user.id, session });
+          await prisma.claudeSession.update({
+            where: { id: session.id },
+            data: {
+              lastEventAt: ts,
+              ...(accepted ? { editsAccepted: { increment: 1 } } : { editsRejected: { increment: 1 } }),
+            },
+          });
+          break;
+        }
+
+        case "api_error": {
+          const { session, created } = await ensureSession(sessionId, user.id, ts, model);
+          if (created) liveBus.publish({ kind: "session_start", userId: user.id, session });
+          await prisma.claudeSession.update({
+            where: { id: session.id },
+            data: { apiErrorCount: { increment: 1 }, lastEventAt: ts },
+          });
+          break;
+        }
+
+        // assistant_response, hook_execution_* -- not needed for /live.
         default:
           break;
       }

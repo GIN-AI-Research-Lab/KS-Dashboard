@@ -1,0 +1,25 @@
+# Local PostgreSQL for KS Dashboard (Giai đoạn 1).
+# Chạy:  docker compose -f deploy/postgres/docker-compose.yml up -d
+# Sau đó đặt trong .env:
+#   DATABASE_URL="postgresql://ksdash:change-me@localhost:5432/ksdash?schema=public"
+services:
+  postgres:
+    image: postgres:16
+    container_name: ks-dashboard-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ksdash
+      POSTGRES_PASSWORD: change-me # đổi mật khẩu này
+      POSTGRES_DB: ksdash
+    ports:
+      - "5432:5432"
+    volumes:
+      - ks_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ksdash -d ksdash"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  ks_pgdata:

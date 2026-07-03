@@ -26,6 +26,21 @@ function resolvePricing(model: string) {
   return match ? MODEL_PRICING[match] : DEFAULT_PRICING;
 }
 
+// USD saved on cache-read tokens vs. paying the full input price for them.
+// Cache reads bill at ~0.1x input, so the saving is ~0.9x the input price.
+export function cacheReadSavingsUsd(model: string, cacheReadTokens: number) {
+  const price = resolvePricing(model);
+  return (cacheReadTokens / 1_000_000) * price.input * 0.9;
+}
+
+// Coarse capability tier for a model id, for "spend by tier" analysis.
+export function modelTier(model: string): "Opus" | "Sonnet" | "Haiku" | "Khác" {
+  if (model.includes("opus") || model.includes("fable") || model.includes("mythos")) return "Opus";
+  if (model.includes("sonnet")) return "Sonnet";
+  if (model.includes("haiku")) return "Haiku";
+  return "Khác";
+}
+
 export function computeCostUsd(
   model: string,
   inputTokens: number,

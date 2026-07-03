@@ -1,0 +1,195 @@
+import { getInsightsStats, getToolSankey, getTeamModelPivot, getCodeStats, type RangeKey } from "@/lib/stats";
+import { Card } from "@/components/ui/Card";
+import { StatCard } from "@/components/ui/StatCard";
+import { RangeSelector } from "@/components/RangeSelector";
+import { RankBarChart } from "@/components/charts/RankBarChart";
+import { ToolSankey } from "@/components/charts/ToolSankey";
+import { formatNumber, formatDuration, formatPercent, formatDay, formatRelativeTime } from "@/lib/format";
+import { colorForModel } from "@/lib/chart-colors";
+
+function PercentileRow({ label, ms }: { label: string; ms: number }) {
+  return (
+    <div className="flex items-center justify-between text-sm">
+      <span className="text-[var(--text-muted)]">{label}</span>
+      <span className="font-semibold tabular-nums">{formatDuration(ms)}</span>
+    </div>
+  );
+}
+
+export default async function InsightsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ range?: string }>;
+}) {
+  const { range } = await searchParams;
+  const r = (range ?? "30d") as RangeKey;
+  const [s, sankey, pivot, code] = await Promise.all([
+    getInsightsStats(r),
+    getToolSankey(r),
+    getTeamModelPivot(r),
+    getCodeStats(r),
+  ]);
+
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-semibold">Phân tích sâu</h1>
+          <p className="text-sm text-[var(--text-muted)]">
+            Độ trễ, chất lượng phiên, tỷ trọng model theo thời gian và đỉnh đồng thời
+          </p>
+        </div>
+        <RangeSelector defaultRange={r} />
+      </div>
+
+      <div>
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+          Kỹ thuật &amp; chất lượng (dữ liệu mở rộng)
+        </h2>
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <StatCard label="Dòng code thêm" value={formatNumber(code.linesAdded)} accent="#008300" icon="＋" />
+          <StatCard label="Dòng code xoá" value={formatNumber(code.linesRemoved)} accent="#e34948" icon="－" />
+          <StatCard
+            label="Tỷ lệ chấp nhận sửa"
+            value={code.editsAccepted + code.editsRejected > 0 ? formatPercent(code.acceptanceRate) : "—"}
+            hint={`${code.editsAccepted}/${code.editsAccepted + code.editsRejected} chấp nhận`}
+            accent="#2a78d6"
+            icon="✓"
+          />
+          <StatCard label="API errors" value={formatNumber(code.apiErrors)} accent="#eb6834" icon="!" />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <Card title={`Độ trễ API (${formatNumber(code.apiLatency.count)} request)`}>
+          <div className="flex flex-col gap-2">
+            <PercentileRow label="p50 (trung vị)" ms={code.apiLatency.p50} />
+            <PercentileRow label="p90" ms={code.apiLatency.p90} />
+            <PercentileRow label="p99" ms={code.apiLatency.p99} />
+          </div>
+        </Card>
+        <Card title={`Time-to-first-token (${formatNumber(code.ttft.count)} request)`}>
+          <div className="flex flex-col gap-2">
+            <PercentileRow label="p50 (trung vị)" ms={code.ttft.p50} />
+            <PercentileRow label="p90" ms={code.ttft.p90} />
+            <PercentileRow label="p99" ms={code.ttft.p99} />
+          </div>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <Card title={`Độ trễ công cụ (${formatNumber(s.toolLatency.count)} lượt)`}>
+          <div className="flex flex-col gap-2">
+            <PercentileRow label="p50 (trung vị)" ms={s.toolLatency.p50} />
+            <PercentileRow label="p90" ms={s.toolLatency.p90} />
+            <PercentileRow label="p99" ms={s.toolLatency.p99} />
+          </div>
+        </Card>
+
+        <Card title={`Thời lượng phiên (${formatNumber(s.sessionDuration.count)} phiên)`}>
+          <div className="flex flex-col gap-2">
+            <PercentileRow label="p50 (trung vị)" ms={s.sessionDuration.p50} />
+            <PercentileRow label="p90" ms={s.sessionDuration.p90} />
+            <PercentileRow label="p99" ms={s.sessionDuration.p99} />
+          </div>
+        </Card>
+
+        <StatCard
+          label="Đỉnh phiên đồng thời"
+          value={formatNumber(s.peakConcurrency.peak)}
+          hint={s.peakConcurrency.peakAt ? `Lúc ${formatRelativeTime(s.peakConcurrency.peakAt)}` : undefined}
+          accent="#e34948"
+          icon="⇈"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+        <Card title="Nguồn khởi tạo phiên">
+          <RankBarChart data={s.bySource.map((x) => ({ label: x.source, value: x.count }))} valueFormat="number" />
+        </Card>
+        <Card title="Lý do kết thúc turn (stop reason)">
+          <RankBarChart data={s.byStopReason.map((x) => ({ label: x.stopReason, value: x.count }))} valueFormat="number" />
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+        <Card title="Phân bố thời lượng phiên">
+          <RankBarChart data={s.durationHistogram.map((h) => ({ label: h.label, value: h.count }))} valueFormat="number" />
+        </Card>
+
+        <Card title="Token theo nhóm × model (pivot)">
+          {pivot.rows.length === 0 ? (
+            <p className="text-sm text-[var(--text-muted)]">Chưa có dữ liệu</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b border-[var(--border)] text-[var(--text-muted)]">
+                    <th className="px-2 py-1 text-left font-medium">Nhóm</th>
+                    {pivot.models.map((m) => (
+                      <th key={m} className="px-2 py-1 text-right font-medium">{m}</th>
+                    ))}
+                    <th className="px-2 py-1 text-right font-medium">Tổng</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pivot.rows.map((row) => (
+                    <tr key={row.team} className="border-b border-[var(--border)] last:border-0">
+                      <td className="px-2 py-1">{row.team}</td>
+                      {row.cells.map((c, k) => (
+                        <td key={k} className="px-2 py-1 text-right tabular-nums text-[var(--text-secondary)]">
+                          {c > 0 ? formatNumber(c) : "—"}
+                        </td>
+                      ))}
+                      <td className="px-2 py-1 text-right font-medium tabular-nums">{formatNumber(row.total)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Card>
+      </div>
+
+      <Card title="Luồng chuyển tiếp công cụ (tool này → tool kế tiếp)">
+        <ToolSankey nodes={sankey.nodes} links={sankey.links} />
+      </Card>
+
+      <Card title="Tỷ trọng model theo tuần (theo token)">
+        {s.modelMix.length === 0 ? (
+          <p className="text-sm text-[var(--text-muted)]">Chưa có dữ liệu</p>
+        ) : (
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-wrap gap-3">
+              {s.topModels.map((m) => (
+                <span key={m} className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)]">
+                  <span className="h-2.5 w-2.5 rounded-full" style={{ background: colorForModel(m) }} />
+                  {m}
+                </span>
+              ))}
+            </div>
+            <div className="flex flex-col gap-2.5">
+              {s.modelMix.map((w) => (
+                <div key={w.week}>
+                  <div className="mb-1 flex justify-between text-xs">
+                    <span className="font-medium">{formatDay(w.week)}</span>
+                    <span className="text-[var(--text-muted)]">{formatNumber(w.total)} token</span>
+                  </div>
+                  <div className="flex h-4 w-full overflow-hidden rounded-md bg-black/5 dark:bg-white/10">
+                    {w.segments.map((seg) => (
+                      <div
+                        key={seg.model}
+                        title={`${seg.model}: ${formatPercent(seg.pct)}`}
+                        style={{ width: `${seg.pct * 100}%`, background: colorForModel(seg.model) }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </Card>
+    </div>
+  );
+}

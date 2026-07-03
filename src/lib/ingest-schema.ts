@@ -13,7 +13,8 @@ const base = {
 export const sessionStartSchema = z.object({
   type: z.literal("session_start"),
   ...base,
-  cwd: z.string().optional(),
+  // Only the project label (last folder name) is accepted -- never the full cwd
+  // path. See PRIVACY.md.
   projectLabel: z.string().optional(),
   source: z.string().optional(),
   model: z.string().optional(),
@@ -29,7 +30,8 @@ export const toolStartSchema = z.object({
   ...base,
   callId: z.string(),
   toolName: z.string(),
-  summary: z.string().optional(),
+  // No `summary`/content field on purpose -- we never accept tool input/output
+  // text (commands, file paths, diffs). Privacy by design; see PRIVACY.md.
 });
 
 export const toolEndSchema = z.object({

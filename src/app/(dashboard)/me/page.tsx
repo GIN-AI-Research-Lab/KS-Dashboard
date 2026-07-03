@@ -1,12 +1,13 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
-import { getUserStats, type RangeKey } from "@/lib/stats";
+import { getUserStats, getUserGamification, getTeamAverages, getUserCodeStats, type RangeKey } from "@/lib/stats";
 import { Card } from "@/components/ui/Card";
 import { StatCard } from "@/components/ui/StatCard";
 import { RangeSelector } from "@/components/RangeSelector";
 import { TrendChart } from "@/components/charts/TrendChart";
 import { Tag } from "@/components/ui/Badge";
-import { formatNumber, formatUsd } from "@/lib/format";
+import { BadgeGrid } from "@/components/BadgeGrid";
+import { formatNumber, formatUsd, formatPercent } from "@/lib/format";
 import { ROLE_LABELS } from "@/lib/access";
 import { colorForIndex } from "@/lib/chart-colors";
 
@@ -21,7 +22,29 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
   });
   if (!user) return null;
 
-  const stats = await getUserStats(user.id, r);
+  const [stats, gami, teamCmp, code] = await Promise.all([
+    getUserStats(user.id, r),
+    getUserGamification(user.id),
+    user.teamId ? getTeamAverages(user.teamId, r) : Promise.resolve(null),
+    getUserCodeStats(user.id, r),
+  ]);
+  const streak = gami.streak;
+
+  const recapDeltaTokens =
+    gami.recap.lastWeek.tokens > 0
+      ? ((gami.recap.thisWeek.tokens - gami.recap.lastWeek.tokens) / gami.recap.lastWeek.tokens) * 100
+      : null;
+
+  const activeDays = stats.daily.length;
+  const tokensPerTurn = stats.totals.turnCount > 0 ? stats.totals.totalTokens / stats.totals.turnCount : 0;
+
+  const comparisons = teamCmp
+    ? ([
+        { label: "Tổng token", you: stats.totals.totalTokens, avg: teamCmp.avg.totalTokens, fmt: formatNumber },
+        { label: "Chi phí", you: stats.totals.costUsd, avg: teamCmp.avg.costUsd, fmt: formatUsd },
+        { label: "Turns", you: stats.totals.turnCount, avg: teamCmp.avg.turnCount, fmt: formatNumber },
+      ] as const)
+    : [];
 
   return (
     <div className="flex flex-col gap-6">
@@ -44,6 +67,43 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
         <StatCard label="Chi phí" value={formatUsd(stats.totals.costUsd)} accent="#e34948" icon="$" />
       </div>
 
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+        <StatCard
+          label="Chuỗi ngày hoạt động"
+          value={`${streak} ngày`}
+          hint="Số ngày làm việc liên tục"
+          accent="#eda100"
+          icon="🔥"
+        />
+        <StatCard
+          label="Số ngày hoạt động"
+          value={formatNumber(activeDays)}
+          hint="Trong khoảng đang chọn"
+          accent="#4a3aa7"
+          icon="◔"
+        />
+        <StatCard
+          label="Token / turn"
+          value={formatNumber(tokensPerTurn)}
+          hint="Trung bình mỗi lượt"
+          accent="#008300"
+          icon="÷"
+        />
+        <StatCard label="Số turns" value={formatNumber(stats.totals.turnCount)} accent="#2a78d6" icon="⟳" />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+        <StatCard label="Dòng code thêm" value={formatNumber(code.linesAdded)} accent="#008300" icon="＋" />
+        <StatCard label="Dòng code xoá" value={formatNumber(code.linesRemoved)} accent="#e34948" icon="－" />
+        <StatCard
+          label="Tỷ lệ chấp nhận sửa"
+          value={code.editsAccepted + code.editsRejected > 0 ? formatPercent(code.acceptanceRate) : "—"}
+          hint={`${code.editsAccepted}/${code.editsAccepted + code.editsRejected} gợi ý`}
+          accent="#2a78d6"
+          icon="✓"
+        />
+      </div>
+
       <Card title="Token theo ngày">
         <TrendChart
           data={stats.daily}
@@ -53,6 +113,65 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
           ]}
         />
       </Card>
+
+      {teamCmp && (
+        <Card title={`So với trung bình nhóm (${teamCmp.memberCount} người)`}>
+          <div className="flex flex-col gap-4">
+            {comparisons.map((m) => {
+              const max = Math.max(m.you, m.avg, 1);
+              return (
+                <div key={m.label}>
+                  <div className="mb-1.5 text-sm font-medium">{m.label}</div>
+                  <div className="flex items-center gap-2 text-xs">
+                    <span className="w-16 shrink-0 text-[var(--text-muted)]">Bạn</span>
+                    <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-black/5 dark:bg-white/10">
+                      <div className="h-full rounded-full" style={{ width: `${(m.you / max) * 100}%`, background: "#2a78d6" }} />
+                    </div>
+                    <span className="w-24 shrink-0 text-right tabular-nums">{m.fmt(m.you)}</span>
+                  </div>
+                  <div className="mt-1 flex items-center gap-2 text-xs">
+                    <span className="w-16 shrink-0 text-[var(--text-muted)]">TB nhóm</span>
+                    <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-black/5 dark:bg-white/10">
+                      <div className="h-full rounded-full" style={{ width: `${(m.avg / max) * 100}%`, background: "#898781" }} />
+                    </div>
+                    <span className="w-24 shrink-0 text-right tabular-nums">{m.fmt(m.avg)}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+      )}
+
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+        <Card title="Huy hiệu">
+          <BadgeGrid badges={gami.badges} earnedCount={gami.earnedCount} totalCount={gami.totalCount} />
+        </Card>
+
+        <Card title="Tuần này vs tuần trước">
+          <div className="grid grid-cols-3 gap-3 text-center">
+            <div>
+              <div className="text-xs text-[var(--text-muted)]">Token</div>
+              <div className="text-lg font-semibold tabular-nums">{formatNumber(gami.recap.thisWeek.tokens)}</div>
+              {recapDeltaTokens != null && (
+                <div className={`text-xs ${recapDeltaTokens >= 0 ? "text-[#0ca30c]" : "text-[#e34948]"}`}>
+                  {recapDeltaTokens >= 0 ? "▲" : "▼"} {Math.abs(recapDeltaTokens).toFixed(0)}%
+                </div>
+              )}
+            </div>
+            <div>
+              <div className="text-xs text-[var(--text-muted)]">Turns</div>
+              <div className="text-lg font-semibold tabular-nums">{gami.recap.thisWeek.turns}</div>
+              <div className="text-xs text-[var(--text-muted)]">trước: {gami.recap.lastWeek.turns}</div>
+            </div>
+            <div>
+              <div className="text-xs text-[var(--text-muted)]">Ngày hoạt động</div>
+              <div className="text-lg font-semibold tabular-nums">{gami.recap.thisWeek.days}</div>
+              <div className="text-xs text-[var(--text-muted)]">trước: {gami.recap.lastWeek.days}</div>
+            </div>
+          </div>
+        </Card>
+      </div>
 
       <Card title="Công cụ dùng nhiều nhất">
         {stats.topTools.length === 0 ? (

@@ -29,7 +29,6 @@ export default async function LivePage() {
     toolCalls: s.toolCalls.map((tc) => ({
       id: tc.id,
       toolName: tc.toolName,
-      summary: tc.summary,
       status: tc.status,
       startedAt: tc.startedAt.toISOString(),
       endedAt: tc.endedAt ? tc.endedAt.toISOString() : null,

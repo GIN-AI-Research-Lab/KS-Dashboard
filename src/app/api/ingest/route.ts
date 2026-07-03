@@ -52,8 +52,7 @@ async function handleEvent(userId: string, event: IngestEvent) {
         create: {
           externalId: event.sessionId,
           userId,
-          cwd: event.cwd,
-          projectLabel: event.projectLabel ?? event.cwd?.split(/[\\/]/).pop(),
+          projectLabel: event.projectLabel,
           source: event.source,
           model: event.model,
           startedAt: ts,
@@ -86,7 +85,6 @@ async function handleEvent(userId: string, event: IngestEvent) {
           sessionId: session.id,
           userId,
           toolName: event.toolName,
-          summary: event.summary,
           status: "STARTED",
           startedAt: ts,
         },

@@ -9,6 +9,7 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
+  ReferenceLine,
 } from "recharts";
 import { CHART_INK } from "@/lib/chart-colors";
 import { formatDay, formatNumber, formatUsd } from "@/lib/format";
@@ -17,6 +18,11 @@ export interface TrendSeries {
   key: string;
   label: string;
   color: string;
+}
+
+export interface TrendAnnotation {
+  date: string;
+  label: string;
 }
 
 // Server Components can't pass function props into a "use client" component
@@ -29,11 +35,13 @@ export function TrendChart({
   series,
   valueFormat = "number",
   height = 260,
+  annotations,
 }: {
   data: Record<string, number | string>[];
   series: TrendSeries[];
   valueFormat?: keyof typeof FORMATTERS;
   height?: number;
+  annotations?: TrendAnnotation[];
 }) {
   const valueFormatter = FORMATTERS[valueFormat];
   if (data.length === 0) {
@@ -84,6 +92,15 @@ export function TrendChart({
           }}
         />
         {series.length > 1 && <Legend wrapperStyle={{ fontSize: 12 }} iconType="circle" iconSize={8} />}
+        {annotations?.map((a) => (
+          <ReferenceLine
+            key={a.date}
+            x={a.date}
+            stroke={CHART_INK.muted}
+            strokeDasharray="4 3"
+            label={{ value: a.label, fontSize: 10, fill: CHART_INK.secondary, position: "top" }}
+          />
+        ))}
         {series.map((s) => (
           <Area
             key={s.key}

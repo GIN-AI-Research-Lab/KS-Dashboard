@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -24,6 +24,22 @@ enum ToolCallStatus {
   STARTED
   SUCCESS
   ERROR
+}
+
+enum SessionOutcome {
+  SOLVED
+  IN_PROGRESS
+  ABANDONED
+}
+
+enum LibraryItemKind {
+  PROMPT
+  SKILL
+}
+
+enum Visibility {
+  PUBLIC
+  PRIVATE
 }
 
 model Department {
@@ -68,9 +84,17 @@ model User {
   amisEmployeeCode String?   @unique // upsert key for AMIS sync, when available
   lastAmisSyncAt   DateTime?
 
-  sessions  ClaudeSession[]
-  turns     Turn[]
-  toolCalls ToolCall[]
+  note String? // free-text admin note about this employee (on leave, new hire, ...)
+
+  sessions         ClaudeSession[]
+  turns            Turn[]
+  toolCalls        ToolCall[]
+  sessionComments  SessionComment[]
+  sessionFeedback  SessionFeedback[]
+  libraryItems     LibraryItem[]
+  libraryComments  LibraryComment[]
+  libraryReactions LibraryReaction[]
+  libraryBookmarks LibraryBookmark[]
 }
 
 model ClaudeSession {
@@ -78,7 +102,8 @@ model ClaudeSession {
   externalId   String        @unique // Claude Code session_id
   userId       String
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  cwd          String?
+  // Only the project label (last folder name) is stored -- never the full cwd
+  // path. See PRIVACY.md.
   projectLabel String?
   source       String? // startup | resume | clear | compact
   model        String?
@@ -96,10 +121,28 @@ model ClaudeSession {
   toolCallCount      Int @default(0)
   promptCount        Int @default(0)
 
+  // Group A telemetry: edit accept/reject, API errors (from OTel logs), and
+  // lines of code changed (from OTel metrics). See /api/otel/logs & /api/otel/metrics.
+  editsAccepted Int @default(0)
+  editsRejected Int @default(0)
+  apiErrorCount Int @default(0)
+  linesAdded    Int @default(0)
+  linesRemoved  Int @default(0)
+
+  // Human annotation: mark whether a session solved its problem, add a note and
+  // tags, and feature notable sessions in the knowledge library.
+  outcome     SessionOutcome?
+  note        String?
+  tags        String? // comma-separated
+  featured    Boolean         @default(false)
+  annotatedAt DateTime?
+
   transcriptOffset Int @default(0) // bytes already parsed from transcript, used by plugin
 
   turns     Turn[]
   toolCalls ToolCall[]
+  comments  SessionComment[]
+  feedback  SessionFeedback[]
 
   @@index([userId])
   @@index([status])
@@ -120,6 +163,8 @@ model Turn {
   cacheCreationTokens Int @default(0)
   cacheReadTokens     Int @default(0)
   costUsd             Float @default(0)
+  durationMs Int? // total api_request duration (OTel)
+  ttftMs     Int? // time-to-first-token (OTel)
   stopReason String?
   createdAt  DateTime      @default(now())
 
@@ -127,6 +172,7 @@ model Turn {
   @@index([userId])
   @@index([createdAt])
   @@index([model])
+  @@index([userId, createdAt])
 }
 
 model ToolCall {
@@ -136,7 +182,8 @@ model ToolCall {
   userId     String
   user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   toolName   String
-  summary    String? // short human-readable description, e.g. truncated command
+  // NOTE: we deliberately store NO tool input/output content (no command text,
+  // file paths, diffs, prompts) -- only the tool name + status + timing. See PRIVACY.md.
   status     ToolCallStatus @default(STARTED)
   startedAt  DateTime       @default(now())
   endedAt    DateTime?
@@ -146,6 +193,7 @@ model ToolCall {
   @@index([userId])
   @@index([toolName])
   @@index([startedAt])
+  @@index([sessionId, startedAt])
 }
 
 // Populated by the OTel receiver (/api/otel/logs) from Claude Code's own
@@ -157,4 +205,94 @@ model SessionIdentity {
   sessionId String   @id
   email     String
   updatedAt DateTime @updatedAt
+}
+
+// Team discussion on a session. @mentions are parsed from `body` at render time.
+model SessionComment {
+  id        String        @id @default(cuid())
+  sessionId String
+  session   ClaudeSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  body      String
+  createdAt DateTime      @default(now())
+
+  @@index([sessionId])
+}
+
+// 👍 / 👎 on a session, one vote per user (value = 1 or -1).
+model SessionFeedback {
+  id        String        @id @default(cuid())
+  sessionId String
+  session   ClaudeSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  value     Int // 1 = up, -1 = down
+  createdAt DateTime      @default(now())
+
+  @@unique([sessionId, userId])
+  @@index([sessionId])
+}
+
+// Shared knowledge library: prompts and skills people post for others. Content
+// is added on purpose by users -- the app never auto-captures anything (privacy).
+// Each item is PUBLIC (shown in the shared feed) or PRIVATE (only the author).
+model LibraryItem {
+  id         String          @id @default(cuid())
+  kind       LibraryItemKind
+  title      String
+  body       String
+  tags       String? // comma-separated
+  visibility Visibility      @default(PUBLIC)
+  authorId   String
+  author     User            @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+
+  comments  LibraryComment[]
+  reactions LibraryReaction[]
+  bookmarks LibraryBookmark[]
+
+  @@index([authorId])
+  @@index([visibility])
+  @@index([kind])
+}
+
+model LibraryComment {
+  id        String      @id @default(cuid())
+  itemId    String
+  item      LibraryItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  body      String
+  createdAt DateTime    @default(now())
+
+  @@index([itemId])
+}
+
+// Emoji reaction; a user may add several distinct emojis but not the same twice.
+model LibraryReaction {
+  id        String      @id @default(cuid())
+  itemId    String
+  item      LibraryItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emoji     String
+  createdAt DateTime    @default(now())
+
+  @@unique([itemId, userId, emoji])
+  @@index([itemId])
+}
+
+// Star / bookmark: save an item to your account, one per user per item.
+model LibraryBookmark {
+  id        String      @id @default(cuid())
+  itemId    String
+  item      LibraryItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime    @default(now())
+
+  @@unique([itemId, userId])
+  @@index([itemId])
 }

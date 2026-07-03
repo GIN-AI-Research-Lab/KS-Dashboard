@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Badge, Tag } from "@/components/ui/Badge";
 import { formatNumber, formatRelativeTime, formatUsd } from "@/lib/format";
 import { colorForIndex } from "@/lib/chart-colors";
@@ -13,7 +13,6 @@ type RawLiveEvent = {
   session: {
     id: string;
     externalId: string;
-    cwd: string | null;
     projectLabel: string | null;
     model: string | null;
     status: LiveSessionCard["status"];
@@ -94,8 +93,6 @@ export function LiveFeed({ initialSessions }: { initialSessions: LiveSessionCard
   const [sessions, setSessions] = useState(initialSessions);
   const [connected, setConnected] = useState(false);
   const [, setTick] = useState(0);
-  const sessionsRef = useRef(sessions);
-  sessionsRef.current = sessions;
 
   useEffect(() => {
     const es = new EventSource("/api/live");

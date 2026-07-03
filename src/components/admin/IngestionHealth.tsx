@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/Card";
 import { StatCard } from "@/components/ui/StatCard";
 import { Badge } from "@/components/ui/Badge";
+import { ExportLink } from "@/components/ExportLink";
 import { formatNumber, formatRelativeTime } from "@/lib/format";
 
 type Summary = {
@@ -39,7 +40,7 @@ export function IngestionHealth({ summary, rows }: { summary: Summary; rows: Row
         />
       </div>
 
-      <Card title="Tình trạng theo nhân viên">
+      <Card title="Tình trạng theo nhân viên" action={<ExportLink href="/api/export/health" />}>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[560px] text-sm">
             <thead>
