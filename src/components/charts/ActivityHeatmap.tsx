@@ -1,9 +1,8 @@
 // Server-rendered heatmap: rows = weekday (Mon..Sun), columns = hour (0..23).
-// Intensity is encoded with opacity over the brand blue, which reads correctly
-// in both light and dark themes without a per-theme palette.
+// Intensity is a single-hue sequential encoding over the accent color, mixed
+// toward transparent by count; the accent var adapts to light/dark themes.
 
 const WEEKDAYS = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
-const BLUE = "42, 120, 214"; // #2a78d6 as rgb channels
 
 export function ActivityHeatmap({ grid, max }: { grid: number[][]; max: number }) {
   if (max === 0) {
@@ -32,12 +31,17 @@ export function ActivityHeatmap({ grid, max }: { grid: number[][]; max: number }
               {WEEKDAYS[day]}
             </div>
             {row.map((count, hour) => {
-              const alpha = count === 0 ? 0 : 0.12 + 0.88 * (count / max);
+              const pct = count === 0 ? 0 : 12 + 88 * (count / max);
               return (
                 <div key={hour} className="flex-1 px-[1px] py-[1px]">
                   <div
-                    className="h-4 w-full rounded-[3px] border border-[var(--border)]"
-                    style={{ background: count === 0 ? "transparent" : `rgba(${BLUE}, ${alpha})` }}
+                    className="h-4 w-full rounded-[3px] border border-[var(--border)] transition-colors"
+                    style={{
+                      background:
+                        count === 0
+                          ? "transparent"
+                          : `color-mix(in srgb, var(--accent) ${pct}%, transparent)`,
+                    }}
                     title={`${WEEKDAYS[day]} ${String(hour).padStart(2, "0")}:00 — ${count} turns`}
                   />
                 </div>

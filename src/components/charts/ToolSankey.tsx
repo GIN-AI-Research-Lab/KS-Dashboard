@@ -17,7 +17,7 @@ function SankeyNode({ x = 0, y = 0, width = 0, height = 0, payload }: NodeProps)
   const clean = name.replace(/→/g, "").trim();
   return (
     <g>
-      <Rectangle x={x} y={y} width={width} height={height} fill="#2a78d6" fillOpacity={0.85} />
+      <Rectangle x={x} y={y} width={width} height={height} fill="var(--accent)" fillOpacity={0.85} />
       <text
         x={isTarget ? x + width + 6 : x - 6}
         y={y + height / 2}
@@ -55,15 +55,17 @@ export function ToolSankey({
         nodePadding={16}
         nodeWidth={10}
         linkCurvature={0.5}
-        link={{ stroke: "#2a78d6", strokeOpacity: 0.12 }}
+        link={{ stroke: "var(--accent)", strokeOpacity: 0.12 }}
         margin={{ left: 70, right: 70, top: 8, bottom: 8 }}
       >
         <Tooltip
           contentStyle={{
             background: CHART_INK.surface,
             border: `1px solid ${CHART_INK.gridline}`,
-            borderRadius: 8,
+            borderRadius: 12,
             fontSize: 12,
+            color: CHART_INK.primary,
+            boxShadow: "var(--shadow-md)",
           }}
         />
       </Sankey>

@@ -2,6 +2,7 @@
 
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Cell } from "recharts";
 import { CHART_INK, colorForIndex } from "@/lib/chart-colors";
+import { ChartTooltip } from "@/components/charts/ChartTooltip";
 import { formatNumber, formatUsd, formatDuration } from "@/lib/format";
 
 // Server Components can't pass function props into a "use client" component,
@@ -41,13 +42,10 @@ export function RankBarChart({
           tickLine={false}
         />
         <Tooltip
-          formatter={(value) => [valueFormatter(Number(value)), ""]}
-          contentStyle={{
-            background: CHART_INK.surface,
-            border: `1px solid ${CHART_INK.gridline}`,
-            borderRadius: 8,
-            fontSize: 12,
-          }}
+          cursor={{ fill: "var(--accent-weak)" }}
+          content={
+            <ChartTooltip hideName valueFormatter={(n) => valueFormatter(n)} labelFormatter={(l) => String(l)} />
+          }
         />
         <Bar
           dataKey="value"

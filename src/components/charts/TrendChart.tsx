@@ -11,7 +11,8 @@ import {
   Legend,
   ReferenceLine,
 } from "recharts";
-import { CHART_INK } from "@/lib/chart-colors";
+import { CHART_INK, themedSeries } from "@/lib/chart-colors";
+import { ChartTooltip } from "@/components/charts/ChartTooltip";
 import { formatDay, formatNumber, formatUsd } from "@/lib/format";
 
 export interface TrendSeries {
@@ -61,8 +62,8 @@ export function TrendChart({
         <defs>
           {series.map((s) => (
             <linearGradient key={s.key} id={`grad-${s.key}`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor={s.color} stopOpacity={0.28} />
-              <stop offset="95%" stopColor={s.color} stopOpacity={0.02} />
+              <stop offset="5%" stopColor={themedSeries(s.color)} stopOpacity={0.26} />
+              <stop offset="95%" stopColor={themedSeries(s.color)} stopOpacity={0.02} />
             </linearGradient>
           ))}
         </defs>
@@ -82,16 +83,25 @@ export function TrendChart({
           width={48}
         />
         <Tooltip
-          formatter={(value, name) => [valueFormatter(Number(value)), String(name)]}
-          labelFormatter={(v) => formatDay(String(v))}
-          contentStyle={{
-            background: CHART_INK.surface,
-            border: `1px solid ${CHART_INK.gridline}`,
-            borderRadius: 8,
-            fontSize: 12,
-          }}
+          cursor={{ stroke: CHART_INK.baseline, strokeWidth: 1, strokeDasharray: "3 3" }}
+          content={
+            <ChartTooltip
+              labelFormatter={(v) => formatDay(String(v))}
+              valueFormatter={(n) => valueFormatter(n)}
+              hideName={series.length === 1}
+            />
+          }
         />
-        {series.length > 1 && <Legend wrapperStyle={{ fontSize: 12 }} iconType="circle" iconSize={8} />}
+        {series.length > 1 && (
+          <Legend
+            iconType="circle"
+            iconSize={8}
+            wrapperStyle={{ fontSize: 12 }}
+            formatter={(value) => (
+              <span style={{ color: CHART_INK.secondary }}>{value}</span>
+            )}
+          />
+        )}
         {annotations?.map((a) => (
           <ReferenceLine
             key={a.date}
@@ -107,10 +117,10 @@ export function TrendChart({
             type="monotone"
             dataKey={s.key}
             name={s.label}
-            stroke={s.color}
+            stroke={themedSeries(s.color)}
             strokeWidth={2}
             fill={`url(#grad-${s.key})`}
-            activeDot={{ r: 4 }}
+            activeDot={{ r: 4, strokeWidth: 2, stroke: CHART_INK.surface }}
           />
         ))}
       </AreaChart>

@@ -1,8 +1,24 @@
 "use client";
 
-import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend, Label } from "recharts";
 import { colorForModel, CHART_INK } from "@/lib/chart-colors";
+import { ChartTooltip } from "@/components/charts/ChartTooltip";
 import { formatNumber } from "@/lib/format";
+
+function DonutCenter({ viewBox, total }: { viewBox?: { cx?: number; cy?: number }; total: number }) {
+  const cx = viewBox?.cx ?? 0;
+  const cy = viewBox?.cy ?? 0;
+  return (
+    <text x={cx} y={cy} textAnchor="middle" dominantBaseline="central">
+      <tspan x={cx} dy="-0.4em" fontSize="20" fontWeight="600" fill="var(--text-primary)">
+        {formatNumber(total)}
+      </tspan>
+      <tspan x={cx} dy="1.7em" fontSize="11" fill="var(--text-muted)">
+        tokens
+      </tspan>
+    </text>
+  );
+}
 
 export function ModelDonut({
   data,
@@ -19,6 +35,8 @@ export function ModelDonut({
     );
   }
 
+  const total = data.reduce((sum, d) => sum + d.totalTokens, 0);
+
   return (
     <ResponsiveContainer width="100%" height={height}>
       <PieChart>
@@ -26,7 +44,7 @@ export function ModelDonut({
           data={data}
           dataKey="totalTokens"
           nameKey="model"
-          innerRadius="55%"
+          innerRadius="58%"
           outerRadius="85%"
           paddingAngle={2}
           strokeWidth={2}
@@ -35,16 +53,9 @@ export function ModelDonut({
           {data.map((d) => (
             <Cell key={d.model} fill={colorForModel(d.model)} />
           ))}
+          <Label content={<DonutCenter total={total} />} />
         </Pie>
-        <Tooltip
-          formatter={(value, name) => [formatNumber(Number(value)) + " tokens", String(name)]}
-          contentStyle={{
-            background: CHART_INK.surface,
-            border: `1px solid ${CHART_INK.gridline}`,
-            borderRadius: 8,
-            fontSize: 12,
-          }}
-        />
+        <Tooltip content={<ChartTooltip valueFormatter={(n) => formatNumber(n) + " tokens"} />} />
         <Legend
           layout="vertical"
           verticalAlign="middle"
@@ -52,6 +63,7 @@ export function ModelDonut({
           iconType="circle"
           iconSize={8}
           wrapperStyle={{ fontSize: 12, lineHeight: "20px" }}
+          formatter={(value) => <span style={{ color: CHART_INK.secondary }}>{value}</span>}
         />
       </PieChart>
     </ResponsiveContainer>
