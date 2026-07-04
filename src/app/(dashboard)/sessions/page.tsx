@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { getSessionLibrary } from "@/lib/stats";
+import { Library } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge, Tag } from "@/components/ui/Badge";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { SessionFilters } from "@/components/SessionFilters";
 import { OUTCOME_LABEL, OUTCOME_VARIANT, parseTags } from "@/lib/session-outcome";
 import { formatUsd, formatRelativeTime } from "@/lib/format";
@@ -44,7 +46,11 @@ export default async function SessionsPage({
 
       <Card title={`${rows.length} phiên`}>
         {rows.length === 0 ? (
-          <p className="text-sm text-[var(--text-muted)]">Không có phiên nào khớp bộ lọc</p>
+          <EmptyState
+            icon={<Library className="h-6 w-6" />}
+            title="Không có phiên nào khớp bộ lọc"
+            hint="Thử bỏ bớt bộ lọc hoặc thay đổi từ khoá tìm kiếm"
+          />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[720px] text-sm">

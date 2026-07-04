@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { MessageCircle, Zap, Star } from "lucide-react";
+import { MessageCircle, Zap, Star, FileText } from "lucide-react";
 import { auth } from "@/auth";
 import { getMyLibrary } from "@/lib/stats";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { ItemManageBar } from "@/components/library/ItemManageBar";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { KIND_LABEL, KIND_VARIANT } from "@/lib/library";
 import { formatRelativeTime } from "@/lib/format";
 
@@ -30,7 +31,11 @@ export default async function MyLibraryPage() {
 
       <Card title={`Bài của tôi (${mine.length})`}>
         {mine.length === 0 ? (
-          <p className="text-sm text-[var(--text-muted)]">Bạn chưa đăng bài nào.</p>
+          <EmptyState
+            icon={<FileText className="h-6 w-6" />}
+            title="Bạn chưa đăng bài nào"
+            hint="Prompt và skill bạn đăng sẽ xuất hiện ở đây"
+          />
         ) : (
           <div className="flex flex-col divide-y divide-[var(--border)]">
             {mine.map((it) => (
@@ -55,7 +60,11 @@ export default async function MyLibraryPage() {
 
       <Card title={`Đã lưu (${saved.length})`}>
         {saved.length === 0 ? (
-          <p className="text-sm text-[var(--text-muted)]">Chưa lưu bài nào. Bấm ★ trên một bài để lưu.</p>
+          <EmptyState
+            icon={<Star className="h-6 w-6" />}
+            title="Chưa có bài đã lưu"
+            hint="Bấm ★ trên một bài trong thư viện để lưu về đây"
+          />
         ) : (
           <div className="flex flex-col divide-y divide-[var(--border)]">
             {saved.map((it) => (

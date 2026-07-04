@@ -9,6 +9,7 @@ import { ModelDonut } from "@/components/charts/ModelDonut";
 import { RankBarChart } from "@/components/charts/RankBarChart";
 import { ActivityHeatmap } from "@/components/charts/ActivityHeatmap";
 import { Badge } from "@/components/ui/Badge";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { KIND_LABEL, KIND_VARIANT } from "@/lib/library";
 import { formatNumber, formatUsd, formatPercent, formatRelativeTime } from "@/lib/format";
 import {
@@ -25,6 +26,7 @@ import {
   Minus,
   Check,
   MessageSquare,
+  Inbox,
 } from "lucide-react";
 
 export default async function OverviewPage({
@@ -151,7 +153,12 @@ export default async function OverviewPage({
           {libSections.map((sec) => (
             <Card key={sec.title} title={sec.title}>
               {sec.items.length === 0 ? (
-                <p className="text-sm text-[var(--text-muted)]">Chưa có bài</p>
+                <EmptyState
+                  icon={<Inbox className="h-5 w-5" />}
+                  title="Chưa có bài"
+                  hint="Nội dung sẽ hiện ở đây"
+                  className="!px-2 !py-6"
+                />
               ) : (
                 <ol className="flex flex-col gap-2.5">
                   {sec.items.map((it, i) => (

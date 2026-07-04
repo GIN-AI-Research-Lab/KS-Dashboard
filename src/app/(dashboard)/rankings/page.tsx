@@ -4,15 +4,14 @@ import { RangeSelector } from "@/components/RangeSelector";
 import { MetricTabs } from "@/components/MetricTabs";
 import { LeaderboardTable } from "@/components/LeaderboardTable";
 import { ExportLink } from "@/components/ExportLink";
-import { formatNumber, formatUsd, formatDuration } from "@/lib/format";
 
-const METRICS: { key: RankingMetric; label: string; unit: string; formatter: (n: number) => string }[] = [
-  { key: "totalTokens", label: "Tổng token", unit: "token", formatter: formatNumber },
-  { key: "inputTokens", label: "Top Input", unit: "token", formatter: formatNumber },
-  { key: "outputTokens", label: "Top Output", unit: "token", formatter: formatNumber },
-  { key: "costUsd", label: "Tốn chi phí nhất", unit: "USD", formatter: formatUsd },
-  { key: "sessionDuration", label: "Phiên lâu nhất", unit: "thời gian", formatter: formatDuration },
-  { key: "turnCount", label: "Nhiều lượt nhất", unit: "turns", formatter: formatNumber },
+const METRICS: { key: RankingMetric; label: string; unit: string; format: "number" | "usd" | "duration" }[] = [
+  { key: "totalTokens", label: "Tổng token", unit: "token", format: "number" },
+  { key: "inputTokens", label: "Top Input", unit: "token", format: "number" },
+  { key: "outputTokens", label: "Top Output", unit: "token", format: "number" },
+  { key: "costUsd", label: "Tốn chi phí nhất", unit: "USD", format: "usd" },
+  { key: "sessionDuration", label: "Phiên lâu nhất", unit: "thời gian", format: "duration" },
+  { key: "turnCount", label: "Nhiều lượt nhất", unit: "turns", format: "number" },
 ];
 
 export default async function RankingsPage({
@@ -49,7 +48,7 @@ export default async function RankingsPage({
         title={activeMetric.label}
         action={<ExportLink href={`/api/export/rankings?metric=${activeMetric.key}&range=${r}`} />}
       >
-        <LeaderboardTable rows={rows} valueLabel={activeMetric.unit} valueFormatter={activeMetric.formatter} />
+        <LeaderboardTable rows={rows} valueLabel={activeMetric.unit} valueFormat={activeMetric.format} />
       </Card>
     </div>
   );

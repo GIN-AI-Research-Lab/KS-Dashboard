@@ -1,11 +1,12 @@
 import Link from "next/link";
-import { MessageCircle, Zap } from "lucide-react";
+import { MessageCircle, Zap, Lightbulb } from "lucide-react";
 import { auth } from "@/auth";
 import { getLibraryFeed } from "@/lib/stats";
 import { Badge, Tag } from "@/components/ui/Badge";
 import { LibraryComposer } from "@/components/library/LibraryComposer";
 import { LibraryFilters } from "@/components/library/LibraryFilters";
 import { LibraryStar } from "@/components/library/LibraryStar";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { KIND_LABEL, KIND_VARIANT, parseTags } from "@/lib/library";
 import { markdownExcerpt, firstImage } from "@/lib/markdown";
 import { formatRelativeTime } from "@/lib/format";
@@ -47,7 +48,11 @@ export default async function LibraryPage({
       <LibraryFilters />
 
       {items.length === 0 ? (
-        <p className="text-sm text-[var(--text-muted)]">Chưa có bài nào. Hãy đăng bài đầu tiên!</p>
+        <EmptyState
+          icon={<Lightbulb className="h-6 w-6" />}
+          title="Chưa có bài nào"
+          hint="Hãy đăng prompt hoặc skill đầu tiên để chia sẻ với mọi người"
+        />
       ) : (
         <div className="flex flex-col gap-4">
           {items.map((it) => {

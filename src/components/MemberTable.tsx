@@ -1,30 +1,82 @@
+"use client";
+
 import Link from "next/link";
+import { useMemo, useState } from "react";
+import { ArrowDown, ArrowUp } from "lucide-react";
 import { formatNumber, formatUsd } from "@/lib/format";
 
-export function MemberTable({
-  members,
-}: {
-  members: { userId: string; userName: string; inputTokens: number; outputTokens: number; costUsd: number; turnCount: number }[];
-}) {
+type Member = {
+  userId: string;
+  userName: string;
+  inputTokens: number;
+  outputTokens: number;
+  costUsd: number;
+  turnCount: number;
+};
+type SortKey = "userName" | "inputTokens" | "outputTokens" | "turnCount" | "costUsd";
+
+function SortIndicator({ active, dir }: { active: boolean; dir: "asc" | "desc" }) {
+  if (!active) return null;
+  return dir === "asc" ? <ArrowUp className="inline h-3 w-3" /> : <ArrowDown className="inline h-3 w-3" />;
+}
+
+export function MemberTable({ members }: { members: Member[] }) {
+  const [sort, setSort] = useState<{ key: SortKey; dir: "asc" | "desc" }>({ key: "costUsd", dir: "desc" });
+
+  const sorted = useMemo(() => {
+    const copy = [...members];
+    copy.sort((a, b) => {
+      const c =
+        sort.key === "userName"
+          ? a.userName.localeCompare(b.userName)
+          : (a[sort.key] as number) - (b[sort.key] as number);
+      return sort.dir === "asc" ? c : -c;
+    });
+    return copy;
+  }, [members, sort]);
+
   if (members.length === 0) {
     return <p className="text-sm text-[var(--text-muted)]">Chưa có thành viên</p>;
   }
 
+  function toggle(key: SortKey, defaultDir: "asc" | "desc") {
+    setSort((s) => (s.key === key ? { key, dir: s.dir === "asc" ? "desc" : "asc" } : { key, dir: defaultDir }));
+  }
+
+  const thBtn = "inline-flex items-center gap-1 transition-colors hover:text-[var(--text-secondary)]";
+
+  const numCols: { key: SortKey; label: string }[] = [
+    { key: "inputTokens", label: "Input" },
+    { key: "outputTokens", label: "Output" },
+    { key: "turnCount", label: "Turns" },
+    { key: "costUsd", label: "Chi phí" },
+  ];
+
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
-        <thead>
+        <thead className="sticky top-0 z-10 bg-[var(--surface)]">
           <tr className="border-b border-[var(--gridline)] text-left text-xs uppercase tracking-wide text-[var(--text-muted)]">
-            <th className="py-2 pr-3 font-medium">Thành viên</th>
-            <th className="py-2 pr-3 text-right font-medium">Input</th>
-            <th className="py-2 pr-3 text-right font-medium">Output</th>
-            <th className="py-2 pr-3 text-right font-medium">Turns</th>
-            <th className="py-2 pr-0 text-right font-medium">Chi phí</th>
+            <th className="py-2 pr-3 font-medium">
+              <button type="button" className={thBtn} onClick={() => toggle("userName", "asc")}>
+                Thành viên <SortIndicator active={sort.key === "userName"} dir={sort.dir} />
+              </button>
+            </th>
+            {numCols.map((c) => (
+              <th key={c.key} className="py-2 pr-3 text-right font-medium last:pr-0">
+                <button type="button" className={`${thBtn} justify-end`} onClick={() => toggle(c.key, "desc")}>
+                  {c.label} <SortIndicator active={sort.key === c.key} dir={sort.dir} />
+                </button>
+              </th>
+            ))}
           </tr>
         </thead>
         <tbody>
-          {members.map((m) => (
-            <tr key={m.userId} className="border-b border-[var(--gridline)] last:border-0 transition-colors hover:bg-black/[0.03] dark:hover:bg-white/[0.04]">
+          {sorted.map((m) => (
+            <tr
+              key={m.userId}
+              className="border-b border-[var(--gridline)] transition-colors last:border-0 hover:bg-black/[0.03] dark:hover:bg-white/[0.04]"
+            >
               <td className="py-2 pr-3 font-medium">
                 <Link href={`/users/${m.userId}`} className="transition-colors hover:text-accent">
                   {m.userName}
