@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* dark mode is driven by the data-theme attribute on <html> (set by the
+   no-flash inline script + ThemeToggle), not by prefers-color-scheme, so a
+   manual Light/System/Dark switch is possible. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 :root {
   --page: #f9f9f7;
   --surface: #fcfcfb;
@@ -9,7 +14,14 @@
   --text-muted: #898781;
   --gridline: #e1e0d9;
   --baseline: #c3c2b7;
-  --border: rgba(11, 11, 11, 0.1);
+  --border: rgba(11, 11, 11, 0.09);
+  --border-strong: rgba(11, 11, 11, 0.16);
+
+  /* single considered accent (matches --series-1 so charts stay in family) */
+  --accent: #2a78d6;
+  --accent-hover: #1f63b8;
+  --accent-weak: rgba(42, 120, 214, 0.1);
+  --accent-ring: rgba(42, 120, 214, 0.4);
 
   --series-1: #2a78d6; /* blue */
   --series-2: #1baf7a; /* aqua */
@@ -24,10 +36,14 @@
   --status-warning: #fab219;
   --status-serious: #ec835a;
   --status-critical: #d03b3b;
+
+  /* tinted, layered shadows — warm-neutral hue, single light source from top */
+  --shadow-xs: 0 1px 2px rgba(28, 27, 22, 0.05);
+  --shadow-sm: 0 1px 2px rgba(28, 27, 22, 0.06), 0 3px 8px rgba(28, 27, 22, 0.05);
+  --shadow-md: 0 2px 4px rgba(28, 27, 22, 0.05), 0 10px 28px rgba(28, 27, 22, 0.08);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
+[data-theme="dark"] {
     --page: #0d0d0d;
     --surface: #1a1a19;
     --surface-raised: #202020;
@@ -36,7 +52,13 @@
     --text-muted: #898781;
     --gridline: #2c2c2a;
     --baseline: #383835;
-    --border: rgba(255, 255, 255, 0.1);
+    --border: rgba(255, 255, 255, 0.09);
+    --border-strong: rgba(255, 255, 255, 0.16);
+
+    --accent: #3987e5;
+    --accent-hover: #5a9bec;
+    --accent-weak: rgba(57, 135, 229, 0.16);
+    --accent-ring: rgba(57, 135, 229, 0.45);
 
     --series-1: #3987e5;
     --series-2: #199e70;
@@ -46,7 +68,10 @@
     --series-6: #e66767;
     --series-7: #d55181;
     --series-8: #d95926;
-  }
+
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4), 0 3px 10px rgba(0, 0, 0, 0.32);
+    --shadow-md: 0 2px 6px rgba(0, 0, 0, 0.4), 0 14px 34px rgba(0, 0, 0, 0.46);
 }
 
 @theme inline {
@@ -58,16 +83,44 @@
   --color-text-muted: var(--text-muted);
   --color-gridline: var(--gridline);
   --color-baseline: var(--baseline);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --font-sans: var(--font-geist-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SFMono-Regular", monospace;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   background: var(--page);
   color: var(--text-primary);
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 * {
   border-color: var(--border);
+}
+
+/* display headings feel intentional: tighter tracking, no orphaned words */
+h1,
+h2,
+h3 {
+  letter-spacing: -0.012em;
+  text-wrap: balance;
+}
+
+::selection {
+  background: var(--accent-weak);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent-ring);
+  outline-offset: 2px;
+  border-radius: 6px;
 }
 
 ::-webkit-scrollbar {
@@ -78,6 +131,127 @@ body {
   background: var(--baseline);
   border-radius: 999px;
 }
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
 ::-webkit-scrollbar-track {
   background: transparent;
+}
+
+/* ─── vivid layer: gradients, colored surfaces, entrance motion ─── */
+
+.card-surface {
+  background: linear-gradient(180deg, var(--surface-raised), var(--surface));
+}
+
+.hero-panel {
+  background:
+    radial-gradient(130% 150% at 100% 0%, color-mix(in srgb, var(--series-1) 16%, transparent), transparent 58%),
+    radial-gradient(130% 150% at 0% 130%, color-mix(in srgb, var(--series-5) 14%, transparent), transparent 55%),
+    var(--surface);
+}
+
+/* colored KPI cards — each tinted by its own --tint (set inline) */
+.stat-card {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.stat-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    var(--tint),
+    color-mix(in srgb, var(--tint) 15%, transparent) 78%,
+    transparent
+  );
+}
+.stat-card:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--tint) 45%, var(--border));
+  box-shadow: 0 12px 30px -12px color-mix(in srgb, var(--tint) 50%, transparent);
+}
+
+.gradient-brand {
+  background-image: linear-gradient(135deg, var(--series-1), var(--series-5));
+}
+.gradient-text {
+  background-image: linear-gradient(120deg, var(--series-1), var(--series-5) 70%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.stagger > * {
+  animation: fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.stagger > *:nth-child(1) { animation-delay: 0ms; }
+.stagger > *:nth-child(2) { animation-delay: 50ms; }
+.stagger > *:nth-child(3) { animation-delay: 100ms; }
+.stagger > *:nth-child(4) { animation-delay: 150ms; }
+.stagger > *:nth-child(5) { animation-delay: 200ms; }
+.stagger > *:nth-child(6) { animation-delay: 250ms; }
+.stagger > *:nth-child(7) { animation-delay: 300ms; }
+.stagger > *:nth-child(8) { animation-delay: 350ms; }
+.stagger > *:nth-child(9) { animation-delay: 400ms; }
+.stagger > *:nth-child(n + 10) { animation-delay: 450ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .stagger > * {
+    animation: none;
+  }
+  .stat-card {
+    transition: none;
+  }
+}
+
+/* ─── loading skeletons: subtle shimmer sweep over a muted surface ─── */
+
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+.skeleton {
+  /* base muted block tinted from the theme's own hues */
+  background-color: color-mix(in srgb, var(--text-muted) 14%, var(--surface));
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--text-muted) 12%, transparent) 20%,
+    color-mix(in srgb, var(--border) 60%, var(--surface-raised)) 50%,
+    color-mix(in srgb, var(--text-muted) 12%, transparent) 80%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    /* leave a static muted block, no sweep */
+    background-image: none;
+    animation: none;
+  }
 }
