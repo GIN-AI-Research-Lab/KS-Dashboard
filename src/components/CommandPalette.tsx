@@ -1,9 +1,51 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import { Sun, Monitor, Moon } from "lucide-react";
+import { ACCENTS, DENSITIES, THEMES, setAccent, setDensity, setTheme } from "./appearance/prefs";
 
-type Item = { label: string; sub?: string; href: string; group: string };
+type Item = {
+  label: string;
+  sub?: string;
+  href?: string;
+  group: string;
+  icon?: ReactNode;
+  onSelect?: () => void;
+};
+
+const THEME_ICONS: Record<string, ReactNode> = {
+  light: <Sun className="h-4 w-4" aria-hidden />,
+  system: <Monitor className="h-4 w-4" aria-hidden />,
+  dark: <Moon className="h-4 w-4" aria-hidden />,
+};
+
+// Appearance quick-actions: run a preference setter, then close the palette.
+const APPEARANCE: Item[] = [
+  ...THEMES.map((t) => ({
+    label: `Giao diện: ${t.label}`,
+    group: "Giao diện",
+    icon: THEME_ICONS[t.key],
+    onSelect: () => setTheme(t.key),
+  })),
+  ...ACCENTS.map((a) => ({
+    label: `Màu nhấn: ${a.label}`,
+    group: "Giao diện",
+    icon: (
+      <span
+        className="h-3 w-3 rounded-full ring-1 ring-black/10 dark:ring-white/15"
+        style={{ backgroundColor: a.color }}
+        aria-hidden
+      />
+    ),
+    onSelect: () => setAccent(a.key),
+  })),
+  ...DENSITIES.map((d) => ({
+    label: `Mật độ: ${d.label}`,
+    group: "Giao diện",
+    onSelect: () => setDensity(d.key),
+  })),
+];
 
 const PAGES: Item[] = [
   { label: "Tổng quan", href: "/", group: "Trang" },
@@ -96,14 +138,22 @@ export function CommandPalette() {
 
   const items = useMemo(() => {
     const term = q.trim().toLowerCase();
-    const pages = term ? PAGES.filter((p) => p.label.toLowerCase().includes(term)) : PAGES;
-    return [...pages, ...remote];
+    const local = [...PAGES, ...APPEARANCE];
+    const filtered = term ? local.filter((p) => p.label.toLowerCase().includes(term)) : local;
+    return [...filtered, ...remote];
   }, [q, remote]);
 
   function go(item: Item | undefined) {
     if (!item) return;
-    setOpen(false);
-    router.push(item.href);
+    if (item.onSelect) {
+      item.onSelect();
+      setOpen(false);
+      return;
+    }
+    if (item.href) {
+      setOpen(false);
+      router.push(item.href);
+    }
   }
 
   if (!open) return null;
@@ -141,16 +191,19 @@ export function CommandPalette() {
           {items.length === 0 && <div className="px-4 py-6 text-center text-sm text-[var(--text-muted)]">Không có kết quả</div>}
           {items.map((item, i) => (
             <button
-              key={`${item.href}-${i}`}
+              key={`${item.group}-${item.label}-${i}`}
               onMouseEnter={() => setActive(i)}
               onClick={() => go(item)}
               className={`flex w-full items-center justify-between gap-3 px-4 py-2 text-left text-sm transition-colors duration-150 ${
                 i === active ? "bg-accent/10 text-accent" : "hover:bg-black/5 dark:hover:bg-white/5"
               }`}
             >
-              <span className="min-w-0 flex-1 truncate">
-                {item.label}
-                {item.sub && <span className="ml-2 text-xs text-[var(--text-muted)]">{item.sub}</span>}
+              <span className="flex min-w-0 flex-1 items-center gap-2.5 truncate">
+                {item.icon && <span className="flex h-4 w-4 shrink-0 items-center justify-center">{item.icon}</span>}
+                <span className="min-w-0 flex-1 truncate">
+                  {item.label}
+                  {item.sub && <span className="ml-2 text-xs text-[var(--text-muted)]">{item.sub}</span>}
+                </span>
               </span>
               <span className="shrink-0 text-[10px] uppercase tracking-wide text-[var(--text-muted)]">{item.group}</span>
             </button>

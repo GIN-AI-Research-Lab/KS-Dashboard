@@ -10,7 +10,7 @@ export function SearchTrigger() {
     >
       <Search className="h-4 w-4" aria-hidden />
       <span>Tìm kiếm…</span>
-      <kbd className="rounded border border-[var(--border)] px-1 text-[10px]">⌘K</kbd>
+      <kbd className="rounded border border-[var(--border)] px-1.5 py-0.5 text-[10px] leading-none text-[var(--text-muted)]">⌘K</kbd>
     </button>
   );
 }

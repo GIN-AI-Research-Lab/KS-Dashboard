@@ -74,6 +74,23 @@ export function colorForIndex(i: number) {
   return SERIES[i % SERIES.length];
 }
 
+// Stable department -> color: hash the name to a theme-aware SERIES var (same
+// approach as colorForModel's hash fallback) so a given department keeps the
+// same color across every view.
+export function colorForDepartment(name: string) {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
+  return SERIES[hash % SERIES.length];
+}
+
+// Stable team -> color, hashed the same way so a team reads consistently
+// wherever it appears.
+export function colorForTeam(name: string) {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
+  return SERIES[hash % SERIES.length];
+}
+
 // Server Components can't read CSS vars, so they pass a light-palette hex for a
 // trend series. Map it to the matching theme-aware var so the line/area follows
 // the theme too; unknown colors pass through unchanged.
