@@ -3,6 +3,7 @@
 import { signIn } from "next-auth/react";
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { ArrowRight } from "lucide-react";
 
 const SSO_ERROR_MESSAGES: Record<string, string> = {
   NoEmailFromProvider: "Tài khoản Microsoft này không trả về địa chỉ email.",
@@ -63,7 +64,7 @@ function LoginForm() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[var(--page)] px-4">
+    <div className="app-shell flex min-h-screen items-center justify-center px-4">
       <div className="w-full max-w-sm rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-8 shadow-sm">
         <div className="mb-6 flex flex-col items-center gap-2">
           <div className="gradient-brand flex h-11 w-11 items-center justify-center rounded-xl text-base font-bold text-white shadow-[var(--shadow-xs)]">
@@ -98,13 +99,20 @@ function LoginForm() {
               placeholder="••••••••"
             />
           </div>
-          {(error || ssoError) && <p className="text-xs text-[#d03b3b]">{error || ssoError}</p>}
+          {(error || ssoError) && (
+            <p className="text-xs text-[var(--status-critical)]">{error || ssoError}</p>
+          )}
           <button
             type="submit"
             disabled={loading}
-            className="mt-2 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white shadow-[var(--shadow-xs)] transition-colors hover:bg-accent-hover disabled:opacity-60"
+            className="group mt-2 flex items-center justify-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white shadow-[var(--shadow-xs)] transition-all duration-200 hover:bg-accent-hover active:scale-[0.98] disabled:opacity-60"
           >
             {loading ? "Đang đăng nhập…" : "Đăng nhập"}
+            {!loading && (
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/20 transition-transform duration-200 group-hover:translate-x-0.5">
+                <ArrowRight className="h-3 w-3" />
+              </span>
+            )}
           </button>
         </form>
 

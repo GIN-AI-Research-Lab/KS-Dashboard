@@ -17,7 +17,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <SidebarProvider>
-      <div className="flex h-screen w-full overflow-hidden bg-[var(--page)]">
+      <div className="app-shell flex h-screen w-full overflow-hidden">
         <AutoRefresh />
         <CommandPalette />
         <Sidebar orgTree={departments} role={user.role} />
