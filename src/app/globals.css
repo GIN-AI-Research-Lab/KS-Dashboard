@@ -311,6 +311,72 @@ svg.lucide {
   stroke-width: 1.75;
 }
 
+/* ─── accent themes (data-accent on <html>; blue = default via :root) ─── */
+:root[data-accent="violet"] {
+  --accent: #6d5ae6;
+  --accent-hover: #5a48c9;
+  --accent-weak: rgba(109, 90, 230, 0.1);
+  --accent-ring: rgba(109, 90, 230, 0.4);
+}
+[data-theme="dark"][data-accent="violet"] {
+  --accent: #9a86f0;
+  --accent-hover: #b0a0f5;
+  --accent-weak: rgba(154, 134, 240, 0.16);
+  --accent-ring: rgba(154, 134, 240, 0.45);
+}
+:root[data-accent="emerald"] {
+  --accent: #0f9d6b;
+  --accent-hover: #0c835a;
+  --accent-weak: rgba(15, 157, 107, 0.1);
+  --accent-ring: rgba(15, 157, 107, 0.4);
+}
+[data-theme="dark"][data-accent="emerald"] {
+  --accent: #22c48a;
+  --accent-hover: #34d29a;
+  --accent-weak: rgba(34, 196, 138, 0.16);
+  --accent-ring: rgba(34, 196, 138, 0.45);
+}
+:root[data-accent="amber"] {
+  --accent: #b8730a;
+  --accent-hover: #9c6208;
+  --accent-weak: rgba(184, 115, 10, 0.1);
+  --accent-ring: rgba(184, 115, 10, 0.4);
+}
+[data-theme="dark"][data-accent="amber"] {
+  --accent: #e0a13a;
+  --accent-hover: #edb04c;
+  --accent-weak: rgba(224, 161, 58, 0.16);
+  --accent-ring: rgba(224, 161, 58, 0.45);
+}
+:root[data-accent="rose"] {
+  --accent: #e03e6d;
+  --accent-hover: #c4325c;
+  --accent-weak: rgba(224, 62, 109, 0.1);
+  --accent-ring: rgba(224, 62, 109, 0.4);
+}
+[data-theme="dark"][data-accent="rose"] {
+  --accent: #f2688f;
+  --accent-hover: #f57ba0;
+  --accent-weak: rgba(242, 104, 143, 0.16);
+  --accent-ring: rgba(242, 104, 143, 0.45);
+}
+
+/* ─── compact density: tighten shared surfaces + table cells ─── */
+[data-density="compact"] .card-surface {
+  padding: 0.85rem;
+}
+[data-density="compact"] .stat-card {
+  padding: 0.7rem;
+}
+[data-density="compact"] .hero-panel {
+  padding: 1rem 1.25rem;
+}
+[data-density="compact"] table td,
+[data-density="compact"] table th {
+  padding-top: 0.3rem;
+  padding-bottom: 0.3rem;
+}
+
 /* fixed film-grain overlay for a subtle physical texture (never blocks input) */
 body::after {
   content: "";

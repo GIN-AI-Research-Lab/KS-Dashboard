@@ -3,7 +3,7 @@ import type { Role } from "@prisma/client";
 import { SignOutButton } from "@/components/SignOutButton";
 import { SearchTrigger } from "@/components/SearchTrigger";
 import { CopyLinkButton } from "@/components/CopyLinkButton";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import { AppearanceMenu } from "@/components/appearance/AppearanceMenu";
 import { MobileMenuButton } from "@/components/sidebar/MobileMenuButton";
 import Link from "next/link";
 
@@ -15,7 +15,7 @@ export function Topbar({ name, role }: { name: string; role: Role }) {
         <SearchTrigger />
       </div>
       <div className="flex items-center gap-3">
-        <ThemeToggle />
+        <AppearanceMenu />
         <CopyLinkButton />
         <Link
           href="/me"
