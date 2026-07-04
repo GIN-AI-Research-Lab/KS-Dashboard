@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { auth } from "@/auth";
 import { getLibraryItem } from "@/lib/stats";
 import { Card } from "@/components/ui/Card";
@@ -26,16 +27,29 @@ export default async function LibraryItemPage({ params }: { params: Promise<{ id
   if (item.visibility === "PRIVATE" && !isOwner && !isAdmin) notFound();
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
+    <div className="stagger mx-auto flex w-full max-w-3xl flex-col gap-6">
       <div>
-        <Link href="/library" className="text-xs text-[var(--text-muted)] hover:underline">
-          ← Thư viện
+        <Link
+          href="/library"
+          className="inline-flex items-center gap-1 text-xs text-[var(--text-muted)] transition-colors hover:text-accent hover:underline"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" />
+          Thư viện
         </Link>
-        <div className="mt-1 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <Badge variant={KIND_VARIANT[item.kind]}>{KIND_LABEL[item.kind]}</Badge>
-            <h1 className="text-xl font-semibold">{item.title}</h1>
-            {item.visibility === "PRIVATE" && <Badge variant="neutral">Riêng tư</Badge>}
+        <div className="hero-panel relative mt-2 flex flex-wrap items-center justify-between gap-4 overflow-hidden rounded-2xl border border-[var(--border)] p-6 shadow-[var(--shadow-xs)]">
+          <div className="min-w-0">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)]/60 px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-[0.1em] text-[var(--text-secondary)] backdrop-blur">
+              <span className="gradient-brand h-1.5 w-1.5 rounded-full" />
+              THƯ VIỆN
+            </span>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <Badge variant={KIND_VARIANT[item.kind]}>{KIND_LABEL[item.kind]}</Badge>
+              <h1 className="text-xl font-semibold tracking-tight">{item.title}</h1>
+              {item.visibility === "PRIVATE" && <Badge variant="neutral">Riêng tư</Badge>}
+            </div>
+            <p className="mt-1 text-sm text-[var(--text-secondary)]">
+              {item.author.name} · {formatRelativeTime(item.createdAt)}
+            </p>
           </div>
           <div className="flex items-center gap-2">
             <LibraryStar itemId={item.id} initialBookmarked={data.bookmarked} initialCount={data.bookmarkCount} />
@@ -43,9 +57,6 @@ export default async function LibraryItemPage({ params }: { params: Promise<{ id
             {isOwner && <ItemManageBar itemId={item.id} initialVisibility={item.visibility} redirectOnDelete="/library" />}
           </div>
         </div>
-        <p className="mt-1 text-sm text-[var(--text-muted)]">
-          {item.author.name} · {formatRelativeTime(item.createdAt)}
-        </p>
       </div>
 
       <Card title={item.kind === "PROMPT" ? "Nội dung prompt" : "Mô tả skill"}>

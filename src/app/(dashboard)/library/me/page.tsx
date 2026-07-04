@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { MessageCircle, Zap, Star } from "lucide-react";
 import { auth } from "@/auth";
 import { getMyLibrary } from "@/lib/stats";
 import { Card } from "@/components/ui/Card";
@@ -12,13 +13,17 @@ export default async function MyLibraryPage() {
   const { mine, saved } = await getMyLibrary(session!.user.id);
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold">Thư viện của tôi</h1>
-          <p className="text-sm text-[var(--text-muted)]">Bài mình đã đăng và các bài đã lưu</p>
+    <div className="stagger flex flex-col gap-6">
+      <div className="hero-panel relative flex flex-wrap items-center justify-between gap-4 overflow-hidden rounded-2xl border border-[var(--border)] p-6 shadow-[var(--shadow-xs)]">
+        <div className="min-w-0">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)]/60 px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-[0.1em] text-[var(--text-secondary)] backdrop-blur">
+            <span className="gradient-brand h-1.5 w-1.5 rounded-full" />
+            THƯ VIỆN
+          </span>
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight">Thư viện của <span className="gradient-text">tôi</span></h1>
+          <p className="mt-1 text-sm text-[var(--text-secondary)]">Bài mình đã đăng và các bài đã lưu</p>
         </div>
-        <Link href="/library" className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10">
+        <Link href="/library" className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm font-medium transition-colors hover:bg-black/5 dark:hover:bg-white/10">
           ← Thư viện chung
         </Link>
       </div>
@@ -35,8 +40,10 @@ export default async function MyLibraryPage() {
                   <Link href={`/library/${it.id}`} className="truncate font-medium hover:underline">
                     {it.title}
                   </Link>
-                  <span className="shrink-0 text-xs text-[var(--text-muted)]">
-                    💬 {it._count.comments} · ⚡ {it._count.reactions} · ★ {it._count.bookmarks}
+                  <span className="flex shrink-0 items-center gap-2 text-xs text-[var(--text-muted)]">
+                    <span className="inline-flex items-center gap-1"><MessageCircle className="h-4 w-4" /> {it._count.comments}</span>
+                    <span className="inline-flex items-center gap-1"><Zap className="h-4 w-4" /> {it._count.reactions}</span>
+                    <span className="inline-flex items-center gap-1"><Star className="h-4 w-4" /> {it._count.bookmarks}</span>
                   </span>
                 </div>
                 <ItemManageBar itemId={it.id} initialVisibility={it.visibility} />

@@ -11,6 +11,21 @@ import { ActivityHeatmap } from "@/components/charts/ActivityHeatmap";
 import { Badge } from "@/components/ui/Badge";
 import { KIND_LABEL, KIND_VARIANT } from "@/lib/library";
 import { formatNumber, formatUsd, formatPercent, formatRelativeTime } from "@/lib/format";
+import {
+  Sigma,
+  ArrowDownToLine,
+  ArrowUpFromLine,
+  DollarSign,
+  MessagesSquare,
+  Activity,
+  Zap,
+  Download,
+  Upload,
+  Plus,
+  Minus,
+  Check,
+  MessageSquare,
+} from "lucide-react";
 
 export default async function OverviewPage({
   searchParams,
@@ -35,17 +50,43 @@ export default async function OverviewPage({
   ]);
 
   const libSections = [
-    { title: "Mới nhất", items: libNew, metric: (it: (typeof libNew)[number]) => formatRelativeTime(it.createdAt) },
-    { title: "Nhiều react nhất", items: libReactions, metric: (it: (typeof libReactions)[number]) => `⚡ ${it.counts.reactions}` },
-    { title: "Nhiều comment nhất", items: libComments, metric: (it: (typeof libComments)[number]) => `💬 ${it.counts.comments}` },
+    {
+      title: "Mới nhất",
+      items: libNew,
+      metric: (it: (typeof libNew)[number]) => formatRelativeTime(it.createdAt),
+    },
+    {
+      title: "Nhiều react nhất",
+      items: libReactions,
+      metric: (it: (typeof libReactions)[number]) => (
+        <span className="inline-flex items-center gap-1 tabular-nums">
+          <Zap className="h-3 w-3" /> {it.counts.reactions}
+        </span>
+      ),
+    },
+    {
+      title: "Nhiều comment nhất",
+      items: libComments,
+      metric: (it: (typeof libComments)[number]) => (
+        <span className="inline-flex items-center gap-1 tabular-nums">
+          <MessageSquare className="h-3 w-3" /> {it.counts.comments}
+        </span>
+      ),
+    },
   ];
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold">Tổng quan công ty</h1>
-          <p className="text-sm text-[var(--text-muted)]">
+    <div className="stagger flex flex-col gap-6">
+      <div className="hero-panel relative flex flex-wrap items-center justify-between gap-4 overflow-hidden rounded-2xl border border-[var(--border)] p-6 shadow-[var(--shadow-xs)]">
+        <div className="min-w-0">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)]/60 px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-[0.1em] text-[var(--text-secondary)] backdrop-blur">
+            <span className="gradient-brand h-1.5 w-1.5 rounded-full" />
+            Tổng quan
+          </span>
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight">
+            Tổng quan <span className="gradient-text">công ty</span>
+          </h1>
+          <p className="mt-1 text-sm text-[var(--text-secondary)]">
             Tổng hợp mức sử dụng Claude Code của toàn bộ nhân viên
           </p>
         </div>
@@ -53,12 +94,12 @@ export default async function OverviewPage({
       </div>
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
-        <StatCard label="Tổng token" value={formatNumber(stats.totals.totalTokens)} accent="#2a78d6" icon="Σ" deltaPct={stats.deltas?.totalTokens} />
-        <StatCard label="Input token" value={formatNumber(stats.totals.inputTokens)} accent="#1baf7a" icon="→" />
-        <StatCard label="Output token" value={formatNumber(stats.totals.outputTokens)} accent="#eb6834" icon="←" />
-        <StatCard label="Chi phí ước tính" value={formatUsd(stats.totals.costUsd)} accent="#e34948" icon="$" deltaPct={stats.deltas?.costUsd} />
-        <StatCard label="Số phiên" value={formatNumber(stats.totals.sessionCount)} accent="#4a3aa7" icon="◧" deltaPct={stats.deltas?.sessionCount} />
-        <StatCard label="Đang hoạt động" value={formatNumber(stats.totals.activeSessionCount)} accent="#0ca30c" icon="●" />
+        <StatCard label="Tổng token" value={formatNumber(stats.totals.totalTokens)} rawValue={stats.totals.totalTokens} format="number" spark={stats.daily.map((d) => d.inputTokens + d.outputTokens)} accent="#2a78d6" icon={<Sigma className="h-4 w-4" />} deltaPct={stats.deltas?.totalTokens} />
+        <StatCard label="Input token" value={formatNumber(stats.totals.inputTokens)} rawValue={stats.totals.inputTokens} format="number" spark={stats.daily.map((d) => d.inputTokens)} accent="#1baf7a" icon={<ArrowDownToLine className="h-4 w-4" />} />
+        <StatCard label="Output token" value={formatNumber(stats.totals.outputTokens)} rawValue={stats.totals.outputTokens} format="number" spark={stats.daily.map((d) => d.outputTokens)} accent="#eb6834" icon={<ArrowUpFromLine className="h-4 w-4" />} />
+        <StatCard label="Chi phí ước tính" value={formatUsd(stats.totals.costUsd)} rawValue={stats.totals.costUsd} format="usd" spark={stats.daily.map((d) => d.costUsd)} accent="#e34948" icon={<DollarSign className="h-4 w-4" />} deltaPct={stats.deltas?.costUsd} />
+        <StatCard label="Số phiên" value={formatNumber(stats.totals.sessionCount)} rawValue={stats.totals.sessionCount} format="number" accent="#4a3aa7" icon={<MessagesSquare className="h-4 w-4" />} deltaPct={stats.deltas?.sessionCount} />
+        <StatCard label="Đang hoạt động" value={formatNumber(stats.totals.activeSessionCount)} rawValue={stats.totals.activeSessionCount} format="number" accent="#0ca30c" icon={<Activity className="h-4 w-4" />} />
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -67,33 +108,33 @@ export default async function OverviewPage({
           value={formatPercent(stats.totals.cacheHitRatio)}
           hint="Phần input được phục vụ từ cache"
           accent="#008300"
-          icon="⚡"
+          icon={<Zap className="h-4 w-4" />}
         />
         <StatCard
           label="Token đọc từ cache"
           value={formatNumber(stats.totals.cacheReadTokens)}
           hint="Không tính phí như input mới"
           accent="#1baf7a"
-          icon="⇐"
+          icon={<Download className="h-4 w-4" />}
         />
         <StatCard
           label="Token tạo cache"
           value={formatNumber(stats.totals.cacheCreationTokens)}
           hint="Chi phí ghi cache ban đầu"
           accent="#eda100"
-          icon="⇒"
+          icon={<Upload className="h-4 w-4" />}
         />
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <StatCard label="Dòng code thêm" value={formatNumber(code.linesAdded)} hint="Từ Claude Code (OTel)" accent="#008300" icon="＋" />
-        <StatCard label="Dòng code xoá" value={formatNumber(code.linesRemoved)} accent="#e34948" icon="－" />
+        <StatCard label="Dòng code thêm" value={formatNumber(code.linesAdded)} hint="Từ Claude Code (OTel)" accent="#008300" icon={<Plus className="h-4 w-4" />} />
+        <StatCard label="Dòng code xoá" value={formatNumber(code.linesRemoved)} accent="#e34948" icon={<Minus className="h-4 w-4" />} />
         <StatCard
           label="Tỷ lệ chấp nhận sửa"
           value={code.editsAccepted + code.editsRejected > 0 ? formatPercent(code.acceptanceRate) : "—"}
           hint={`${code.editsAccepted}/${code.editsAccepted + code.editsRejected} gợi ý sửa`}
           accent="#2a78d6"
-          icon="✓"
+          icon={<Check className="h-4 w-4" />}
         />
       </div>
 
@@ -102,7 +143,7 @@ export default async function OverviewPage({
           <h2 className="text-sm font-semibold uppercase tracking-wide text-[var(--text-muted)]">
             Thư viện · Prompt &amp; Skill
           </h2>
-          <Link href="/library" className="text-xs font-medium text-[#2a78d6] hover:underline">
+          <Link href="/library" className="text-xs font-medium text-[var(--accent)] transition-colors hover:text-[var(--accent-hover)]">
             Xem tất cả →
           </Link>
         </div>

@@ -3,18 +3,24 @@ import { ExportLink } from "@/components/ExportLink";
 
 export default function IntegratePage() {
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
-      <div>
-        <h1 className="text-xl font-semibold">Tích hợp Claude Code</h1>
-        <p className="text-sm text-[var(--text-muted)]">
-          Kết nối Claude Code (CLI + VS Code extension) để tự động gửi dữ liệu sử dụng lên dashboard
-        </p>
+    <div className="stagger mx-auto flex w-full max-w-3xl flex-col gap-6">
+      <div className="hero-panel relative flex flex-wrap items-center justify-between gap-4 overflow-hidden rounded-2xl border border-[var(--border)] p-6 shadow-[var(--shadow-xs)]">
+        <div className="min-w-0">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)]/60 px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-[0.1em] text-[var(--text-secondary)] backdrop-blur">
+            <span className="gradient-brand h-1.5 w-1.5 rounded-full" />
+            TÍCH HỢP
+          </span>
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight">Tích hợp <span className="gradient-text">Claude Code</span></h1>
+          <p className="mt-1 text-sm text-[var(--text-secondary)]">
+            Kết nối Claude Code (CLI + VS Code extension) để tự động gửi dữ liệu sử dụng lên dashboard
+          </p>
+        </div>
       </div>
 
       <Card title="Cách 1 — Cá nhân (tự cài, không cần admin)">
         <ol className="flex list-decimal flex-col gap-2 pl-5 text-sm">
           <li>Tải script và lưu vào máy:
-            <div className="mt-1"><ExportLink href="/api/download/setup-telemetry.ps1" label="⭳ Tải setup-telemetry.ps1" /></div>
+            <div className="mt-1"><ExportLink href="/api/download/setup-telemetry.ps1" label="Tải setup-telemetry.ps1" /></div>
           </li>
           <li>Mở PowerShell tại thư mục chứa file, chạy:
             <pre className="mt-1 overflow-x-auto rounded-lg bg-black/[0.04] p-2 font-mono text-xs dark:bg-white/5">powershell -ExecutionPolicy Bypass -File setup-telemetry.ps1</pre>
@@ -30,7 +36,7 @@ export default function IntegratePage() {
       <Card title="Cách 2 — IT triển khai toàn công ty (cần admin)">
         <ol className="flex list-decimal flex-col gap-2 pl-5 text-sm">
           <li>Tải script (self-elevate admin, áp cho <b>CLI + VS Code + WSL</b> trên máy):
-            <div className="mt-1"><ExportLink href="/api/download/install-managed-settings.ps1" label="⭳ Tải install-managed-settings.ps1" /></div>
+            <div className="mt-1"><ExportLink href="/api/download/install-managed-settings.ps1" label="Tải install-managed-settings.ps1" /></div>
           </li>
           <li>Chạy (chuột phải → Run with PowerShell, hoặc):
             <pre className="mt-1 overflow-x-auto rounded-lg bg-black/[0.04] p-2 font-mono text-xs dark:bg-white/5">powershell -ExecutionPolicy Bypass -File install-managed-settings.ps1</pre>

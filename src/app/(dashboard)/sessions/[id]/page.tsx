@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/Badge";
 import { SessionAnnotationForm } from "@/components/SessionAnnotationForm";
 import { SessionDiscussion } from "@/components/SessionDiscussion";
 import { formatNumber, formatUsd, formatDuration, formatRelativeTime } from "@/lib/format";
+import { ArrowDownToLine, ArrowUpFromLine, DollarSign, Repeat, Clock, Check, X, MoreHorizontal } from "lucide-react";
 import type { SessionStatus } from "@prisma/client";
 
 const STATUS_LABEL: Record<SessionStatus, string> = { ACTIVE: "Đang chạy", IDLE: "Chờ", ENDED: "Kết thúc" };
@@ -50,17 +51,21 @@ export default async function SessionDetailPage({ params }: { params: Promise<{ 
     .slice(0, 500);
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <Link href="/sessions" className="text-xs text-[var(--text-muted)] hover:underline">
-            ← Thư viện phiên
-          </Link>
-          <h1 className="mt-1 text-xl font-semibold">
-            {s.projectLabel ?? "Phiên không rõ dự án"}
+    <div className="stagger flex flex-col gap-6">
+      <Link href="/sessions" className="text-xs text-[var(--text-muted)] transition-colors hover:text-accent hover:underline">
+        ← Thư viện phiên
+      </Link>
+      <div className="hero-panel relative flex flex-wrap items-center justify-between gap-4 overflow-hidden rounded-2xl border border-[var(--border)] p-6 shadow-[var(--shadow-xs)]">
+        <div className="min-w-0">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)]/60 px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-[0.1em] text-[var(--text-secondary)] backdrop-blur">
+            <span className="gradient-brand h-1.5 w-1.5 rounded-full" />
+            CHI TIẾT PHIÊN
+          </span>
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight">
+            <span className="gradient-text">Phiên</span> {s.projectLabel ?? "chưa rõ dự án"}
           </h1>
-          <p className="text-sm text-[var(--text-muted)]">
-            <Link href={`/users/${s.userId}`} className="hover:underline">{s.user.name}</Link>
+          <p className="mt-1 text-sm text-[var(--text-secondary)]">
+            <Link href={`/users/${s.userId}`} className="transition-colors hover:text-accent hover:underline">{s.user.name}</Link>
             {s.model ? ` · ${s.model}` : ""}
             {s.user.team ? ` · ${s.user.team.name}` : ""}
             {" · "}bắt đầu {formatRelativeTime(s.startedAt)}
@@ -72,11 +77,11 @@ export default async function SessionDetailPage({ params }: { params: Promise<{ 
       </div>
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
-        <StatCard label="Token vào" value={formatNumber(s.inputTokens)} accent="#1baf7a" icon="→" />
-        <StatCard label="Token ra" value={formatNumber(s.outputTokens)} accent="#eb6834" icon="←" />
-        <StatCard label="Chi phí" value={formatUsd(s.costUsd)} accent="#e34948" icon="$" />
-        <StatCard label="Turns" value={formatNumber(s.turnCount)} accent="#2a78d6" icon="⟳" />
-        <StatCard label="Thời lượng" value={formatDuration(durationMs)} accent="#4a3aa7" icon="◷" />
+        <StatCard label="Token vào" value={formatNumber(s.inputTokens)} accent="#1baf7a" icon={<ArrowDownToLine className="h-4 w-4" />} />
+        <StatCard label="Token ra" value={formatNumber(s.outputTokens)} accent="#eb6834" icon={<ArrowUpFromLine className="h-4 w-4" />} />
+        <StatCard label="Chi phí" value={formatUsd(s.costUsd)} accent="#e34948" icon={<DollarSign className="h-4 w-4" />} />
+        <StatCard label="Turns" value={formatNumber(s.turnCount)} accent="#2a78d6" icon={<Repeat className="h-4 w-4" />} />
+        <StatCard label="Thời lượng" value={formatDuration(durationMs)} accent="#4a3aa7" icon={<Clock className="h-4 w-4" />} />
       </div>
 
       <Card title="Ghi chú & kết quả">
@@ -137,8 +142,8 @@ export default async function SessionDetailPage({ params }: { params: Promise<{ 
                 ) : (
                   <div className="min-w-0 flex-1 text-sm">
                     <span className="font-mono font-medium">{e.toolName}</span>{" "}
-                    <span className={e.status === "ERROR" ? "text-[#e34948]" : "text-[var(--text-muted)]"}>
-                      {e.status === "SUCCESS" ? "✓" : e.status === "ERROR" ? "✕" : "⋯"}
+                    <span className={`inline-flex align-middle ${e.status === "ERROR" ? "text-[#e34948]" : "text-[var(--text-muted)]"}`}>
+                      {e.status === "SUCCESS" ? <Check className="h-4 w-4" /> : e.status === "ERROR" ? <X className="h-4 w-4" /> : <MoreHorizontal className="h-4 w-4" />}
                     </span>
                     {e.durationMs != null && (
                       <span className="text-xs text-[var(--text-muted)]"> · {formatDuration(e.durationMs)}</span>

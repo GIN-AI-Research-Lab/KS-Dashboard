@@ -66,7 +66,7 @@ function LoginForm() {
     <div className="flex min-h-screen items-center justify-center bg-[var(--page)] px-4">
       <div className="w-full max-w-sm rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-8 shadow-sm">
         <div className="mb-6 flex flex-col items-center gap-2">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#2a78d6] text-base font-bold text-white">
+          <div className="gradient-brand flex h-11 w-11 items-center justify-center rounded-xl text-base font-bold text-white shadow-[var(--shadow-xs)]">
             KS
           </div>
           <h1 className="text-lg font-semibold">KS Dashboard</h1>
@@ -83,7 +83,7 @@ function LoginForm() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-[#2a78d6]"
+              className="w-full rounded-lg border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-accent"
               placeholder="ban@congty.com"
             />
           </div>
@@ -94,7 +94,7 @@ function LoginForm() {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-lg border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-[#2a78d6]"
+              className="w-full rounded-lg border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-accent"
               placeholder="••••••••"
             />
           </div>
@@ -102,7 +102,7 @@ function LoginForm() {
           <button
             type="submit"
             disabled={loading}
-            className="mt-2 rounded-lg bg-[#2a78d6] px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+            className="mt-2 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white shadow-[var(--shadow-xs)] transition-colors hover:bg-accent-hover disabled:opacity-60"
           >
             {loading ? "Đang đăng nhập…" : "Đăng nhập"}
           </button>

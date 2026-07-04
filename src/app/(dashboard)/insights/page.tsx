@@ -6,6 +6,7 @@ import { RankBarChart } from "@/components/charts/RankBarChart";
 import { ToolSankey } from "@/components/charts/ToolSankey";
 import { formatNumber, formatDuration, formatPercent, formatDay, formatRelativeTime } from "@/lib/format";
 import { colorForModel } from "@/lib/chart-colors";
+import { Plus, Minus, Check, AlertTriangle, TrendingUp } from "lucide-react";
 
 function PercentileRow({ label, ms }: { label: string; ms: number }) {
   return (
@@ -31,11 +32,15 @@ export default async function InsightsPage({
   ]);
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold">Phân tích sâu</h1>
-          <p className="text-sm text-[var(--text-muted)]">
+    <div className="stagger flex flex-col gap-6">
+      <div className="hero-panel relative flex flex-wrap items-center justify-between gap-4 overflow-hidden rounded-2xl border border-[var(--border)] p-6 shadow-[var(--shadow-xs)]">
+        <div className="min-w-0">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)]/60 px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-[0.1em] text-[var(--text-secondary)] backdrop-blur">
+            <span className="gradient-brand h-1.5 w-1.5 rounded-full" />
+            PHÂN TÍCH
+          </span>
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight">Phân tích <span className="gradient-text">sâu</span></h1>
+          <p className="mt-1 text-sm text-[var(--text-secondary)]">
             Độ trễ, chất lượng phiên, tỷ trọng model theo thời gian và đỉnh đồng thời
           </p>
         </div>
@@ -47,16 +52,16 @@ export default async function InsightsPage({
           Kỹ thuật &amp; chất lượng (dữ liệu mở rộng)
         </h2>
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          <StatCard label="Dòng code thêm" value={formatNumber(code.linesAdded)} accent="#008300" icon="＋" />
-          <StatCard label="Dòng code xoá" value={formatNumber(code.linesRemoved)} accent="#e34948" icon="－" />
+          <StatCard label="Dòng code thêm" value={formatNumber(code.linesAdded)} accent="#008300" icon={<Plus className="h-4 w-4" />} />
+          <StatCard label="Dòng code xoá" value={formatNumber(code.linesRemoved)} accent="#e34948" icon={<Minus className="h-4 w-4" />} />
           <StatCard
             label="Tỷ lệ chấp nhận sửa"
             value={code.editsAccepted + code.editsRejected > 0 ? formatPercent(code.acceptanceRate) : "—"}
             hint={`${code.editsAccepted}/${code.editsAccepted + code.editsRejected} chấp nhận`}
-            accent="#2a78d6"
-            icon="✓"
+            accent="var(--accent)"
+            icon={<Check className="h-4 w-4" />}
           />
-          <StatCard label="API errors" value={formatNumber(code.apiErrors)} accent="#eb6834" icon="!" />
+          <StatCard label="API errors" value={formatNumber(code.apiErrors)} accent="#eb6834" icon={<AlertTriangle className="h-4 w-4" />} />
         </div>
       </div>
 
@@ -99,7 +104,7 @@ export default async function InsightsPage({
           value={formatNumber(s.peakConcurrency.peak)}
           hint={s.peakConcurrency.peakAt ? `Lúc ${formatRelativeTime(s.peakConcurrency.peakAt)}` : undefined}
           accent="#e34948"
-          icon="⇈"
+          icon={<TrendingUp className="h-4 w-4" />}
         />
       </div>
 

@@ -8,6 +8,7 @@ import { Badge, Tag } from "@/components/ui/Badge";
 import { formatNumber, formatPercent, formatDay } from "@/lib/format";
 import { colorForIndex } from "@/lib/chart-colors";
 import { ANNOTATIONS } from "@/lib/annotations";
+import { Activity, CalendarDays, CalendarRange, Repeat } from "lucide-react";
 
 const PHASE_LABELS: Record<AdoptionPhase, string> = {
   power: "Power user (≥12 ngày/28)",
@@ -26,11 +27,15 @@ export default async function AdoptionPage({
   const [a, cohort] = await Promise.all([getAdoptionStats(r), getCohortRetention(8)]);
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold">Mức độ áp dụng (Adoption)</h1>
-          <p className="text-sm text-[var(--text-muted)]">
+    <div className="stagger flex flex-col gap-6">
+      <div className="hero-panel relative flex flex-wrap items-center justify-between gap-4 overflow-hidden rounded-2xl border border-[var(--border)] p-6 shadow-[var(--shadow-xs)]">
+        <div className="min-w-0">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)]/60 px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-[0.1em] text-[var(--text-secondary)] backdrop-blur">
+            <span className="gradient-brand h-1.5 w-1.5 rounded-full" />
+            MỨC ĐỘ ÁP DỤNG
+          </span>
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight">Mức độ <span className="gradient-text">áp dụng</span> (Adoption)</h1>
+          <p className="mt-1 text-sm text-[var(--text-secondary)]">
             Ai đang thực sự dùng Claude, mức độ đều đặn và độ phủ theo nhóm
           </p>
         </div>
@@ -38,15 +43,15 @@ export default async function AdoptionPage({
       </div>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard label="DAU trung bình" value={formatNumber(a.current.avgDau)} hint="28 ngày gần nhất" accent="#2a78d6" icon="◕" />
-        <StatCard label="WAU" value={formatNumber(a.current.wau)} hint="7 ngày gần nhất" accent="#1baf7a" icon="7" />
-        <StatCard label="MAU" value={formatNumber(a.current.mau)} hint="28 ngày gần nhất" accent="#4a3aa7" icon="28" />
+        <StatCard label="DAU trung bình" value={formatNumber(a.current.avgDau)} hint="28 ngày gần nhất" accent="#2a78d6" icon={<Activity className="h-4 w-4" />} />
+        <StatCard label="WAU" value={formatNumber(a.current.wau)} hint="7 ngày gần nhất" accent="#1baf7a" icon={<CalendarDays className="h-4 w-4" />} />
+        <StatCard label="MAU" value={formatNumber(a.current.mau)} hint="28 ngày gần nhất" accent="#4a3aa7" icon={<CalendarRange className="h-4 w-4" />} />
         <StatCard
           label="Stickiness (DAU/MAU)"
           value={formatPercent(a.current.stickiness)}
           hint="Càng cao càng dùng đều"
           accent="#eda100"
-          icon="≈"
+          icon={<Repeat className="h-4 w-4" />}
         />
       </div>
 

@@ -8,6 +8,7 @@ import { RangeSelector } from "@/components/RangeSelector";
 import { TrendChart } from "@/components/charts/TrendChart";
 import { MemberTable } from "@/components/MemberTable";
 import { formatNumber, formatUsd } from "@/lib/format";
+import { Sigma, ArrowDownToLine, ArrowUpFromLine, DollarSign } from "lucide-react";
 
 export default async function DepartmentPage({
   params,
@@ -40,22 +41,28 @@ export default async function DepartmentPage({
   ]);
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold">{department.name}</h1>
-          <p className="text-sm text-[var(--text-muted)]">
-            Bộ phận · {department.teams.length} nhóm · {allUserIds.length} thành viên
+    <div className="stagger flex flex-col gap-6">
+      <div className="hero-panel relative flex flex-wrap items-center justify-between gap-4 overflow-hidden rounded-2xl border border-[var(--border)] p-6 shadow-[var(--shadow-xs)]">
+        <div className="min-w-0">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)]/60 px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-[0.1em] text-[var(--text-secondary)] backdrop-blur">
+            <span className="gradient-brand h-1.5 w-1.5 rounded-full" />
+            BỘ PHẬN
+          </span>
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight">
+            <span className="gradient-text">Bộ phận</span> {department.name}
+          </h1>
+          <p className="mt-1 text-sm text-[var(--text-secondary)]">
+            {department.teams.length} nhóm · {allUserIds.length} thành viên
           </p>
         </div>
         <RangeSelector defaultRange={r} />
       </div>
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <StatCard label="Tổng token" value={formatNumber(stats.totals.totalTokens)} accent="#2a78d6" icon="Σ" />
-        <StatCard label="Input" value={formatNumber(stats.totals.inputTokens)} accent="#1baf7a" icon="→" />
-        <StatCard label="Output" value={formatNumber(stats.totals.outputTokens)} accent="#eb6834" icon="←" />
-        <StatCard label="Chi phí" value={formatUsd(stats.totals.costUsd)} accent="#e34948" icon="$" />
+        <StatCard label="Tổng token" value={formatNumber(stats.totals.totalTokens)} accent="#2a78d6" icon={<Sigma className="h-4 w-4" />} />
+        <StatCard label="Input" value={formatNumber(stats.totals.inputTokens)} accent="#1baf7a" icon={<ArrowDownToLine className="h-4 w-4" />} />
+        <StatCard label="Output" value={formatNumber(stats.totals.outputTokens)} accent="#eb6834" icon={<ArrowUpFromLine className="h-4 w-4" />} />
+        <StatCard label="Chi phí" value={formatUsd(stats.totals.costUsd)} accent="#e34948" icon={<DollarSign className="h-4 w-4" />} />
       </div>
 
       <Card title="Token theo ngày">
@@ -75,7 +82,7 @@ export default async function DepartmentPage({
               <Link
                 key={t.id}
                 href={`/teams/${t.id}`}
-                className="flex items-center justify-between rounded-lg px-3 py-2 text-sm hover:bg-black/5 dark:hover:bg-white/10"
+                className="flex items-center justify-between rounded-lg px-3 py-2 text-sm transition-colors hover:bg-black/5 dark:hover:bg-white/10"
               >
                 <span className="font-medium">{t.name}</span>
                 <span className="text-xs text-[var(--text-muted)]">{t.users.length} thành viên</span>

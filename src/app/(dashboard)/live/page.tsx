@@ -37,12 +37,20 @@ export default async function LivePage() {
   }));
 
   return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-xl font-semibold">Phiên trực tuyến</h1>
-        <p className="text-sm text-[var(--text-muted)]">
-          Theo dõi các phiên Claude Code đang diễn ra theo thời gian thực
-        </p>
+    <div className="stagger flex flex-col gap-6">
+      <div className="hero-panel relative flex flex-wrap items-center justify-between gap-4 overflow-hidden rounded-2xl border border-[var(--border)] p-6 shadow-[var(--shadow-xs)]">
+        <div className="min-w-0">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)]/60 px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-[0.1em] text-[var(--text-secondary)] backdrop-blur">
+            <span className="gradient-brand h-1.5 w-1.5 animate-pulse rounded-full" />
+            TRỰC TIẾP
+          </span>
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight">
+            Phiên <span className="gradient-text">trực tuyến</span>
+          </h1>
+          <p className="mt-1 text-sm text-[var(--text-secondary)]">
+            Theo dõi các phiên Claude Code đang diễn ra theo thời gian thực
+          </p>
+        </div>
       </div>
       <LiveFeed initialSessions={initialSessions} />
     </div>
