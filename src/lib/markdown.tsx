@@ -28,7 +28,7 @@ function renderInline(text: string, keyPrefix: string): ReactNode[] {
     if ((m = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/))) {
       const url = safeUrl(m[2]);
       return url ? (
-        <a key={key} href={url} target="_blank" rel="noopener noreferrer" className="text-[#2a78d6] hover:underline">
+        <a key={key} href={url} target="_blank" rel="noopener noreferrer" className="text-accent transition-colors duration-150 hover:text-[var(--accent-hover)] hover:underline">
           {m[1]}
         </a>
       ) : (

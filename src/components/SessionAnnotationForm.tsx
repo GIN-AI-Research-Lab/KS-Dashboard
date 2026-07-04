@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Star, Check } from "lucide-react";
 import type { SessionOutcome } from "@prisma/client";
 import { Badge, Tag } from "@/components/ui/Badge";
 import { OUTCOME_LABEL, OUTCOME_VARIANT, parseTags } from "@/lib/session-outcome";
@@ -36,7 +37,11 @@ export function SessionAnnotationForm({ sessionId, canEdit, initialOutcome, init
           ) : (
             <span className="text-[var(--text-muted)]">Chưa gắn kết quả</span>
           )}
-          {initialFeatured && <Badge variant="info">★ Nổi bật</Badge>}
+          {initialFeatured && (
+            <Badge variant="info">
+              <Star className="h-3.5 w-3.5 fill-current" /> Nổi bật
+            </Badge>
+          )}
         </div>
         {tagList.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
@@ -75,10 +80,10 @@ export function SessionAnnotationForm({ sessionId, canEdit, initialOutcome, init
             key={o}
             type="button"
             onClick={() => setOutcome(outcome === o ? "" : o)}
-            className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
+            className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-all duration-150 active:scale-95 ${
               outcome === o
-                ? "border-[#2a78d6] bg-[#2a78d6]/10 text-[#2a78d6]"
-                : "border-[var(--border)] text-[var(--text-secondary)] hover:bg-black/5 dark:hover:bg-white/10"
+                ? "border-accent bg-accent/10 text-accent"
+                : "border-[var(--border)] text-[var(--text-secondary)] hover:border-accent hover:bg-black/5 dark:hover:bg-white/10"
             }`}
           >
             {OUTCOME_LABEL[o]}
@@ -116,11 +121,15 @@ export function SessionAnnotationForm({ sessionId, canEdit, initialOutcome, init
         <button
           onClick={save}
           disabled={saving}
-          className="rounded-lg bg-[#2a78d6] px-4 py-2 text-sm font-medium text-white hover:bg-[#2368bd] disabled:opacity-60"
+          className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white shadow-[var(--shadow-xs)] transition-all duration-150 hover:bg-accent-hover hover:shadow-[var(--shadow-sm)] active:scale-95 disabled:opacity-60 disabled:shadow-none"
         >
           {saving ? "Đang lưu..." : "Lưu ghi chú"}
         </button>
-        {saved && <span className="text-sm text-[#0ca30c]">Đã lưu ✓</span>}
+        {saved && (
+          <span className="inline-flex items-center gap-1 text-sm font-medium text-[var(--status-good)]">
+            <Check className="h-4 w-4" /> Đã lưu
+          </span>
+        )}
       </div>
     </div>
   );

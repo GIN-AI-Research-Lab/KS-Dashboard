@@ -28,10 +28,10 @@ export function LeaderboardTable({
         </thead>
         <tbody>
           {rows.map((row, i) => (
-            <tr key={row.userId} className="border-b border-[var(--gridline)] last:border-0">
+            <tr key={row.userId} className="border-b border-[var(--gridline)] last:border-0 transition-colors hover:bg-black/[0.03] dark:hover:bg-white/[0.04]">
               <td className="py-2.5 text-base">{MEDALS[i] ?? i + 1}</td>
               <td className="py-2.5 pr-3 font-medium">
-                <Link href={`/users/${row.userId}`} className="hover:text-[#2a78d6]">
+                <Link href={`/users/${row.userId}`} className="transition-colors hover:text-accent">
                   {row.userName}
                 </Link>
               </td>

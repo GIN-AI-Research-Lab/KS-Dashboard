@@ -39,8 +39,10 @@ export function LibraryReactions({
           <button
             key={emoji}
             onClick={() => react(emoji)}
-            className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-sm ${
-              active ? "border-[#2a78d6] bg-[#2a78d6]/10" : "border-[var(--border)] hover:bg-black/5 dark:hover:bg-white/10"
+            className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-sm transition-all duration-150 active:scale-95 ${
+              active
+                ? "border-accent bg-accent/10 text-accent"
+                : "border-[var(--border)] hover:border-[var(--border-strong)] hover:bg-black/5 dark:hover:bg-white/10"
             }`}
           >
             <span>{emoji}</span>

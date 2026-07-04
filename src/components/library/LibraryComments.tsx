@@ -8,7 +8,7 @@ type Comment = { id: string; body: string; createdAt: string; authorName: string
 function renderBody(body: string) {
   return body.split(/(@[\p{L}\w.]+)/u).map((part, i) =>
     part.startsWith("@") ? (
-      <span key={i} className="font-medium text-[#2a78d6]">{part}</span>
+      <span key={i} className="font-medium text-accent">{part}</span>
     ) : (
       <span key={i}>{part}</span>
     ),
@@ -40,7 +40,7 @@ export function LibraryComments({ itemId, initialComments }: { itemId: string; i
     <div className="flex flex-col gap-3">
       {comments.length === 0 && <p className="text-sm text-[var(--text-muted)]">Chưa có bình luận.</p>}
       {comments.map((c) => (
-        <div key={c.id} className="rounded-lg border border-[var(--border)] px-3 py-2">
+        <div key={c.id} className="rounded-lg border border-[var(--border)] px-3 py-2 transition-all duration-150 hover:border-[var(--border-strong)] hover:shadow-[var(--shadow-sm)]">
           <div className="mb-0.5 flex items-center gap-2 text-xs text-[var(--text-muted)]">
             <span className="font-medium text-[var(--text-secondary)]">{c.authorName}</span>
             <span>{formatRelativeTime(c.createdAt)}</span>
@@ -59,7 +59,7 @@ export function LibraryComments({ itemId, initialComments }: { itemId: string; i
         <button
           onClick={add}
           disabled={posting || !body.trim()}
-          className="self-start rounded-lg bg-[#2a78d6] px-4 py-2 text-sm font-medium text-white hover:bg-[#2368bd] disabled:opacity-60"
+          className="self-start rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition-colors duration-150 hover:bg-[var(--accent-hover)] active:scale-95 disabled:opacity-60"
         >
           {posting ? "Đang gửi..." : "Gửi"}
         </button>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Check, Loader2, X } from "lucide-react";
 import { Badge, Tag } from "@/components/ui/Badge";
 import { formatNumber, formatRelativeTime, formatUsd } from "@/lib/format";
 import { colorForIndex } from "@/lib/chart-colors";
@@ -118,7 +119,9 @@ export function LiveFeed({ initialSessions }: { initialSessions: LiveSessionCard
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
         <span
-          className={`h-2 w-2 rounded-full ${connected ? "bg-[#0ca30c]" : "bg-[#898781]"}`}
+          className={`h-2 w-2 rounded-full transition-colors duration-200 ${
+            connected ? "bg-[var(--status-good)] animate-pulse" : "bg-[var(--text-muted)]"
+          }`}
           aria-hidden
         />
         {connected ? "Đang kết nối trực tiếp" : "Đang kết nối lại..."}
@@ -132,7 +135,10 @@ export function LiveFeed({ initialSessions }: { initialSessions: LiveSessionCard
 
       <div className="flex flex-col gap-3">
         {sessions.map((s) => (
-          <div key={s.id} className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
+          <div
+            key={s.id}
+            className="card-surface rounded-2xl border border-[var(--border)] p-4 shadow-[var(--shadow-xs)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[var(--shadow-sm)]"
+          >
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#4a3aa7]/15 text-xs font-semibold text-[#4a3aa7]">
@@ -174,8 +180,16 @@ export function LiveFeed({ initialSessions }: { initialSessions: LiveSessionCard
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {s.toolCalls.map((tc, i) => (
                   <Tag key={tc.id} color={colorForIndex(i)}>
-                    {tc.toolName}
-                    {tc.status === "STARTED" ? " ⋯" : tc.status === "ERROR" ? " ✕" : " ✓"}
+                    <span className="inline-flex items-center gap-1">
+                      {tc.toolName}
+                      {tc.status === "STARTED" ? (
+                        <Loader2 className="h-3 w-3 animate-spin" aria-hidden />
+                      ) : tc.status === "ERROR" ? (
+                        <X className="h-3 w-3" aria-hidden />
+                      ) : (
+                        <Check className="h-3 w-3" aria-hidden />
+                      )}
+                    </span>
                   </Tag>
                 ))}
               </div>

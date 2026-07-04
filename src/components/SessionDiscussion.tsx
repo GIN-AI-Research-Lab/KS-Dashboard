@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ThumbsUp, ThumbsDown } from "lucide-react";
 import { formatRelativeTime } from "@/lib/format";
 
 type Comment = { id: string; body: string; createdAt: string; authorName: string };
@@ -9,7 +10,7 @@ function renderBody(body: string) {
   // Highlight @mentions (display only; notification delivery is future work).
   return body.split(/(@[\p{L}\w.]+)/u).map((part, i) =>
     part.startsWith("@") ? (
-      <span key={i} className="font-medium text-[#2a78d6]">
+      <span key={i} className="font-medium text-accent">
         {part}
       </span>
     ) : (
@@ -74,26 +75,30 @@ export function SessionDiscussion({
       <div className="flex items-center gap-2">
         <button
           onClick={() => vote(1)}
-          className={`rounded-lg border px-3 py-1.5 text-sm font-medium ${
-            myVote === 1 ? "border-[#0ca30c] bg-[#0ca30c]/10 text-[#0ca30c]" : "border-[var(--border)] hover:bg-black/5 dark:hover:bg-white/10"
+          className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors duration-150 active:scale-95 ${
+            myVote === 1
+              ? "border-[var(--status-good)] bg-[var(--status-good)]/10 text-[var(--status-good)]"
+              : "border-[var(--border)] hover:border-[var(--status-good)] hover:bg-black/5 dark:hover:bg-white/10"
           }`}
         >
-          👍 {up}
+          <ThumbsUp className="h-4 w-4" /> {up}
         </button>
         <button
           onClick={() => vote(-1)}
-          className={`rounded-lg border px-3 py-1.5 text-sm font-medium ${
-            myVote === -1 ? "border-[#e34948] bg-[#e34948]/10 text-[#e34948]" : "border-[var(--border)] hover:bg-black/5 dark:hover:bg-white/10"
+          className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors duration-150 active:scale-95 ${
+            myVote === -1
+              ? "border-[var(--status-critical)] bg-[var(--status-critical)]/10 text-[var(--status-critical)]"
+              : "border-[var(--border)] hover:border-[var(--status-critical)] hover:bg-black/5 dark:hover:bg-white/10"
           }`}
         >
-          👎 {down}
+          <ThumbsDown className="h-4 w-4" /> {down}
         </button>
       </div>
 
       <div className="flex flex-col gap-3">
         {comments.length === 0 && <p className="text-sm text-[var(--text-muted)]">Chưa có bình luận.</p>}
         {comments.map((c) => (
-          <div key={c.id} className="rounded-lg border border-[var(--border)] px-3 py-2">
+          <div key={c.id} className="card-surface rounded-2xl border border-[var(--border)] px-3 py-2 shadow-[var(--shadow-xs)] transition-all duration-150 hover:-translate-y-0.5 hover:shadow-[var(--shadow-sm)]">
             <div className="mb-0.5 flex items-center gap-2 text-xs text-[var(--text-muted)]">
               <span className="font-medium text-[var(--text-secondary)]">{c.authorName}</span>
               <span>{formatRelativeTime(c.createdAt)}</span>
@@ -114,7 +119,7 @@ export function SessionDiscussion({
         <button
           onClick={addComment}
           disabled={posting || !body.trim()}
-          className="self-start rounded-lg bg-[#2a78d6] px-4 py-2 text-sm font-medium text-white hover:bg-[#2368bd] disabled:opacity-60"
+          className="self-start rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white shadow-[var(--shadow-xs)] transition-all duration-150 hover:bg-accent-hover hover:shadow-[var(--shadow-sm)] active:scale-95 disabled:opacity-60 disabled:shadow-none"
         >
           {posting ? "Đang gửi..." : "Gửi bình luận"}
         </button>

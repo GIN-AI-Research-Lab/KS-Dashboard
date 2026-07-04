@@ -28,10 +28,10 @@ export function RangeSelector({ defaultRange = "30d" }: { defaultRange?: string 
         <button
           key={opt.key}
           onClick={() => setRange(opt.key)}
-          className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+          className={`rounded-md px-2.5 py-1 text-xs font-medium transition-all duration-150 active:scale-95 ${
             current === opt.key
-              ? "bg-[var(--text-primary)] text-[var(--surface)]"
-              : "text-[var(--text-secondary)] hover:bg-black/5 dark:hover:bg-white/10"
+              ? "bg-accent/10 text-accent"
+              : "text-[var(--text-secondary)] hover:bg-black/5 hover:text-[var(--text-primary)] dark:hover:bg-white/10"
           }`}
         >
           {opt.label}

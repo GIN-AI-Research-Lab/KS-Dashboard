@@ -33,9 +33,9 @@ export function BadgeGrid({
               <div
                 key={b.key}
                 title={b.desc}
-                className={`flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm ${
+                className={`flex items-center gap-2 rounded-xl border px-3 py-1.5 text-sm transition-all duration-150 ${
                   b.earned
-                    ? "border-[var(--border)] bg-[var(--surface)]"
+                    ? "card-surface border-[var(--border)] shadow-[var(--shadow-xs)] hover:-translate-y-0.5 hover:shadow-[var(--shadow-sm)]"
                     : "border-dashed border-[var(--border)] opacity-40"
                 }`}
               >

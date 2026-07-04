@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Plus } from "lucide-react";
 import { MarkdownEditor } from "@/components/library/MarkdownEditor";
 
 export function LibraryComposer() {
@@ -34,8 +35,9 @@ export function LibraryComposer() {
 
   if (!open) {
     return (
-      <button onClick={() => setOpen(true)} className="self-start rounded-lg bg-[#2a78d6] px-4 py-2 text-sm font-medium text-white hover:bg-[#2368bd]">
-        + Đăng bài
+      <button onClick={() => setOpen(true)} className="inline-flex items-center gap-1.5 self-start rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white shadow-[var(--shadow-xs)] transition-colors duration-150 hover:bg-accent-hover active:scale-[0.98]">
+        <Plus className="h-4 w-4" />
+        Đăng bài
       </button>
     );
   }
@@ -47,7 +49,7 @@ export function LibraryComposer() {
           <button
             key={k}
             onClick={() => setKind(k)}
-            className={`rounded-lg border px-3 py-1 text-sm font-medium ${kind === k ? "border-[#2a78d6] bg-[#2a78d6]/10 text-[#2a78d6]" : "border-[var(--border)] text-[var(--text-secondary)]"}`}
+            className={`rounded-lg border px-3 py-1 text-sm font-medium transition-colors duration-150 ${kind === k ? "border-accent bg-accent/10 text-accent" : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border-strong)] hover:text-[var(--text-primary)]"}`}
           >
             {k === "PROMPT" ? "Prompt" : "Skill"}
           </button>
@@ -57,7 +59,7 @@ export function LibraryComposer() {
             <button
               key={v}
               onClick={() => setVisibility(v)}
-              className={`rounded-lg border px-3 py-1 text-xs font-medium ${visibility === v ? "border-[#2a78d6] bg-[#2a78d6]/10 text-[#2a78d6]" : "border-[var(--border)] text-[var(--text-secondary)]"}`}
+              className={`rounded-lg border px-3 py-1 text-xs font-medium transition-colors duration-150 ${visibility === v ? "border-accent bg-accent/10 text-accent" : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border-strong)] hover:text-[var(--text-primary)]"}`}
             >
               {v === "PUBLIC" ? "Công khai" : "Riêng tư"}
             </button>
@@ -85,7 +87,7 @@ export function LibraryComposer() {
         <button
           onClick={save}
           disabled={saving || !title.trim() || !body.trim()}
-          className="rounded-lg bg-[#2a78d6] px-4 py-2 text-sm font-medium text-white hover:bg-[#2368bd] disabled:opacity-60"
+          className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white shadow-[var(--shadow-xs)] transition-colors duration-150 hover:bg-accent-hover active:scale-[0.98] disabled:opacity-60"
         >
           {saving ? "Đang đăng..." : "Đăng"}
         </button>

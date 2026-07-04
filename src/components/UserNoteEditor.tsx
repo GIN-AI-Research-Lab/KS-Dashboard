@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Check } from "lucide-react";
 
 export function UserNoteEditor({ userId, initialNote }: { userId: string; initialNote: string | null }) {
   const router = useRouter();
@@ -38,11 +39,16 @@ export function UserNoteEditor({ userId, initialNote }: { userId: string; initia
         <button
           onClick={save}
           disabled={saving}
-          className="self-start rounded-lg bg-[#2a78d6] px-4 py-2 text-sm font-medium text-white hover:bg-[#2368bd] disabled:opacity-60"
+          className="self-start rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white shadow-[var(--shadow-xs)] transition-all duration-150 hover:bg-[var(--accent-hover)] active:scale-95 disabled:opacity-60"
         >
           {saving ? "Đang lưu..." : "Lưu ghi chú"}
         </button>
-        {saved && <span className="text-sm text-[#0ca30c]">Đã lưu ✓</span>}
+        {saved && (
+          <span className="inline-flex items-center gap-1 text-sm font-medium text-[var(--status-good)]">
+            <Check className="h-4 w-4" aria-hidden />
+            Đã lưu
+          </span>
+        )}
       </div>
     </div>
   );

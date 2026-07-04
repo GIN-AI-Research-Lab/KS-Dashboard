@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useState } from "react";
+import { Search } from "lucide-react";
 import { SORTS } from "@/lib/library";
 
 const KINDS = [
@@ -35,18 +36,19 @@ export function LibraryFilters() {
             <button
               key={k.key}
               onClick={() => update({ kind: k.key || null })}
-              className={`rounded-md px-2.5 py-1 text-xs font-medium ${kind === k.key ? "bg-[var(--text-primary)] text-[var(--surface)]" : "text-[var(--text-secondary)] hover:bg-black/5 dark:hover:bg-white/10"}`}
+              className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors duration-150 ${kind === k.key ? "bg-accent/10 text-accent" : "text-[var(--text-secondary)] hover:bg-black/5 dark:hover:bg-white/10"}`}
             >
               {k.label}
             </button>
           ))}
         </div>
-        <form onSubmit={(e) => { e.preventDefault(); update({ q: q || null }); }} className="min-w-[180px] flex-1">
+        <form onSubmit={(e) => { e.preventDefault(); update({ q: q || null }); }} className="relative min-w-[180px] flex-1">
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-muted)]" />
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Tìm tiêu đề, nội dung, tag… (Enter)"
-            className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-sm"
+            className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] py-1.5 pl-8 pr-3 text-sm transition-colors duration-150 focus:border-accent"
           />
         </form>
       </div>
@@ -55,7 +57,7 @@ export function LibraryFilters() {
           <button
             key={s.key}
             onClick={() => update({ sort: s.key === "new" ? null : s.key })}
-            className={`rounded-md px-2.5 py-1 text-xs font-medium ${sort === s.key ? "bg-[var(--text-primary)] text-[var(--surface)]" : "text-[var(--text-secondary)] hover:bg-black/5 dark:hover:bg-white/10"}`}
+            className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors duration-150 ${sort === s.key ? "bg-accent/10 text-accent" : "text-[var(--text-secondary)] hover:bg-black/5 dark:hover:bg-white/10"}`}
           >
             {s.label}
           </button>

@@ -54,10 +54,10 @@ export function AdminPanel({
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+            className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors duration-150 ${
               tab === t
-                ? "bg-[#2a78d6] text-white"
-                : "border border-[var(--border)] text-[var(--text-secondary)] hover:bg-black/5 dark:hover:bg-white/10"
+                ? "border-accent/30 bg-accent/10 text-accent"
+                : "border-[var(--border)] text-[var(--text-secondary)] hover:bg-black/5 dark:hover:bg-white/10"
             }`}
           >
             {TAB_LABELS[t]}
@@ -117,12 +117,12 @@ function DepartmentsTab({
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Tên bộ phận mới"
-          className="flex-1 rounded-lg border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-[#2a78d6]"
+          className="flex-1 rounded-lg border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-accent"
         />
         <button
           onClick={create}
           disabled={busy}
-          className="rounded-lg bg-[#2a78d6] px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+          className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition-colors duration-150 hover:bg-[var(--accent-hover)] active:opacity-90 disabled:opacity-60 disabled:hover:bg-accent"
         >
           Thêm
         </button>
@@ -138,12 +138,12 @@ function DepartmentsTab({
         </thead>
         <tbody>
           {departments.map((d) => (
-            <tr key={d.id} className="border-b border-[var(--gridline)] last:border-0">
+            <tr key={d.id} className="border-b border-[var(--gridline)] transition-colors last:border-0 hover:bg-black/[0.03] dark:hover:bg-white/5">
               <td className="py-2 font-medium">{d.name}</td>
               <td className="py-2">{d.teamCount}</td>
               <td className="py-2">{d.userCount}</td>
               <td className="py-2 text-right">
-                <button onClick={() => remove(d.id)} className="text-xs text-[#d03b3b] hover:underline">
+                <button onClick={() => remove(d.id)} className="text-xs text-[#d03b3b] transition-colors hover:underline">
                   Xoá
                 </button>
               </td>
@@ -201,7 +201,7 @@ function TeamsTab({
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Tên nhóm mới"
-          className="flex-1 rounded-lg border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-[#2a78d6]"
+          className="flex-1 rounded-lg border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-accent"
         />
         <select
           value={departmentId}
@@ -217,7 +217,7 @@ function TeamsTab({
         <button
           onClick={create}
           disabled={busy || !departmentId}
-          className="rounded-lg bg-[#2a78d6] px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+          className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition-colors duration-150 hover:bg-[var(--accent-hover)] active:opacity-90 disabled:opacity-60 disabled:hover:bg-accent"
         >
           Thêm
         </button>
@@ -233,12 +233,12 @@ function TeamsTab({
         </thead>
         <tbody>
           {teams.map((t) => (
-            <tr key={t.id} className="border-b border-[var(--gridline)] last:border-0">
+            <tr key={t.id} className="border-b border-[var(--gridline)] transition-colors last:border-0 hover:bg-black/[0.03] dark:hover:bg-white/5">
               <td className="py-2 font-medium">{t.name}</td>
               <td className="py-2 text-[var(--text-secondary)]">{t.departmentName}</td>
               <td className="py-2">{t.userCount}</td>
               <td className="py-2 text-right">
-                <button onClick={() => remove(t.id)} className="text-xs text-[#d03b3b] hover:underline">
+                <button onClick={() => remove(t.id)} className="text-xs text-[#d03b3b] transition-colors hover:underline">
                   Xoá
                 </button>
               </td>
@@ -322,21 +322,21 @@ function UsersTab({
           value={form.name}
           onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
           placeholder="Họ tên"
-          className="rounded-lg border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-[#2a78d6] md:col-span-1"
+          className="rounded-lg border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-accent md:col-span-1"
         />
         <input
           value={form.email}
           onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
           placeholder="Email"
           type="email"
-          className="rounded-lg border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-[#2a78d6] md:col-span-1"
+          className="rounded-lg border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-accent md:col-span-1"
         />
         <input
           value={form.password}
           onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
           placeholder="Mật khẩu tạm"
           type="text"
-          className="rounded-lg border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-[#2a78d6] md:col-span-1"
+          className="rounded-lg border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-accent md:col-span-1"
         />
         <select
           value={form.role}
@@ -380,7 +380,7 @@ function UsersTab({
         <button
           onClick={create}
           disabled={busy}
-          className="rounded-lg bg-[#2a78d6] px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+          className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition-colors duration-150 hover:bg-[var(--accent-hover)] active:opacity-90 disabled:opacity-60 disabled:hover:bg-accent"
         >
           Tạo tài khoản
         </button>
@@ -401,7 +401,7 @@ function UsersTab({
           </thead>
           <tbody>
             {users.map((u) => (
-              <tr key={u.id} className="border-b border-[var(--gridline)] last:border-0">
+              <tr key={u.id} className="border-b border-[var(--gridline)] transition-colors last:border-0 hover:bg-black/[0.03] dark:hover:bg-white/5">
                 <td className="py-2 pr-3 font-medium">{u.name}</td>
                 <td className="py-2 pr-3 text-[var(--text-secondary)]">{u.email}</td>
                 <td className="py-2 pr-3">
@@ -448,7 +448,7 @@ function UsersTab({
                   </select>
                 </td>
                 <td className="py-2 text-right">
-                  <button onClick={() => remove(u.id)} className="text-xs text-[#d03b3b] hover:underline">
+                  <button onClick={() => remove(u.id)} className="text-xs text-[#d03b3b] transition-colors hover:underline">
                     Xoá
                   </button>
                 </td>

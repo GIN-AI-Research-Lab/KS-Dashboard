@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { Image as ImageIcon } from "lucide-react";
 import { renderMarkdown } from "@/lib/markdown";
 
 export function MarkdownEditor({
@@ -56,7 +57,7 @@ export function MarkdownEditor({
     onChange(value ? `${value}\n\n${text}` : text);
   }
 
-  const btn = "rounded border border-[var(--border)] px-2 py-1 text-xs font-medium hover:bg-black/5 dark:hover:bg-white/10";
+  const btn = "rounded border border-[var(--border)] px-2 py-1 text-xs font-medium transition-colors duration-150 hover:border-[var(--border-strong)] hover:bg-black/5 active:scale-[0.98] dark:hover:bg-white/10";
 
   return (
     <div className="flex flex-col gap-2">
@@ -67,11 +68,12 @@ export function MarkdownEditor({
         <button type="button" className={btn} onClick={() => insert("`", "`", "code")}>{"</>"}</button>
         <button type="button" className={btn} onClick={() => insert("```\n", "\n```", "code block")}>Code block</button>
         <button type="button" className={btn} onClick={() => insert("- ", "", "mục")}>Danh sách</button>
-        <button type="button" className={btn} onClick={() => imgInput.current?.click()} disabled={uploading}>
-          {uploading ? "Đang tải..." : "🖼 Ảnh"}
+        <button type="button" className={`${btn} inline-flex items-center gap-1`} onClick={() => imgInput.current?.click()} disabled={uploading}>
+          <ImageIcon className="h-4 w-4" />
+          {uploading ? "Đang tải..." : "Ảnh"}
         </button>
         <button type="button" className={btn} onClick={() => mdInput.current?.click()}>Nhập .md</button>
-        <button type="button" className={`${btn} ml-auto ${preview ? "bg-[#2a78d6]/10 text-[#2a78d6]" : ""}`} onClick={() => setPreview((p) => !p)}>
+        <button type="button" className={`${btn} ml-auto ${preview ? "border-accent bg-accent/10 text-accent" : ""}`} onClick={() => setPreview((p) => !p)}>
           {preview ? "Soạn thảo" : "Xem trước"}
         </button>
         <input

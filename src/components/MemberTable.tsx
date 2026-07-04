@@ -24,9 +24,9 @@ export function MemberTable({
         </thead>
         <tbody>
           {members.map((m) => (
-            <tr key={m.userId} className="border-b border-[var(--gridline)] last:border-0">
+            <tr key={m.userId} className="border-b border-[var(--gridline)] last:border-0 transition-colors hover:bg-black/[0.03] dark:hover:bg-white/[0.04]">
               <td className="py-2 pr-3 font-medium">
-                <Link href={`/users/${m.userId}`} className="hover:text-[#2a78d6]">
+                <Link href={`/users/${m.userId}`} className="transition-colors hover:text-accent">
                   {m.userName}
                 </Link>
               </td>

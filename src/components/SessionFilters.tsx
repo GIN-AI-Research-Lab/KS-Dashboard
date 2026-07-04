@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useState } from "react";
+import { Star } from "lucide-react";
 import { OUTCOME_LABEL } from "@/lib/session-outcome";
 
 const OUTCOME_OPTS = [
@@ -35,10 +36,10 @@ export function SessionFilters() {
           <button
             key={o.key}
             onClick={() => update({ outcome: o.key || null })}
-            className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+            className={`rounded-md px-2.5 py-1 text-xs font-medium transition-all duration-150 active:scale-95 ${
               outcome === o.key
-                ? "bg-[var(--text-primary)] text-[var(--surface)]"
-                : "text-[var(--text-secondary)] hover:bg-black/5 dark:hover:bg-white/10"
+                ? "bg-accent/10 text-accent"
+                : "text-[var(--text-secondary)] hover:bg-black/5 hover:text-[var(--text-primary)] dark:hover:bg-white/10"
             }`}
           >
             {o.label}
@@ -48,13 +49,14 @@ export function SessionFilters() {
 
       <button
         onClick={() => update({ featured: featured ? null : "1" })}
-        className={`rounded-lg border px-2.5 py-1 text-xs font-medium transition-colors ${
+        className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium transition-all duration-150 active:scale-95 ${
           featured
-            ? "border-[#2a78d6] bg-[#2a78d6]/10 text-[#2a78d6]"
-            : "border-[var(--border)] text-[var(--text-secondary)] hover:bg-black/5 dark:hover:bg-white/10"
+            ? "border-accent bg-accent/10 text-accent"
+            : "border-[var(--border)] text-[var(--text-secondary)] hover:bg-black/5 hover:text-[var(--text-primary)] dark:hover:bg-white/10"
         }`}
       >
-        ★ Nổi bật
+        <Star className={`h-4 w-4 ${featured ? "fill-current" : ""}`} />
+        Nổi bật
       </button>
 
       <form
@@ -68,7 +70,7 @@ export function SessionFilters() {
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Tìm ghi chú, tag, dự án, người… (Enter)"
-          className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-sm"
+          className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-sm transition-colors hover:border-[var(--border-strong)]"
         />
       </form>
     </div>

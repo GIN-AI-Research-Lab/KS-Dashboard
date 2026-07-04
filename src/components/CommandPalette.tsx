@@ -144,8 +144,8 @@ export function CommandPalette() {
               key={`${item.href}-${i}`}
               onMouseEnter={() => setActive(i)}
               onClick={() => go(item)}
-              className={`flex w-full items-center justify-between gap-3 px-4 py-2 text-left text-sm ${
-                i === active ? "bg-[#2a78d6]/10" : ""
+              className={`flex w-full items-center justify-between gap-3 px-4 py-2 text-left text-sm transition-colors duration-150 ${
+                i === active ? "bg-accent/10 text-accent" : "hover:bg-black/5 dark:hover:bg-white/5"
               }`}
             >
               <span className="min-w-0 flex-1 truncate">
