@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { Image as ImageIcon } from "lucide-react";
 import { renderMarkdown } from "@/lib/markdown";
+import { useToast } from "@/components/ui/toast/ToastProvider";
 
 export function MarkdownEditor({
   value,
@@ -13,6 +14,7 @@ export function MarkdownEditor({
   onChange: (v: string) => void;
   placeholder?: string;
 }) {
+  const { toast } = useToast();
   const ref = useRef<HTMLTextAreaElement>(null);
   const imgInput = useRef<HTMLInputElement>(null);
   const mdInput = useRef<HTMLInputElement>(null);
@@ -48,7 +50,7 @@ export function MarkdownEditor({
       onChange(`${value}${value.endsWith("\n") || value === "" ? "" : "\n"}![ảnh](${d.url})\n`);
     } else {
       const d = await res.json().catch(() => ({}));
-      alert(d.error ?? "Tải ảnh thất bại");
+      toast(d.error ?? "Tải ảnh thất bại", "error");
     }
   }
 

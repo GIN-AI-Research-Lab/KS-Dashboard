@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Star } from "lucide-react";
+import { useToast } from "@/components/ui/toast/ToastProvider";
 
 export function LibraryStar({
   itemId,
@@ -12,6 +13,7 @@ export function LibraryStar({
   initialBookmarked: boolean;
   initialCount: number;
 }) {
+  const { toast } = useToast();
   const [on, setOn] = useState(initialBookmarked);
   const [count, setCount] = useState(initialCount);
   const [busy, setBusy] = useState(false);
@@ -24,6 +26,7 @@ export function LibraryStar({
       const d = await res.json();
       setOn(d.bookmarked);
       setCount(d.count);
+      toast(d.bookmarked ? "Đã lưu bài" : "Đã bỏ lưu");
     }
   }
 

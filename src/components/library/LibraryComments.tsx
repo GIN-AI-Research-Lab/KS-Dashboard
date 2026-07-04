@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { formatRelativeTime } from "@/lib/format";
+import { useToast } from "@/components/ui/toast/ToastProvider";
 
 type Comment = { id: string; body: string; createdAt: string; authorName: string };
 
@@ -16,6 +17,7 @@ function renderBody(body: string) {
 }
 
 export function LibraryComments({ itemId, initialComments }: { itemId: string; initialComments: Comment[] }) {
+  const { toast } = useToast();
   const [comments, setComments] = useState(initialComments);
   const [body, setBody] = useState("");
   const [posting, setPosting] = useState(false);
@@ -33,6 +35,9 @@ export function LibraryComments({ itemId, initialComments }: { itemId: string; i
       const d = await res.json();
       setComments((c) => [...c, { id: d.comment.id, body: d.comment.body, createdAt: d.comment.createdAt, authorName: d.comment.author.name }]);
       setBody("");
+      toast("Đã gửi bình luận");
+    } else {
+      toast("Gửi bình luận thất bại", "error");
     }
   }
 

@@ -6,6 +6,7 @@ import { Star, Check } from "lucide-react";
 import type { SessionOutcome } from "@prisma/client";
 import { Badge, Tag } from "@/components/ui/Badge";
 import { OUTCOME_LABEL, OUTCOME_VARIANT, parseTags } from "@/lib/session-outcome";
+import { useToast } from "@/components/ui/toast/ToastProvider";
 
 type Props = {
   sessionId: string;
@@ -20,6 +21,7 @@ const OUTCOMES: SessionOutcome[] = ["SOLVED", "IN_PROGRESS", "ABANDONED"];
 
 export function SessionAnnotationForm({ sessionId, canEdit, initialOutcome, initialNote, initialTags, initialFeatured }: Props) {
   const router = useRouter();
+  const { toast } = useToast();
   const [outcome, setOutcome] = useState<SessionOutcome | "">(initialOutcome ?? "");
   const [note, setNote] = useState(initialNote ?? "");
   const [tags, setTags] = useState(initialTags ?? "");
@@ -67,8 +69,11 @@ export function SessionAnnotationForm({ sessionId, canEdit, initialOutcome, init
     setSaving(false);
     if (res.ok) {
       setSaved(true);
+      toast("Đã lưu");
       router.refresh();
       setTimeout(() => setSaved(false), 2000);
+    } else {
+      toast("Lưu thất bại", "error");
     }
   }
 

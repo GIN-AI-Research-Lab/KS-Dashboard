@@ -2,16 +2,19 @@
 
 import { useState } from "react";
 import { Check, Copy } from "lucide-react";
+import { useToast } from "@/components/ui/toast/ToastProvider";
 
 // Copies the current URL (including active filters in the query string) so a
 // filtered dashboard view can be shared with a teammate.
 export function CopyLinkButton() {
   const [copied, setCopied] = useState(false);
+  const { toast } = useToast();
   return (
     <button
       onClick={async () => {
         await navigator.clipboard.writeText(window.location.href);
         setCopied(true);
+        toast("Đã sao chép liên kết");
         setTimeout(() => setCopied(false), 1500);
       }}
       title="Sao chép liên kết view hiện tại (kèm bộ lọc)"

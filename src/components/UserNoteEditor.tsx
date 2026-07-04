@@ -3,9 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check } from "lucide-react";
+import { useToast } from "@/components/ui/toast/ToastProvider";
 
 export function UserNoteEditor({ userId, initialNote }: { userId: string; initialNote: string | null }) {
   const router = useRouter();
+  const { toast } = useToast();
   const [note, setNote] = useState(initialNote ?? "");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -21,8 +23,11 @@ export function UserNoteEditor({ userId, initialNote }: { userId: string; initia
     setSaving(false);
     if (res.ok) {
       setSaved(true);
+      toast("Đã lưu ghi chú");
       router.refresh();
       setTimeout(() => setSaved(false), 2000);
+    } else {
+      toast("Lưu thất bại", "error");
     }
   }
 

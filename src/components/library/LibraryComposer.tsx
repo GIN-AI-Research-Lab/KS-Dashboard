@@ -4,9 +4,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { MarkdownEditor } from "@/components/library/MarkdownEditor";
+import { useToast } from "@/components/ui/toast/ToastProvider";
 
 export function LibraryComposer() {
   const router = useRouter();
+  const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [kind, setKind] = useState<"PROMPT" | "SKILL">("PROMPT");
   const [title, setTitle] = useState("");
@@ -29,7 +31,10 @@ export function LibraryComposer() {
       setBody("");
       setTags("");
       setOpen(false);
+      toast("Đã đăng");
       router.refresh();
+    } else {
+      toast("Đăng thất bại", "error");
     }
   }
 

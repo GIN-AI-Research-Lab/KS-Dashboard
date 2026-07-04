@@ -1,25 +1,35 @@
 "use client";
 
 import { useState } from "react";
+import { useToast } from "@/components/ui/toast/ToastProvider";
 
 export function ApiKeyBox({ initialKey }: { initialKey: string }) {
   const [apiKey, setApiKey] = useState(initialKey);
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
 
   async function copy() {
     await navigator.clipboard.writeText(apiKey);
     setCopied(true);
+    toast("Đã sao chép API key");
     setTimeout(() => setCopied(false), 1500);
   }
 
   async function regenerate() {
     if (!confirm("Tạo API key mới? Key cũ sẽ ngừng hoạt động và plugin cần cập nhật lại.")) return;
     setLoading(true);
-    const res = await fetch("/api/me/regenerate-key", { method: "POST" });
-    const data = await res.json();
-    setApiKey(data.apiKey);
-    setLoading(false);
+    try {
+      const res = await fetch("/api/me/regenerate-key", { method: "POST" });
+      if (!res.ok) throw new Error("regenerate failed");
+      const data = await res.json();
+      setApiKey(data.apiKey);
+      toast("Đã tạo API key mới", "success");
+    } catch {
+      toast("Không tạo được key, thử lại", "error");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (

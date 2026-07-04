@@ -14,8 +14,18 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "KS Dashboard — Claude Usage Analytics",
+  metadataBase: new URL(process.env.NEXTAUTH_URL ?? "http://localhost:4000"),
+  title: {
+    default: "KS Dashboard — Claude Usage Analytics",
+    template: "%s · KS Dashboard",
+  },
   description: "Company-wide Claude Code usage, cost, and session analytics",
+  openGraph: {
+    title: "KS Dashboard — Claude Usage Analytics",
+    description: "Company-wide Claude Code usage, cost, and session analytics",
+    siteName: "KS Dashboard",
+    type: "website",
+  },
 };
 
 export default function RootLayout({

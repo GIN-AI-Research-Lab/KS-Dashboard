@@ -24,6 +24,6 @@ export const config = {
     // api/otel/* receives Claude Code's own OTel export (logs + metrics), which
     // carries no session cookie and authenticates by user.email attribute
     // instead -- see HANDOFF.md. api/ingest is the plugin hook pipeline.
-    "/((?!api/ingest|api/otel|api/auth|_next/static|_next/image|favicon.ico).*)",
+    "/((?!api/ingest|api/otel|api/auth|_next/static|_next/image|icon.svg|apple-icon|opengraph-image|favicon.ico).*)",
   ],
 };
