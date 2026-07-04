@@ -4,41 +4,81 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import type { Role } from "@prisma/client";
+import {
+  LayoutDashboard,
+  User,
+  Trophy,
+  Bot,
+  Wrench,
+  TrendingUp,
+  DollarSign,
+  FolderKanban,
+  FlaskConical,
+  Library,
+  Lightbulb,
+  Plug,
+  Radio,
+  Settings,
+  Building2,
+  ChevronDown,
+  PanelLeftClose,
+  PanelLeftOpen,
+  type LucideIcon,
+} from "lucide-react";
+import { useSidebar } from "@/components/sidebar/SidebarContext";
 
 type OrgTree = { id: string; name: string; teams: { id: string; name: string }[] }[];
 
-const ICONS: Record<string, string> = {
-  overview: "📊",
-  me: "👤",
-  rankings: "🏆",
-  models: "🤖",
-  tools: "🛠️",
-  adoption: "📈",
-  roi: "💰",
-  projects: "📁",
-  insights: "🔬",
-  sessions: "📚",
-  library: "💡",
-  integrate: "🔌",
-  live: "🟢",
-  admin: "⚙️",
-  org: "🏢",
+const ICONS: Record<string, LucideIcon> = {
+  overview: LayoutDashboard,
+  me: User,
+  rankings: Trophy,
+  models: Bot,
+  tools: Wrench,
+  adoption: TrendingUp,
+  roi: DollarSign,
+  projects: FolderKanban,
+  insights: FlaskConical,
+  sessions: Library,
+  library: Lightbulb,
+  integrate: Plug,
+  live: Radio,
+  admin: Settings,
 };
 
-function NavLink({ href, label, icon, exact }: { href: string; label: string; icon: string; exact?: boolean }) {
+function NavLink({
+  href,
+  label,
+  icon: Icon,
+  exact,
+}: {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  exact?: boolean;
+}) {
   const pathname = usePathname();
+  const { collapsed, setMobileOpen } = useSidebar();
   const active = exact ? pathname === href : pathname.startsWith(href);
   return (
     <Link
       href={href}
-      className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+      title={collapsed ? label : undefined}
+      onClick={() => setMobileOpen(false)}
+      aria-current={active ? "page" : undefined}
+      className={`group relative flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-150 ${
+        collapsed ? "md:justify-center" : ""
+      } ${
         active
-          ? "bg-[#2a78d6]/10 text-[#2a78d6]"
-          : "text-[var(--text-secondary)] hover:bg-black/5 dark:hover:bg-white/10"
+          ? "bg-[var(--accent-weak)] text-[var(--accent)]"
+          : "text-[var(--text-secondary)] hover:bg-black/[0.04] hover:text-[var(--text-primary)] dark:hover:bg-white/[0.06]"
       }`}
     >
-      <span aria-hidden>{icon}</span>
-      {label}
+      {active && (
+        <span className="absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-full bg-[var(--accent)]" />
+      )}
+      <Icon className="h-[18px] w-[18px] shrink-0" strokeWidth={active ? 2.25 : 2} />
+      <span className={collapsed ? "md:hidden" : ""}>{label}</span>
     </Link>
   );
 }
@@ -46,81 +86,122 @@ function NavLink({ href, label, icon, exact }: { href: string; label: string; ic
 export function Sidebar({ orgTree, role }: { orgTree: OrgTree; role: Role }) {
   const [orgOpen, setOrgOpen] = useState(true);
   const pathname = usePathname();
+  const { collapsed, toggleCollapsed, mobileOpen, setMobileOpen } = useSidebar();
 
   return (
-    <aside className="flex h-full w-64 shrink-0 flex-col border-r border-[var(--border)] bg-[var(--surface)] px-3 py-4">
-      <div className="mb-6 flex items-center gap-2 px-2">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#2a78d6] text-sm font-bold text-white">
-          KS
-        </div>
-        <div>
-          <div className="text-sm font-semibold leading-tight">KS Dashboard</div>
-          <div className="text-[11px] leading-tight text-[var(--text-muted)]">Claude usage analytics</div>
-        </div>
-      </div>
+    <>
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/40 md:hidden"
+          aria-hidden="true"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
 
-      <nav className="flex flex-1 flex-col gap-1 overflow-y-auto">
-        <NavLink href="/" label="Tổng quan" icon={ICONS.overview} exact />
-        <NavLink href="/me" label="Cá nhân" icon={ICONS.me} />
-        <NavLink href="/rankings" label="Xếp hạng" icon={ICONS.rankings} />
-        <NavLink href="/models" label="Model" icon={ICONS.models} />
-        <NavLink href="/tools" label="Công cụ" icon={ICONS.tools} />
-        <NavLink href="/adoption" label="Áp dụng" icon={ICONS.adoption} />
-        <NavLink href="/roi" label="Hiệu quả & Chi phí" icon={ICONS.roi} />
-        <NavLink href="/projects" label="Dự án" icon={ICONS.projects} />
-        <NavLink href="/insights" label="Phân tích sâu" icon={ICONS.insights} />
-        <NavLink href="/sessions" label="Thư viện phiên" icon={ICONS.sessions} />
-        <NavLink href="/library" label="Thư viện" icon={ICONS.library} />
-        <NavLink href="/integrate" label="Tích hợp Claude" icon={ICONS.integrate} />
-        <NavLink href="/live" label="Phiên trực tuyến" icon={ICONS.live} />
-
-        <button
-          onClick={() => setOrgOpen((v) => !v)}
-          className="mt-3 flex items-center justify-between rounded-lg px-3 py-2 text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]"
+      <aside
+        className={`fixed inset-y-0 left-0 z-40 flex h-full w-64 shrink-0 flex-col border-r border-[var(--border)] bg-[var(--surface)] px-3 py-4 transition-[transform,width] duration-200 md:static md:translate-x-0 ${
+          mobileOpen ? "translate-x-0" : "-translate-x-full"
+        } ${collapsed ? "md:w-[4.5rem]" : "md:w-64"}`}
+      >
+        <div
+          className={`mb-6 flex items-center gap-2.5 px-2 ${
+            collapsed ? "md:justify-center md:px-0" : ""
+          }`}
         >
-          <span className="flex items-center gap-2">
-            <span aria-hidden>{ICONS.org}</span> Bộ phận / Nhóm
-          </span>
-          <span>{orgOpen ? "−" : "+"}</span>
-        </button>
-        {orgOpen && (
-          <div className="ml-2 flex flex-col gap-0.5 border-l border-[var(--border)] pl-3">
-            {orgTree.map((dept) => (
-              <div key={dept.id}>
-                <Link
-                  href={`/departments/${dept.id}`}
-                  className={`block truncate rounded-md px-2 py-1.5 text-sm ${
-                    pathname === `/departments/${dept.id}`
-                      ? "font-medium text-[#2a78d6]"
-                      : "text-[var(--text-secondary)] hover:bg-black/5 dark:hover:bg-white/10"
-                  }`}
-                >
-                  {dept.name}
-                </Link>
-                {dept.teams.map((team) => (
-                  <Link
-                    key={team.id}
-                    href={`/teams/${team.id}`}
-                    className={`ml-3 block truncate rounded-md px-2 py-1 text-[13px] ${
-                      pathname === `/teams/${team.id}`
-                        ? "font-medium text-[#2a78d6]"
-                        : "text-[var(--text-muted)] hover:bg-black/5 dark:hover:bg-white/10"
-                    }`}
-                  >
-                    · {team.name}
-                  </Link>
+          <div className="gradient-brand flex h-8 w-8 items-center justify-center rounded-lg text-sm font-bold text-white shadow-[var(--shadow-sm)]">
+            KS
+          </div>
+          <div className={collapsed ? "md:hidden" : ""}>
+            <div className="text-sm font-semibold leading-tight tracking-tight">KS Dashboard</div>
+            <div className="text-[11px] leading-tight text-[var(--text-muted)]">Claude usage analytics</div>
+          </div>
+        </div>
+
+        <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto">
+          <NavLink href="/" label="Tổng quan" icon={ICONS.overview} exact />
+          <NavLink href="/me" label="Cá nhân" icon={ICONS.me} />
+          <NavLink href="/rankings" label="Xếp hạng" icon={ICONS.rankings} />
+          <NavLink href="/models" label="Model" icon={ICONS.models} />
+          <NavLink href="/tools" label="Công cụ" icon={ICONS.tools} />
+          <NavLink href="/adoption" label="Áp dụng" icon={ICONS.adoption} />
+          <NavLink href="/roi" label="Hiệu quả & Chi phí" icon={ICONS.roi} />
+          <NavLink href="/projects" label="Dự án" icon={ICONS.projects} />
+          <NavLink href="/insights" label="Phân tích sâu" icon={ICONS.insights} />
+          <NavLink href="/sessions" label="Thư viện phiên" icon={ICONS.sessions} />
+          <NavLink href="/library" label="Thư viện" icon={ICONS.library} />
+          <NavLink href="/integrate" label="Tích hợp Claude" icon={ICONS.integrate} />
+          <NavLink href="/live" label="Phiên trực tuyến" icon={ICONS.live} />
+
+          <div className={collapsed ? "md:hidden" : ""}>
+            <button
+              onClick={() => setOrgOpen((v) => !v)}
+              className="mt-3 flex w-full items-center justify-between rounded-lg px-3 py-2 text-xs font-semibold uppercase tracking-[0.06em] text-[var(--text-muted)] transition-colors hover:text-[var(--text-secondary)]"
+            >
+              <span className="flex items-center gap-2">
+                <Building2 className="h-[18px] w-[18px]" /> Bộ phận / Nhóm
+              </span>
+              <ChevronDown
+                className={`h-4 w-4 transition-transform duration-200 ${orgOpen ? "" : "-rotate-90"}`}
+              />
+            </button>
+            {orgOpen && (
+              <div className="ml-2 flex flex-col gap-0.5 border-l border-[var(--border)] pl-3">
+                {orgTree.map((dept) => (
+                  <div key={dept.id}>
+                    <Link
+                      href={`/departments/${dept.id}`}
+                      onClick={() => setMobileOpen(false)}
+                      className={`block truncate rounded-md px-2 py-1.5 text-sm transition-colors ${
+                        pathname === `/departments/${dept.id}`
+                          ? "font-medium text-[var(--accent)]"
+                          : "text-[var(--text-secondary)] hover:bg-black/[0.04] hover:text-[var(--text-primary)] dark:hover:bg-white/[0.06]"
+                      }`}
+                    >
+                      {dept.name}
+                    </Link>
+                    {dept.teams.map((team) => (
+                      <Link
+                        key={team.id}
+                        href={`/teams/${team.id}`}
+                        onClick={() => setMobileOpen(false)}
+                        className={`ml-3 block truncate rounded-md px-2 py-1 text-[13px] transition-colors ${
+                          pathname === `/teams/${team.id}`
+                            ? "font-medium text-[var(--accent)]"
+                            : "text-[var(--text-muted)] hover:bg-black/[0.04] hover:text-[var(--text-secondary)] dark:hover:bg-white/[0.06]"
+                        }`}
+                      >
+                        · {team.name}
+                      </Link>
+                    ))}
+                  </div>
                 ))}
               </div>
-            ))}
+            )}
           </div>
-        )}
 
-        {role === "ADMIN" && (
-          <div className="mt-3 border-t border-[var(--border)] pt-3">
-            <NavLink href="/admin" label="Quản trị" icon={ICONS.admin} />
-          </div>
-        )}
-      </nav>
-    </aside>
+          {role === "ADMIN" && (
+            <div className="mt-3 border-t border-[var(--border)] pt-3">
+              <NavLink href="/admin" label="Quản trị" icon={ICONS.admin} />
+            </div>
+          )}
+        </nav>
+
+        <button
+          onClick={toggleCollapsed}
+          title={collapsed ? "Mở rộng thanh bên" : "Thu gọn thanh bên"}
+          aria-label={collapsed ? "Mở rộng thanh bên" : "Thu gọn thanh bên"}
+          className={`mt-2 hidden items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-black/[0.04] hover:text-[var(--text-primary)] md:flex dark:hover:bg-white/[0.06] ${
+            collapsed ? "md:justify-center" : ""
+          }`}
+        >
+          {collapsed ? (
+            <PanelLeftOpen className="h-[18px] w-[18px] shrink-0" strokeWidth={2} />
+          ) : (
+            <PanelLeftClose className="h-[18px] w-[18px] shrink-0" strokeWidth={2} />
+          )}
+          <span className={collapsed ? "md:hidden" : ""}>Thu gọn</span>
+        </button>
+      </aside>
+    </>
   );
 }

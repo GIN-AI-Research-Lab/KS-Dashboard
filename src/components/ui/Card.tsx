@@ -12,16 +12,20 @@ export function Card({
   className?: string;
 }) {
   return (
-    <div
-      className={`rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 ${className}`}
+    <section
+      className={`card-surface rounded-2xl border border-[var(--border)] p-5 shadow-[var(--shadow-xs)] transition-shadow duration-200 hover:shadow-[var(--shadow-sm)] ${className}`}
     >
       {(title || action) && (
-        <div className="mb-4 flex items-center justify-between">
-          {title && <h3 className="text-sm font-semibold text-[var(--text-primary)]">{title}</h3>}
+        <div className="mb-4 flex items-center justify-between gap-3">
+          {title && (
+            <h3 className="text-[13px] font-semibold tracking-tight text-[var(--text-primary)]">
+              {title}
+            </h3>
+          )}
           {action}
         </div>
       )}
       {children}
-    </div>
+    </section>
   );
 }

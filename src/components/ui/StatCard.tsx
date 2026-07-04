@@ -1,4 +1,7 @@
-import { ReactNode } from "react";
+import { ReactNode, CSSProperties } from "react";
+import { ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { CountUp } from "./CountUp";
+import { Sparkline } from "./Sparkline";
 
 export function StatCard({
   label,
@@ -7,6 +10,9 @@ export function StatCard({
   accent,
   icon,
   deltaPct,
+  rawValue,
+  format,
+  spark,
 }: {
   label: string;
   value: string;
@@ -14,37 +20,61 @@ export function StatCard({
   accent?: string;
   icon?: ReactNode;
   deltaPct?: number | null;
+  rawValue?: number;
+  format?: "number" | "usd" | "percent";
+  spark?: number[];
 }) {
   const hasDelta = typeof deltaPct === "number" && isFinite(deltaPct);
   const up = hasDelta && (deltaPct as number) >= 0;
+  const tint = accent ?? "var(--accent)";
+  const animate = typeof rawValue === "number" && isFinite(rawValue) && !!format;
+  const hasSpark = Array.isArray(spark) && spark.length > 1;
+
+  const style = {
+    "--tint": tint,
+    background: `linear-gradient(165deg, color-mix(in srgb, ${tint} 9%, var(--surface)) 0%, var(--surface) 58%)`,
+  } as CSSProperties;
 
   return (
-    <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
+    <div
+      className="stat-card rounded-2xl border border-[var(--border)] p-4 shadow-[var(--shadow-xs)]"
+      style={style}
+    >
       <div className="flex items-center justify-between">
-        <span className="text-xs font-medium uppercase tracking-wide text-[var(--text-muted)]">
+        <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-[var(--text-muted)]">
           {label}
         </span>
         {icon && (
           <span
-            className="flex h-7 w-7 items-center justify-center rounded-lg"
-            style={{ background: `${accent ?? "#2a78d6"}1a`, color: accent ?? "#2a78d6" }}
+            className="flex h-8 w-8 items-center justify-center rounded-xl"
+            style={{ background: `color-mix(in srgb, ${tint} 16%, transparent)`, color: tint }}
           >
             {icon}
           </span>
         )}
       </div>
-      <div className="mt-2 text-2xl font-semibold tabular-nums text-[var(--text-primary)]">
-        {value}
+      <div className="mt-3 text-[1.7rem] font-semibold leading-none tracking-tight tabular-nums text-[var(--text-primary)]">
+        {animate ? (
+          <CountUp value={rawValue as number} format={format as "number" | "usd" | "percent"} />
+        ) : (
+          value
+        )}
       </div>
       {hasDelta && (
-        <div className="mt-1 flex items-center gap-1 text-xs">
-          <span className={up ? "text-[#0ca30c]" : "text-[#e34948]"}>
-            {up ? "▲" : "▼"} {Math.abs(deltaPct as number).toFixed(1)}%
+        <div className="mt-2 flex items-center gap-1.5 text-xs">
+          <span
+            className={`inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 font-medium tabular-nums ${
+              up ? "bg-[#0ca30c]/10 text-[#0ca30c]" : "bg-[#e34948]/10 text-[#e34948]"
+            }`}
+          >
+            {up ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
+            {Math.abs(deltaPct as number).toFixed(1)}%
           </span>
           <span className="text-[var(--text-muted)]">vs kỳ trước</span>
         </div>
       )}
-      {hint && <div className="mt-1 text-xs text-[var(--text-secondary)]">{hint}</div>}
+      {hint && <div className="mt-1.5 text-xs leading-relaxed text-[var(--text-secondary)]">{hint}</div>}
+      {hasSpark && <Sparkline data={spark as number[]} color={tint} className="mt-3" />}
     </div>
   );
 }

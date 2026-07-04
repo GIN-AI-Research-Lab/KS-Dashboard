@@ -4,6 +4,7 @@ import { Sidebar } from "@/components/Sidebar";
 import { Topbar } from "@/components/Topbar";
 import { AutoRefresh } from "@/components/AutoRefresh";
 import { CommandPalette } from "@/components/CommandPalette";
+import { SidebarProvider } from "@/components/sidebar/SidebarContext";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -15,14 +16,16 @@ export default async function DashboardLayout({ children }: { children: React.Re
   });
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-[var(--page)]">
-      <AutoRefresh />
-      <CommandPalette />
-      <Sidebar orgTree={departments} role={user.role} />
-      <div className="flex min-w-0 flex-1 flex-col">
-        <Topbar name={user.name} role={user.role} />
-        <main className="flex-1 overflow-y-auto p-6">{children}</main>
+    <SidebarProvider>
+      <div className="flex h-screen w-full overflow-hidden bg-[var(--page)]">
+        <AutoRefresh />
+        <CommandPalette />
+        <Sidebar orgTree={departments} role={user.role} />
+        <div className="flex min-w-0 flex-1 flex-col">
+          <Topbar name={user.name} role={user.role} />
+          <main className="flex-1 overflow-y-auto p-6">{children}</main>
+        </div>
       </div>
-    </div>
+    </SidebarProvider>
   );
 }
