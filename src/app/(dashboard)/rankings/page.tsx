@@ -1,4 +1,4 @@
-import { getRankings, type RangeKey, type RankingMetric } from "@/lib/stats";
+import { getRankingMovement, type RangeKey, type RankingMetric } from "@/lib/stats";
 import { Card } from "@/components/ui/Card";
 import { RangeSelector } from "@/components/RangeSelector";
 import { MetricTabs } from "@/components/MetricTabs";
@@ -23,7 +23,7 @@ export default async function RankingsPage({
   const r = (range ?? "30d") as RangeKey;
   const activeMetric = METRICS.find((m) => m.key === metric) ?? METRICS[0];
 
-  const rows = await getRankings(activeMetric.key, r, 25);
+  const rows = await getRankingMovement(activeMetric.key, r, 25);
 
   return (
     <div className="stagger flex flex-col gap-6">

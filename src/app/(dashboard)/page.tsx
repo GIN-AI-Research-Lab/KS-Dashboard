@@ -14,6 +14,7 @@ import { Card } from "@/components/ui/Card";
 import { StatCard } from "@/components/ui/StatCard";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { RangeSelector } from "@/components/RangeSelector";
+import { BudgetAlert } from "@/components/BudgetAlert";
 import { TrendChart, ModelDonut, RankBarChart } from "@/components/charts/lazy";
 import { ActivityHeatmap } from "@/components/charts/ActivityHeatmap";
 import { Badge } from "@/components/ui/Badge";
@@ -303,6 +304,10 @@ export default async function OverviewPage({
         </div>
         <RangeSelector defaultRange={r} />
       </div>
+
+      <Suspense fallback={<Skeleton className="h-[72px] rounded-2xl" />}>
+        <BudgetAlert />
+      </Suspense>
 
       <Suspense fallback={<StatsFallback />}>
         <StatsSection r={r} />

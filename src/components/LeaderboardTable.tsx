@@ -17,12 +17,33 @@ type Row = {
   team: string | null;
   department: string | null;
   value: number;
+  rankDelta?: number | null;
 };
 type SortKey = "rank" | "name" | "value";
 
 function SortIndicator({ active, dir }: { active: boolean; dir: "asc" | "desc" }) {
   if (!active) return null;
   return dir === "asc" ? <ArrowUp className="inline h-3 w-3" /> : <ArrowDown className="inline h-3 w-3" />;
+}
+
+// Rank change vs the previous period: ▲ up, ▼ down, – no change, "mới" = new.
+function MovementChip({ delta }: { delta?: number | null }) {
+  if (delta === undefined) return null;
+  if (delta === null)
+    return <span className="rounded bg-accent/10 px-1 py-0.5 text-[10px] font-medium text-accent">mới</span>;
+  if (delta === 0) return <span className="text-[10px] text-[var(--text-muted)]">–</span>;
+  const up = delta > 0;
+  return (
+    <span
+      className={`inline-flex items-center gap-0.5 text-[10px] font-medium tabular-nums ${
+        up ? "text-[#0ca30c]" : "text-[#e34948]"
+      }`}
+      title={`${up ? "Tăng" : "Giảm"} ${Math.abs(delta)} hạng so với kỳ trước`}
+    >
+      {up ? <ArrowUp className="h-2.5 w-2.5" /> : <ArrowDown className="h-2.5 w-2.5" />}
+      {Math.abs(delta)}
+    </span>
+  );
 }
 
 export function LeaderboardTable({
@@ -93,9 +114,12 @@ export function LeaderboardTable({
             >
               <td className="py-2.5 text-base">{MEDALS[row.rank - 1] ?? row.rank}</td>
               <td className="py-2.5 pr-3 font-medium">
-                <Link href={`/users/${row.userId}`} className="transition-colors hover:text-accent">
-                  {row.userName}
-                </Link>
+                <span className="inline-flex items-center gap-1.5">
+                  <Link href={`/users/${row.userId}`} className="transition-colors hover:text-accent">
+                    {row.userName}
+                  </Link>
+                  <MovementChip delta={row.rankDelta} />
+                </span>
               </td>
               <td className="py-2.5 pr-3 text-xs text-[var(--text-muted)]">
                 {[row.department, row.team].filter(Boolean).join(" · ") || "—"}

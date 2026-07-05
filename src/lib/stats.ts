@@ -73,6 +73,71 @@ export async function getLastActivity(): Promise<Date | null> {
   });
 }
 
+// Top-N rankings for the current window, enriched with each user's rank change
+// vs the previous equal-length window (rankDelta > 0 = moved up; null = new /
+// not ranked last period). Separate from getRankings so other callers don't pay
+// for the extra previous-window query. Movement isn't computed for
+// sessionDuration or the "all" range.
+export async function getRankingMovement(metric: RankingMetric, range: RangeKey, limit = 25) {
+  const current = await getRankings(metric, range, limit);
+  const since = rangeToDate(range);
+  if (!since || metric === "sessionDuration") {
+    return current.map((r) => ({ ...r, rankDelta: null as number | null }));
+  }
+
+  const prevSince = new Date(since.getTime() - (Date.now() - since.getTime()));
+  const prevRank = await cached(`prevrank:${metric}:${range}`, DASH_TTL, async () => {
+    const grouped = await prisma.turn.groupBy({
+      by: ["userId"],
+      where: { createdAt: { gte: prevSince, lt: since } },
+      _sum: { inputTokens: true, outputTokens: true, costUsd: true },
+      _count: true,
+    });
+    const ranked = grouped
+      .map((g) => {
+        let value = 0;
+        switch (metric) {
+          case "totalTokens":
+            value = (g._sum.inputTokens ?? 0) + (g._sum.outputTokens ?? 0);
+            break;
+          case "inputTokens":
+            value = g._sum.inputTokens ?? 0;
+            break;
+          case "outputTokens":
+            value = g._sum.outputTokens ?? 0;
+            break;
+          case "costUsd":
+            value = g._sum.costUsd ?? 0;
+            break;
+          case "turnCount":
+            value = g._count;
+            break;
+        }
+        return { userId: g.userId, value };
+      })
+      .sort((a, b) => b.value - a.value);
+    const map = new Map<string, number>();
+    ranked.forEach((r, i) => map.set(r.userId, i + 1));
+    return map;
+  });
+
+  return current.map((r, i) => {
+    const pr = prevRank.get(r.userId);
+    return { ...r, rankDelta: pr ? pr - (i + 1) : null };
+  });
+}
+
+// Month-to-date total cost (USD), for the budget alert banner.
+export async function getMonthToDateCost(): Promise<number> {
+  return cached("mtd-cost", DASH_TTL, async () => {
+    const agg = await prisma.turn.aggregate({
+      _sum: { costUsd: true },
+      where: { createdAt: { gte: startOfMonth() } },
+    });
+    return agg._sum.costUsd ?? 0;
+  });
+}
+
 export async function getOverviewStats(range: RangeKey) {
   return cached(`overview:${range}`, DASH_TTL, async () => {
   const since = rangeToDate(range);

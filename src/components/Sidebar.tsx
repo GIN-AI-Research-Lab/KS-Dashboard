@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import type { Role } from "@prisma/client";
 import {
@@ -21,6 +21,7 @@ import {
   Settings,
   Building2,
   BookOpen,
+  CalendarCheck,
   ChevronDown,
   PanelLeftClose,
   PanelLeftOpen,
@@ -44,6 +45,7 @@ const ICONS: Record<string, LucideIcon> = {
   library: Lightbulb,
   integrate: Plug,
   live: Radio,
+  summary: CalendarCheck,
   glossary: BookOpen,
   admin: Settings,
 };
@@ -60,11 +62,14 @@ function NavLink({
   exact?: boolean;
 }) {
   const pathname = usePathname();
+  const range = useSearchParams().get("range");
   const { collapsed, setMobileOpen } = useSidebar();
   const active = exact ? pathname === href : pathname.startsWith(href);
+  // Carry the active time range across navigation so it doesn't reset per page.
+  const target = range ? `${href}?range=${range}` : href;
   return (
     <Link
-      href={href}
+      href={target}
       title={collapsed ? label : undefined}
       onClick={() => setMobileOpen(false)}
       aria-current={active ? "page" : undefined}
@@ -88,6 +93,8 @@ function NavLink({
 export function Sidebar({ orgTree, role }: { orgTree: OrgTree; role: Role }) {
   const [orgOpen, setOrgOpen] = useState(true);
   const pathname = usePathname();
+  const range = useSearchParams().get("range");
+  const withRange = (h: string) => (range ? `${h}?range=${range}` : h);
   const { collapsed, toggleCollapsed, mobileOpen, setMobileOpen } = useSidebar();
 
   return (
@@ -133,6 +140,7 @@ export function Sidebar({ orgTree, role }: { orgTree: OrgTree; role: Role }) {
           <NavLink href="/library" label="Thư viện" icon={ICONS.library} />
           <NavLink href="/integrate" label="Tích hợp Claude" icon={ICONS.integrate} />
           <NavLink href="/live" label="Phiên trực tuyến" icon={ICONS.live} />
+          <NavLink href="/summary" label="Tóm tắt tuần" icon={ICONS.summary} />
           <NavLink href="/glossary" label="Thuật ngữ" icon={ICONS.glossary} />
 
           <div className={collapsed ? "md:hidden" : ""}>
@@ -152,7 +160,7 @@ export function Sidebar({ orgTree, role }: { orgTree: OrgTree; role: Role }) {
                 {orgTree.map((dept) => (
                   <div key={dept.id}>
                     <Link
-                      href={`/departments/${dept.id}`}
+                      href={withRange(`/departments/${dept.id}`)}
                       onClick={() => setMobileOpen(false)}
                       className={`block truncate rounded-md px-2 py-1.5 text-sm transition-colors ${
                         pathname === `/departments/${dept.id}`
@@ -165,7 +173,7 @@ export function Sidebar({ orgTree, role }: { orgTree: OrgTree; role: Role }) {
                     {dept.teams.map((team) => (
                       <Link
                         key={team.id}
-                        href={`/teams/${team.id}`}
+                        href={withRange(`/teams/${team.id}`)}
                         onClick={() => setMobileOpen(false)}
                         className={`ml-3 block truncate rounded-md px-2 py-1 text-[13px] transition-colors ${
                           pathname === `/teams/${team.id}`
