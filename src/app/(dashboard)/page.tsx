@@ -10,6 +10,8 @@ import { RankBarChart } from "@/components/charts/RankBarChart";
 import { ActivityHeatmap } from "@/components/charts/ActivityHeatmap";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { InfoTip } from "@/components/ui/InfoTip";
+import { METRIC_HELP } from "@/lib/glossary";
 import { KIND_LABEL, KIND_VARIANT } from "@/lib/library";
 import { formatNumber, formatUsd, formatPercent, formatRelativeTime } from "@/lib/format";
 import {
@@ -96,17 +98,18 @@ export default async function OverviewPage({
       </div>
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
-        <StatCard label="Tổng token" value={formatNumber(stats.totals.totalTokens)} rawValue={stats.totals.totalTokens} format="number" spark={stats.daily.map((d) => d.inputTokens + d.outputTokens)} accent="#2a78d6" icon={<Sigma className="h-4 w-4" />} deltaPct={stats.deltas?.totalTokens} />
-        <StatCard label="Input token" value={formatNumber(stats.totals.inputTokens)} rawValue={stats.totals.inputTokens} format="number" spark={stats.daily.map((d) => d.inputTokens)} accent="#1baf7a" icon={<ArrowDownToLine className="h-4 w-4" />} />
-        <StatCard label="Output token" value={formatNumber(stats.totals.outputTokens)} rawValue={stats.totals.outputTokens} format="number" spark={stats.daily.map((d) => d.outputTokens)} accent="#eb6834" icon={<ArrowUpFromLine className="h-4 w-4" />} />
-        <StatCard label="Chi phí ước tính" value={formatUsd(stats.totals.costUsd)} rawValue={stats.totals.costUsd} format="usd" spark={stats.daily.map((d) => d.costUsd)} accent="#e34948" icon={<DollarSign className="h-4 w-4" />} deltaPct={stats.deltas?.costUsd} />
+        <StatCard label="Tổng token" tooltip={METRIC_HELP.totalTokens} value={formatNumber(stats.totals.totalTokens)} rawValue={stats.totals.totalTokens} format="number" spark={stats.daily.map((d) => d.inputTokens + d.outputTokens)} accent="#2a78d6" icon={<Sigma className="h-4 w-4" />} deltaPct={stats.deltas?.totalTokens} />
+        <StatCard label="Input token" tooltip={METRIC_HELP.inputTokens} value={formatNumber(stats.totals.inputTokens)} rawValue={stats.totals.inputTokens} format="number" spark={stats.daily.map((d) => d.inputTokens)} accent="#1baf7a" icon={<ArrowDownToLine className="h-4 w-4" />} />
+        <StatCard label="Output token" tooltip={METRIC_HELP.outputTokens} value={formatNumber(stats.totals.outputTokens)} rawValue={stats.totals.outputTokens} format="number" spark={stats.daily.map((d) => d.outputTokens)} accent="#eb6834" icon={<ArrowUpFromLine className="h-4 w-4" />} />
+        <StatCard label="Chi phí ước tính" tooltip={METRIC_HELP.cost} value={formatUsd(stats.totals.costUsd)} rawValue={stats.totals.costUsd} format="usd" spark={stats.daily.map((d) => d.costUsd)} accent="#e34948" icon={<DollarSign className="h-4 w-4" />} deltaPct={stats.deltas?.costUsd} />
         <StatCard label="Số phiên" value={formatNumber(stats.totals.sessionCount)} rawValue={stats.totals.sessionCount} format="number" accent="#4a3aa7" icon={<MessagesSquare className="h-4 w-4" />} deltaPct={stats.deltas?.sessionCount} />
-        <StatCard label="Đang hoạt động" value={formatNumber(stats.totals.activeSessionCount)} rawValue={stats.totals.activeSessionCount} format="number" accent="#0ca30c" icon={<Activity className="h-4 w-4" />} />
+        <StatCard label="Đang hoạt động" tooltip={METRIC_HELP.activeSessions} value={formatNumber(stats.totals.activeSessionCount)} rawValue={stats.totals.activeSessionCount} format="number" accent="#0ca30c" icon={<Activity className="h-4 w-4" />} />
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatCard
           label="Cache hit ratio"
+          tooltip={METRIC_HELP.cacheHitRatio}
           value={formatPercent(stats.totals.cacheHitRatio)}
           hint="Phần input được phục vụ từ cache"
           accent="#008300"
@@ -114,6 +117,7 @@ export default async function OverviewPage({
         />
         <StatCard
           label="Token đọc từ cache"
+          tooltip={METRIC_HELP.cacheReadTokens}
           value={formatNumber(stats.totals.cacheReadTokens)}
           hint="Không tính phí như input mới"
           accent="#1baf7a"
@@ -121,6 +125,7 @@ export default async function OverviewPage({
         />
         <StatCard
           label="Token tạo cache"
+          tooltip={METRIC_HELP.cacheCreationTokens}
           value={formatNumber(stats.totals.cacheCreationTokens)}
           hint="Chi phí ghi cache ban đầu"
           accent="#eda100"
@@ -129,10 +134,11 @@ export default async function OverviewPage({
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <StatCard label="Dòng code thêm" value={formatNumber(code.linesAdded)} hint="Từ Claude Code (OTel)" accent="#008300" icon={<Plus className="h-4 w-4" />} />
-        <StatCard label="Dòng code xoá" value={formatNumber(code.linesRemoved)} accent="#e34948" icon={<Minus className="h-4 w-4" />} />
+        <StatCard label="Dòng code thêm" tooltip={METRIC_HELP.linesAdded} value={formatNumber(code.linesAdded)} hint="Từ Claude Code (OTel)" accent="#008300" icon={<Plus className="h-4 w-4" />} />
+        <StatCard label="Dòng code xoá" tooltip={METRIC_HELP.linesRemoved} value={formatNumber(code.linesRemoved)} accent="#e34948" icon={<Minus className="h-4 w-4" />} />
         <StatCard
           label="Tỷ lệ chấp nhận sửa"
+          tooltip={METRIC_HELP.acceptanceRate}
           value={code.editsAccepted + code.editsRejected > 0 ? formatPercent(code.acceptanceRate) : "—"}
           hint={`${code.editsAccepted}/${code.editsAccepted + code.editsRejected} gợi ý sửa`}
           accent="#2a78d6"
@@ -201,7 +207,7 @@ export default async function OverviewPage({
             valueFormat="usd"
           />
         </Card>
-        <Card title={`${stats.totals.activeUserCount} người dùng hoạt động`}>
+        <Card title={`${stats.totals.activeUserCount} người dùng hoạt động`} titleTip={METRIC_HELP.activeUsers}>
           <div className="flex h-full flex-col justify-center gap-4 py-4 text-center">
             <div>
               <div className="text-4xl font-semibold tabular-nums">{stats.totals.userCount}</div>
@@ -216,7 +222,7 @@ export default async function OverviewPage({
         </Card>
       </div>
 
-      <Card title="Nhịp độ hoạt động theo giờ (turns)">
+      <Card title="Nhịp độ hoạt động theo giờ (turns)" titleTip={METRIC_HELP.turns}>
         <ActivityHeatmap grid={heatmap.grid} max={heatmap.max} />
       </Card>
 
@@ -235,9 +241,15 @@ export default async function OverviewPage({
                 <tr className="border-b border-[var(--border)] text-left text-xs uppercase tracking-wide text-[var(--text-muted)]">
                   <th className="py-2 pr-4 font-medium">Nhóm</th>
                   <th className="py-2 pr-4 text-right font-medium">Thành viên</th>
-                  <th className="py-2 pr-4 text-right font-medium">Độ phủ</th>
-                  <th className="py-2 pr-4 text-right font-medium">Token/người</th>
-                  <th className="py-2 pr-4 text-right font-medium">Chi phí/người dùng</th>
+                  <th className="py-2 pr-4 text-right font-medium">
+                    <span className="inline-flex items-center gap-1">Độ phủ<InfoTip label={METRIC_HELP.coverage} /></span>
+                  </th>
+                  <th className="py-2 pr-4 text-right font-medium">
+                    <span className="inline-flex items-center gap-1">Token/người<InfoTip label={METRIC_HELP.tokensPerMember} /></span>
+                  </th>
+                  <th className="py-2 pr-4 text-right font-medium">
+                    <span className="inline-flex items-center gap-1">Chi phí/người dùng<InfoTip label={METRIC_HELP.costPerUser} /></span>
+                  </th>
                   <th className="py-2 text-right font-medium">Tổng chi phí</th>
                 </tr>
               </thead>

@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ArrowDown, ArrowUp } from "lucide-react";
 import { formatNumber, formatUsd } from "@/lib/format";
+import { InfoTip } from "@/components/ui/InfoTip";
+import { METRIC_HELP } from "@/lib/glossary";
 
 type Member = {
   userId: string;
@@ -45,10 +47,10 @@ export function MemberTable({ members }: { members: Member[] }) {
 
   const thBtn = "inline-flex items-center gap-1 transition-colors hover:text-[var(--text-secondary)]";
 
-  const numCols: { key: SortKey; label: string }[] = [
-    { key: "inputTokens", label: "Input" },
-    { key: "outputTokens", label: "Output" },
-    { key: "turnCount", label: "Turns" },
+  const numCols: { key: SortKey; label: string; tip?: string }[] = [
+    { key: "inputTokens", label: "Input", tip: METRIC_HELP.inputTokens },
+    { key: "outputTokens", label: "Output", tip: METRIC_HELP.outputTokens },
+    { key: "turnCount", label: "Turns", tip: METRIC_HELP.turns },
     { key: "costUsd", label: "Chi phí" },
   ];
 
@@ -64,9 +66,12 @@ export function MemberTable({ members }: { members: Member[] }) {
             </th>
             {numCols.map((c) => (
               <th key={c.key} className="py-2 pr-3 text-right font-medium last:pr-0">
-                <button type="button" className={`${thBtn} justify-end`} onClick={() => toggle(c.key, "desc")}>
-                  {c.label} <SortIndicator active={sort.key === c.key} dir={sort.dir} />
-                </button>
+                <span className="inline-flex items-center justify-end gap-1">
+                  <button type="button" className={`${thBtn} justify-end`} onClick={() => toggle(c.key, "desc")}>
+                    {c.label} <SortIndicator active={sort.key === c.key} dir={sort.dir} />
+                  </button>
+                  {c.tip && <InfoTip label={c.tip} />}
+                </span>
               </th>
             ))}
           </tr>

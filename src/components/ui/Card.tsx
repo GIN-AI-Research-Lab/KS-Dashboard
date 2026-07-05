@@ -1,13 +1,16 @@
 import { CSSProperties, ReactNode } from "react";
+import { InfoTip } from "./InfoTip";
 
 export function Card({
   title,
+  titleTip,
   action,
   children,
   className = "",
   tone,
 }: {
   title?: ReactNode;
+  titleTip?: string;
   action?: ReactNode;
   children: ReactNode;
   className?: string;
@@ -27,8 +30,9 @@ export function Card({
       {(title || action) && (
         <div className="mb-4 flex items-center justify-between gap-3">
           {title && (
-            <h3 className="text-[13px] font-semibold tracking-tight text-[var(--text-primary)]">
+            <h3 className="inline-flex items-center gap-1.5 text-[13px] font-semibold tracking-tight text-[var(--text-primary)]">
               {title}
+              {titleTip && <InfoTip label={titleTip} />}
             </h3>
           )}
           {action}

@@ -6,6 +6,7 @@ import { RankBarChart } from "@/components/charts/RankBarChart";
 import { ToolSankey } from "@/components/charts/ToolSankey";
 import { formatNumber, formatDuration, formatPercent, formatDay, formatRelativeTime } from "@/lib/format";
 import { colorForModel } from "@/lib/chart-colors";
+import { METRIC_HELP } from "@/lib/glossary";
 import { Plus, Minus, Check, AlertTriangle, TrendingUp } from "lucide-react";
 
 function PercentileRow({ label, ms }: { label: string; ms: number }) {
@@ -52,28 +53,35 @@ export default async function InsightsPage({
           Kỹ thuật &amp; chất lượng (dữ liệu mở rộng)
         </h2>
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          <StatCard label="Dòng code thêm" value={formatNumber(code.linesAdded)} accent="#008300" icon={<Plus className="h-4 w-4" />} />
-          <StatCard label="Dòng code xoá" value={formatNumber(code.linesRemoved)} accent="#e34948" icon={<Minus className="h-4 w-4" />} />
+          <StatCard label="Dòng code thêm" value={formatNumber(code.linesAdded)} tooltip={METRIC_HELP.linesAdded} accent="#008300" icon={<Plus className="h-4 w-4" />} />
+          <StatCard label="Dòng code xoá" value={formatNumber(code.linesRemoved)} tooltip={METRIC_HELP.linesRemoved} accent="#e34948" icon={<Minus className="h-4 w-4" />} />
           <StatCard
             label="Tỷ lệ chấp nhận sửa"
             value={code.editsAccepted + code.editsRejected > 0 ? formatPercent(code.acceptanceRate) : "—"}
             hint={`${code.editsAccepted}/${code.editsAccepted + code.editsRejected} chấp nhận`}
+            tooltip={METRIC_HELP.acceptanceRate}
             accent="var(--accent)"
             icon={<Check className="h-4 w-4" />}
           />
-          <StatCard label="API errors" value={formatNumber(code.apiErrors)} accent="#eb6834" icon={<AlertTriangle className="h-4 w-4" />} />
+          <StatCard label="API errors" value={formatNumber(code.apiErrors)} tooltip="Số lỗi khi Claude gọi API (ví dụ quá tải, hết thời gian chờ)." accent="#eb6834" icon={<AlertTriangle className="h-4 w-4" />} />
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <Card title={`Độ trễ API (${formatNumber(code.apiLatency.count)} request)`}>
+        <Card
+          title={`Độ trễ API (${formatNumber(code.apiLatency.count)} request)`}
+          titleTip="Thời gian Claude phản hồi một yêu cầu; p50/p90/p99 là mức phân vị (p90 = 90% yêu cầu nhanh hơn giá trị này)."
+        >
           <div className="flex flex-col gap-2">
             <PercentileRow label="p50 (trung vị)" ms={code.apiLatency.p50} />
             <PercentileRow label="p90" ms={code.apiLatency.p90} />
             <PercentileRow label="p99" ms={code.apiLatency.p99} />
           </div>
         </Card>
-        <Card title={`Time-to-first-token (${formatNumber(code.ttft.count)} request)`}>
+        <Card
+          title={`Time-to-first-token (${formatNumber(code.ttft.count)} request)`}
+          titleTip="Thời gian từ lúc gửi yêu cầu đến khi nhận được token đầu tiên của câu trả lời."
+        >
           <div className="flex flex-col gap-2">
             <PercentileRow label="p50 (trung vị)" ms={code.ttft.p50} />
             <PercentileRow label="p90" ms={code.ttft.p90} />
@@ -83,7 +91,10 @@ export default async function InsightsPage({
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <Card title={`Độ trễ công cụ (${formatNumber(s.toolLatency.count)} lượt)`}>
+        <Card
+          title={`Độ trễ công cụ (${formatNumber(s.toolLatency.count)} lượt)`}
+          titleTip="Thời gian chạy một công cụ (đọc/sửa file, chạy lệnh…); p50/p90/p99 là mức phân vị."
+        >
           <div className="flex flex-col gap-2">
             <PercentileRow label="p50 (trung vị)" ms={s.toolLatency.p50} />
             <PercentileRow label="p90" ms={s.toolLatency.p90} />
@@ -91,7 +102,10 @@ export default async function InsightsPage({
           </div>
         </Card>
 
-        <Card title={`Thời lượng phiên (${formatNumber(s.sessionDuration.count)} phiên)`}>
+        <Card
+          title={`Thời lượng phiên (${formatNumber(s.sessionDuration.count)} phiên)`}
+          titleTip="Độ dài mỗi phiên làm việc; p50/p90/p99 là mức phân vị (p90 = 90% phiên ngắn hơn giá trị này)."
+        >
           <div className="flex flex-col gap-2">
             <PercentileRow label="p50 (trung vị)" ms={s.sessionDuration.p50} />
             <PercentileRow label="p90" ms={s.sessionDuration.p90} />
@@ -101,6 +115,7 @@ export default async function InsightsPage({
 
         <StatCard
           label="Đỉnh phiên đồng thời"
+          tooltip="Số phiên chạy cùng lúc cao nhất ghi nhận trong kỳ."
           value={formatNumber(s.peakConcurrency.peak)}
           hint={s.peakConcurrency.peakAt ? `Lúc ${formatRelativeTime(s.peakConcurrency.peakAt)}` : undefined}
           accent="#e34948"
@@ -112,7 +127,10 @@ export default async function InsightsPage({
         <Card title="Nguồn khởi tạo phiên">
           <RankBarChart data={s.bySource.map((x) => ({ label: x.source, value: x.count }))} valueFormat="number" />
         </Card>
-        <Card title="Lý do kết thúc turn (stop reason)">
+        <Card
+          title="Lý do kết thúc turn (stop reason)"
+          titleTip="Vì sao model dừng mỗi lượt trả lời (trả lời xong, gọi công cụ, chạm giới hạn độ dài…)."
+        >
           <RankBarChart data={s.byStopReason.map((x) => ({ label: x.stopReason, value: x.count }))} valueFormat="number" />
         </Card>
       </div>
@@ -122,7 +140,10 @@ export default async function InsightsPage({
           <RankBarChart data={s.durationHistogram.map((h) => ({ label: h.label, value: h.count }))} valueFormat="number" />
         </Card>
 
-        <Card title="Token theo nhóm × model (pivot)">
+        <Card
+          title="Token theo nhóm × model (pivot)"
+          titleTip="Bảng chéo: mỗi ô là số token một nhóm dùng trên một model."
+        >
           {pivot.rows.length === 0 ? (
             <p className="text-sm text-[var(--text-muted)]">Chưa có dữ liệu</p>
           ) : (

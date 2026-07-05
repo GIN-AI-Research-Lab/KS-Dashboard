@@ -4,6 +4,7 @@ import { StatCard } from "@/components/ui/StatCard";
 import { RangeSelector } from "@/components/RangeSelector";
 import { RankBarChart } from "@/components/charts/RankBarChart";
 import { ExportLink } from "@/components/ExportLink";
+import { InfoTip } from "@/components/ui/InfoTip";
 import { formatNumber, formatPercent, formatDuration } from "@/lib/format";
 import { Zap, Wrench, AlertTriangle, Clock } from "lucide-react";
 
@@ -39,6 +40,7 @@ export default async function ToolsPage({
         <StatCard label="Số loại công cụ" value={formatNumber(totals.uniqueTools)} accent="#4a3aa7" icon={<Wrench className="h-4 w-4" />} />
         <StatCard
           label="Tỷ lệ lỗi"
+          tooltip="Phần trăm lượt gọi công cụ bị lỗi trên tổng số lượt gọi."
           value={formatPercent(totals.errorRate)}
           hint={`${formatNumber(totals.errorTotal)} lượt lỗi`}
           accent="#e34948"
@@ -46,6 +48,7 @@ export default async function ToolsPage({
         />
         <StatCard
           label="Thời gian TB"
+          tooltip="Thời gian chạy trung bình của mỗi lượt gọi công cụ."
           value={totals.avgDurationMs != null ? formatDuration(totals.avgDurationMs) : "—"}
           accent="#1baf7a"
           icon={<Clock className="h-4 w-4" />}
@@ -77,7 +80,9 @@ export default async function ToolsPage({
                     <th className="py-2 pr-4 text-right font-medium">Thành công</th>
                     <th className="py-2 pr-4 text-right font-medium">Lỗi</th>
                     <th className="py-2 pr-4 text-right font-medium">Tỷ lệ lỗi</th>
-                    <th className="py-2 text-right font-medium">Thời gian TB</th>
+                    <th className="py-2 text-right font-medium">
+                      <span className="inline-flex items-center gap-1">Thời gian TB<InfoTip label="Thời gian chạy trung bình của mỗi lượt gọi công cụ." /></span>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>

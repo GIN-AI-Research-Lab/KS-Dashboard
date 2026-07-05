@@ -2,6 +2,7 @@ import { ReactNode, CSSProperties } from "react";
 import { ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { CountUp } from "./CountUp";
 import { Sparkline } from "./Sparkline";
+import { InfoTip } from "./InfoTip";
 
 export function StatCard({
   label,
@@ -13,6 +14,7 @@ export function StatCard({
   rawValue,
   format,
   spark,
+  tooltip,
 }: {
   label: string;
   value: string;
@@ -23,6 +25,7 @@ export function StatCard({
   rawValue?: number;
   format?: "number" | "usd" | "percent";
   spark?: number[];
+  tooltip?: string;
 }) {
   const hasDelta = typeof deltaPct === "number" && isFinite(deltaPct);
   const up = hasDelta && (deltaPct as number) >= 0;
@@ -40,9 +43,10 @@ export function StatCard({
       className="stat-card rounded-2xl border border-[var(--border)] p-4 shadow-[var(--shadow-xs)]"
       style={style}
     >
-      <div className="flex items-center justify-between">
-        <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-[var(--text-muted)]">
+      <div className="flex items-center justify-between gap-2">
+        <span className="inline-flex items-center gap-1 text-[11px] font-medium uppercase tracking-[0.08em] text-[var(--text-muted)]">
           {label}
+          {tooltip && <InfoTip label={tooltip} />}
         </span>
         {icon && (
           <span

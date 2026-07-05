@@ -12,6 +12,7 @@ import { BadgeGrid } from "@/components/BadgeGrid";
 import { formatNumber, formatUsd, formatPercent } from "@/lib/format";
 import { ROLE_LABELS } from "@/lib/access";
 import { colorForIndex } from "@/lib/chart-colors";
+import { METRIC_HELP } from "@/lib/glossary";
 import { Sigma, ArrowRight, ArrowLeft, DollarSign, Plus, Minus, Check } from "lucide-react";
 
 export default async function UserPage({
@@ -55,19 +56,20 @@ export default async function UserPage({
       </div>
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <StatCard label="Tổng token" value={formatNumber(stats.totals.totalTokens)} accent="#2a78d6" icon={<Sigma className="h-4 w-4" />} />
-        <StatCard label="Input" value={formatNumber(stats.totals.inputTokens)} accent="#1baf7a" icon={<ArrowRight className="h-4 w-4" />} />
-        <StatCard label="Output" value={formatNumber(stats.totals.outputTokens)} accent="#eb6834" icon={<ArrowLeft className="h-4 w-4" />} />
-        <StatCard label="Chi phí" value={formatUsd(stats.totals.costUsd)} accent="#e34948" icon={<DollarSign className="h-4 w-4" />} />
+        <StatCard label="Tổng token" value={formatNumber(stats.totals.totalTokens)} tooltip={METRIC_HELP.totalTokens} accent="#2a78d6" icon={<Sigma className="h-4 w-4" />} />
+        <StatCard label="Input" value={formatNumber(stats.totals.inputTokens)} tooltip={METRIC_HELP.inputTokens} accent="#1baf7a" icon={<ArrowRight className="h-4 w-4" />} />
+        <StatCard label="Output" value={formatNumber(stats.totals.outputTokens)} tooltip={METRIC_HELP.outputTokens} accent="#eb6834" icon={<ArrowLeft className="h-4 w-4" />} />
+        <StatCard label="Chi phí" value={formatUsd(stats.totals.costUsd)} tooltip={METRIC_HELP.cost} accent="#e34948" icon={<DollarSign className="h-4 w-4" />} />
       </div>
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-        <StatCard label="Dòng code thêm" value={formatNumber(code.linesAdded)} accent="#008300" icon={<Plus className="h-4 w-4" />} />
-        <StatCard label="Dòng code xoá" value={formatNumber(code.linesRemoved)} accent="#e34948" icon={<Minus className="h-4 w-4" />} />
+        <StatCard label="Dòng code thêm" value={formatNumber(code.linesAdded)} tooltip={METRIC_HELP.linesAdded} accent="#008300" icon={<Plus className="h-4 w-4" />} />
+        <StatCard label="Dòng code xoá" value={formatNumber(code.linesRemoved)} tooltip={METRIC_HELP.linesRemoved} accent="#e34948" icon={<Minus className="h-4 w-4" />} />
         <StatCard
           label="Tỷ lệ chấp nhận sửa"
           value={code.editsAccepted + code.editsRejected > 0 ? formatPercent(code.acceptanceRate) : "—"}
           hint={`${code.editsAccepted}/${code.editsAccepted + code.editsRejected} gợi ý`}
+          tooltip={METRIC_HELP.acceptanceRate}
           accent="#2a78d6"
           icon={<Check className="h-4 w-4" />}
         />

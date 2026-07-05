@@ -3,6 +3,8 @@ import { Card } from "@/components/ui/Card";
 import { StatCard } from "@/components/ui/StatCard";
 import { RangeSelector } from "@/components/RangeSelector";
 import { RankBarChart } from "@/components/charts/RankBarChart";
+import { InfoTip } from "@/components/ui/InfoTip";
+import { METRIC_HELP } from "@/lib/glossary";
 import { formatNumber, formatUsd } from "@/lib/format";
 import { Folders, FilePen, Terminal, Zap } from "lucide-react";
 
@@ -33,9 +35,9 @@ export default async function ProjectsPage({
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard label="Số dự án" value={formatNumber(totals.projectCount)} accent="#4a3aa7" icon={<Folders className="h-4 w-4" />} />
-        <StatCard label="Sửa file (Edit/Write)" value={formatNumber(totals.editWrites)} accent="#1baf7a" icon={<FilePen className="h-4 w-4" />} />
-        <StatCard label="Lệnh Bash" value={formatNumber(totals.bashRuns)} accent="#eb6834" icon={<Terminal className="h-4 w-4" />} />
-        <StatCard label="Tổng lượt gọi tool" value={formatNumber(totals.toolCalls)} accent="#2a78d6" icon={<Zap className="h-4 w-4" />} />
+        <StatCard label="Sửa file (Edit/Write)" value={formatNumber(totals.editWrites)} tooltip="Số lần Claude sửa hoặc ghi file — proxy cho sản lượng code." accent="#1baf7a" icon={<FilePen className="h-4 w-4" />} />
+        <StatCard label="Lệnh Bash" value={formatNumber(totals.bashRuns)} tooltip="Số lần Claude chạy lệnh terminal (Bash)." accent="#eb6834" icon={<Terminal className="h-4 w-4" />} />
+        <StatCard label="Tổng lượt gọi tool" value={formatNumber(totals.toolCalls)} tooltip="Tổng số lần Claude gọi công cụ (đọc/sửa file, chạy lệnh, tìm kiếm…)." accent="#2a78d6" icon={<Zap className="h-4 w-4" />} />
       </div>
 
       <Card title="Chi phí theo dự án">
@@ -55,8 +57,12 @@ export default async function ProjectsPage({
                 <tr className="border-b border-[var(--border)] text-left text-xs uppercase tracking-wide text-[var(--text-muted)]">
                   <th className="py-2 pr-4 font-medium">Dự án</th>
                   <th className="py-2 pr-4 text-right font-medium">Phiên</th>
-                  <th className="py-2 pr-4 text-right font-medium">Turns</th>
-                  <th className="py-2 pr-4 text-right font-medium">Token</th>
+                  <th className="py-2 pr-4 text-right font-medium">
+                    <span className="inline-flex items-center gap-1">Turns<InfoTip label={METRIC_HELP.turns} /></span>
+                  </th>
+                  <th className="py-2 pr-4 text-right font-medium">
+                    <span className="inline-flex items-center gap-1">Token<InfoTip label={METRIC_HELP.totalTokens} /></span>
+                  </th>
                   <th className="py-2 pr-4 text-right font-medium">Sửa file</th>
                   <th className="py-2 pr-4 text-right font-medium">Bash</th>
                   <th className="py-2 text-right font-medium">Chi phí</th>

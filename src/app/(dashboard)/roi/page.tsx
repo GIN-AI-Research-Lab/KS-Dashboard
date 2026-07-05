@@ -5,6 +5,8 @@ import { StatCard } from "@/components/ui/StatCard";
 import { RangeSelector } from "@/components/RangeSelector";
 import { RankBarChart } from "@/components/charts/RankBarChart";
 import { Badge } from "@/components/ui/Badge";
+import { InfoTip } from "@/components/ui/InfoTip";
+import { METRIC_HELP } from "@/lib/glossary";
 import { formatNumber, formatUsd } from "@/lib/format";
 import { DollarSign, Zap, CalendarClock, Scale } from "lucide-react";
 
@@ -41,6 +43,7 @@ export default async function RoiPage({
           label="Tiết kiệm nhờ cache"
           value={formatUsd(c.cacheSavingsUsd)}
           hint="So với trả giá input đầy đủ"
+          tooltip="Số tiền tiết kiệm nhờ đọc lại token từ 'prompt cache' thay vì tính phí như input mới."
           accent="#008300"
           icon={<Zap className="h-4 w-4" />}
         />
@@ -55,6 +58,7 @@ export default async function RoiPage({
           label="ROI ước tính"
           value={c.roi.roiRatio != null ? `${c.roi.roiRatio.toFixed(1)}×` : "—"}
           hint="Giá trị năng suất / chi phí"
+          tooltip={METRIC_HELP.roi}
           accent="#4a3aa7"
           icon={<Scale className="h-4 w-4" />}
         />
@@ -64,7 +68,10 @@ export default async function RoiPage({
         <Card title="Ước tính giá trị năng suất">
           <div className="flex flex-col gap-3 text-sm">
             <div className="flex items-center justify-between">
-              <span className="text-[var(--text-muted)]">Số turns</span>
+              <span className="inline-flex items-center gap-1 text-[var(--text-muted)]">
+                Số turns
+                <InfoTip label={METRIC_HELP.turns} />
+              </span>
               <span className="font-semibold tabular-nums">{formatNumber(c.roi.turnCount)}</span>
             </div>
             <div className="flex items-center justify-between">
@@ -83,7 +90,10 @@ export default async function RoiPage({
           </div>
         </Card>
 
-        <Card title="Chi phí theo cấp model (tier)">
+        <Card
+          title="Chi phí theo cấp model (tier)"
+          titleTip="Tier là cấp model (Opus/Sonnet/Haiku…); mỗi cấp có đơn giá khác nhau."
+        >
           {c.byTier.length === 0 ? (
             <p className="text-sm text-[var(--text-muted)]">Chưa có dữ liệu</p>
           ) : (

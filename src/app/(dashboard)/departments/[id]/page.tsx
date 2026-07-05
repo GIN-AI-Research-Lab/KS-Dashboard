@@ -8,6 +8,7 @@ import { RangeSelector } from "@/components/RangeSelector";
 import { TrendChart } from "@/components/charts/TrendChart";
 import { MemberTable } from "@/components/MemberTable";
 import { formatNumber, formatUsd } from "@/lib/format";
+import { METRIC_HELP } from "@/lib/glossary";
 import { Sigma, ArrowDownToLine, ArrowUpFromLine, DollarSign } from "lucide-react";
 
 export default async function DepartmentPage({
@@ -59,13 +60,13 @@ export default async function DepartmentPage({
       </div>
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <StatCard label="Tổng token" value={formatNumber(stats.totals.totalTokens)} accent="#2a78d6" icon={<Sigma className="h-4 w-4" />} />
-        <StatCard label="Input" value={formatNumber(stats.totals.inputTokens)} accent="#1baf7a" icon={<ArrowDownToLine className="h-4 w-4" />} />
-        <StatCard label="Output" value={formatNumber(stats.totals.outputTokens)} accent="#eb6834" icon={<ArrowUpFromLine className="h-4 w-4" />} />
-        <StatCard label="Chi phí" value={formatUsd(stats.totals.costUsd)} accent="#e34948" icon={<DollarSign className="h-4 w-4" />} />
+        <StatCard label="Tổng token" value={formatNumber(stats.totals.totalTokens)} accent="#2a78d6" icon={<Sigma className="h-4 w-4" />} tooltip={METRIC_HELP.totalTokens} />
+        <StatCard label="Input" value={formatNumber(stats.totals.inputTokens)} accent="#1baf7a" icon={<ArrowDownToLine className="h-4 w-4" />} tooltip={METRIC_HELP.inputTokens} />
+        <StatCard label="Output" value={formatNumber(stats.totals.outputTokens)} accent="#eb6834" icon={<ArrowUpFromLine className="h-4 w-4" />} tooltip={METRIC_HELP.outputTokens} />
+        <StatCard label="Chi phí" value={formatUsd(stats.totals.costUsd)} accent="#e34948" icon={<DollarSign className="h-4 w-4" />} tooltip={METRIC_HELP.cost} />
       </div>
 
-      <Card title="Token theo ngày">
+      <Card title="Token theo ngày" titleTip={METRIC_HELP.totalTokens}>
         <TrendChart
           data={stats.daily}
           series={[

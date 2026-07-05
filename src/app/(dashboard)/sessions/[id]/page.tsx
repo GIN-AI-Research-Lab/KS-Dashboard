@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/Badge";
 import { SessionAnnotationForm } from "@/components/SessionAnnotationForm";
 import { SessionDiscussion } from "@/components/SessionDiscussion";
 import { formatNumber, formatUsd, formatDuration, formatRelativeTime } from "@/lib/format";
+import { METRIC_HELP } from "@/lib/glossary";
 import { ArrowDownToLine, ArrowUpFromLine, DollarSign, Repeat, Clock, Check, X, MoreHorizontal } from "lucide-react";
 import type { SessionStatus } from "@prisma/client";
 
@@ -77,10 +78,10 @@ export default async function SessionDetailPage({ params }: { params: Promise<{ 
       </div>
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
-        <StatCard label="Token vào" value={formatNumber(s.inputTokens)} accent="#1baf7a" icon={<ArrowDownToLine className="h-4 w-4" />} />
-        <StatCard label="Token ra" value={formatNumber(s.outputTokens)} accent="#eb6834" icon={<ArrowUpFromLine className="h-4 w-4" />} />
-        <StatCard label="Chi phí" value={formatUsd(s.costUsd)} accent="#e34948" icon={<DollarSign className="h-4 w-4" />} />
-        <StatCard label="Turns" value={formatNumber(s.turnCount)} accent="#2a78d6" icon={<Repeat className="h-4 w-4" />} />
+        <StatCard label="Token vào" value={formatNumber(s.inputTokens)} accent="#1baf7a" icon={<ArrowDownToLine className="h-4 w-4" />} tooltip={METRIC_HELP.inputTokens} />
+        <StatCard label="Token ra" value={formatNumber(s.outputTokens)} accent="#eb6834" icon={<ArrowUpFromLine className="h-4 w-4" />} tooltip={METRIC_HELP.outputTokens} />
+        <StatCard label="Chi phí" value={formatUsd(s.costUsd)} accent="#e34948" icon={<DollarSign className="h-4 w-4" />} tooltip={METRIC_HELP.cost} />
+        <StatCard label="Turns" value={formatNumber(s.turnCount)} accent="#2a78d6" icon={<Repeat className="h-4 w-4" />} tooltip={METRIC_HELP.turns} />
         <StatCard label="Thời lượng" value={formatDuration(durationMs)} accent="#4a3aa7" icon={<Clock className="h-4 w-4" />} />
       </div>
 

@@ -6,6 +6,7 @@ import { TrendChart } from "@/components/charts/TrendChart";
 import { RankBarChart } from "@/components/charts/RankBarChart";
 import { Badge, Tag } from "@/components/ui/Badge";
 import { formatNumber, formatPercent, formatDay } from "@/lib/format";
+import { METRIC_HELP } from "@/lib/glossary";
 import { colorForIndex } from "@/lib/chart-colors";
 import { ANNOTATIONS } from "@/lib/annotations";
 import { Activity, CalendarDays, CalendarRange, Repeat } from "lucide-react";
@@ -43,11 +44,12 @@ export default async function AdoptionPage({
       </div>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard label="DAU trung bình" value={formatNumber(a.current.avgDau)} hint="28 ngày gần nhất" accent="#2a78d6" icon={<Activity className="h-4 w-4" />} />
-        <StatCard label="WAU" value={formatNumber(a.current.wau)} hint="7 ngày gần nhất" accent="#1baf7a" icon={<CalendarDays className="h-4 w-4" />} />
-        <StatCard label="MAU" value={formatNumber(a.current.mau)} hint="28 ngày gần nhất" accent="#4a3aa7" icon={<CalendarRange className="h-4 w-4" />} />
+        <StatCard label="DAU trung bình" tooltip="DAU (Daily Active Users) — số người dùng hoạt động trung bình mỗi ngày." value={formatNumber(a.current.avgDau)} hint="28 ngày gần nhất" accent="#2a78d6" icon={<Activity className="h-4 w-4" />} />
+        <StatCard label="WAU" tooltip="WAU (Weekly Active Users) — số người dùng có hoạt động trong 7 ngày gần nhất." value={formatNumber(a.current.wau)} hint="7 ngày gần nhất" accent="#1baf7a" icon={<CalendarDays className="h-4 w-4" />} />
+        <StatCard label="MAU" tooltip="MAU (Monthly Active Users) — số người dùng có hoạt động trong 28 ngày gần nhất." value={formatNumber(a.current.mau)} hint="28 ngày gần nhất" accent="#4a3aa7" icon={<CalendarRange className="h-4 w-4" />} />
         <StatCard
           label="Stickiness (DAU/MAU)"
+          tooltip="Tỷ lệ DAU/MAU — đo mức độ quay lại đều đặn; càng cao người dùng càng gắn bó."
           value={formatPercent(a.current.stickiness)}
           hint="Càng cao càng dùng đều"
           accent="#eda100"
@@ -55,7 +57,7 @@ export default async function AdoptionPage({
         />
       </div>
 
-      <Card title="Người dùng hoạt động theo ngày (DAU)">
+      <Card title="Người dùng hoạt động theo ngày (DAU)" titleTip="DAU (Daily Active Users) — số người dùng có ít nhất một hoạt động trong ngày.">
         <TrendChart
           data={a.dauSeries}
           series={[{ key: "users", label: "Người dùng", color: "#2a78d6" }]}
@@ -76,6 +78,7 @@ export default async function AdoptionPage({
 
         <Card
           title="Độ phủ theo nhóm"
+          titleTip={METRIC_HELP.coverage}
           action={
             <span className="text-xs text-[var(--text-muted)]">
               Toàn công ty: {a.coverage.activeInRange}/{a.coverage.totalUsers} ({formatPercent(a.coverage.pct)})
@@ -129,7 +132,7 @@ export default async function AdoptionPage({
           </div>
         </Card>
 
-        <Card title="Giữ chân theo cohort tuần">
+        <Card title="Giữ chân theo cohort tuần" titleTip="Cohort — nhóm người bắt đầu dùng trong cùng một tuần; cột T+k cho biết % còn quay lại sau k tuần.">
           {cohort.rows.every((r2) => r2.size === 0) ? (
             <p className="text-sm text-[var(--text-muted)]">Chưa đủ dữ liệu</p>
           ) : (
