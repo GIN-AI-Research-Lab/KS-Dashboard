@@ -5,7 +5,7 @@ import { getUserStats, getUserGamification, getUserCodeStats, type RangeKey } fr
 import { Card } from "@/components/ui/Card";
 import { StatCard } from "@/components/ui/StatCard";
 import { RangeSelector } from "@/components/RangeSelector";
-import { TrendChart } from "@/components/charts/TrendChart";
+import { TrendChart } from "@/components/charts/lazy";
 import { Tag } from "@/components/ui/Badge";
 import { UserNoteEditor } from "@/components/UserNoteEditor";
 import { BadgeGrid } from "@/components/BadgeGrid";

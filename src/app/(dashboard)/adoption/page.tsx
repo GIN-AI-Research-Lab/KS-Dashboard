@@ -2,8 +2,7 @@ import { getAdoptionStats, getCohortRetention, type RangeKey, type AdoptionPhase
 import { Card } from "@/components/ui/Card";
 import { StatCard } from "@/components/ui/StatCard";
 import { RangeSelector } from "@/components/RangeSelector";
-import { TrendChart } from "@/components/charts/TrendChart";
-import { RankBarChart } from "@/components/charts/RankBarChart";
+import { TrendChart, RankBarChart } from "@/components/charts/lazy";
 import { Badge, Tag } from "@/components/ui/Badge";
 import { formatNumber, formatPercent, formatDay } from "@/lib/format";
 import { METRIC_HELP } from "@/lib/glossary";

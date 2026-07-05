@@ -2,7 +2,7 @@ import { getProjectStats, type RangeKey } from "@/lib/stats";
 import { Card } from "@/components/ui/Card";
 import { StatCard } from "@/components/ui/StatCard";
 import { RangeSelector } from "@/components/RangeSelector";
-import { RankBarChart } from "@/components/charts/RankBarChart";
+import { RankBarChart } from "@/components/charts/lazy";
 import { InfoTip } from "@/components/ui/InfoTip";
 import { METRIC_HELP } from "@/lib/glossary";
 import { formatNumber, formatUsd } from "@/lib/format";

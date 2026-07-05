@@ -25,3 +25,8 @@ export const RankBarChart = dynamic(
   () => import("./RankBarChart").then((m) => ({ default: m.RankBarChart })),
   { ssr: false, loading: chartFallback(200) }
 );
+
+export const ToolSankey = dynamic(
+  () => import("./ToolSankey").then((m) => ({ default: m.ToolSankey })),
+  { ssr: false, loading: chartFallback(280) }
+);

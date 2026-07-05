@@ -2,8 +2,7 @@ import { getInsightsStats, getToolSankey, getTeamModelPivot, getCodeStats, type 
 import { Card } from "@/components/ui/Card";
 import { StatCard } from "@/components/ui/StatCard";
 import { RangeSelector } from "@/components/RangeSelector";
-import { RankBarChart } from "@/components/charts/RankBarChart";
-import { ToolSankey } from "@/components/charts/ToolSankey";
+import { RankBarChart, ToolSankey } from "@/components/charts/lazy";
 import { formatNumber, formatDuration, formatPercent, formatDay, formatRelativeTime } from "@/lib/format";
 import { colorForModel } from "@/lib/chart-colors";
 import { METRIC_HELP } from "@/lib/glossary";

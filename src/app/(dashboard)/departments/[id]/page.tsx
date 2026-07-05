@@ -5,7 +5,7 @@ import { getDepartmentStats, getMemberBreakdown, type RangeKey } from "@/lib/sta
 import { Card } from "@/components/ui/Card";
 import { StatCard } from "@/components/ui/StatCard";
 import { RangeSelector } from "@/components/RangeSelector";
-import { TrendChart } from "@/components/charts/TrendChart";
+import { TrendChart } from "@/components/charts/lazy";
 import { MemberTable } from "@/components/MemberTable";
 import { formatNumber, formatUsd } from "@/lib/format";
 import { METRIC_HELP } from "@/lib/glossary";

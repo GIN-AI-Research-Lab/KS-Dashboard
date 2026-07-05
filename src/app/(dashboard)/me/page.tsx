@@ -4,7 +4,7 @@ import { getUserStats, getUserGamification, getTeamAverages, getUserCodeStats, t
 import { Card } from "@/components/ui/Card";
 import { StatCard } from "@/components/ui/StatCard";
 import { RangeSelector } from "@/components/RangeSelector";
-import { TrendChart } from "@/components/charts/TrendChart";
+import { TrendChart } from "@/components/charts/lazy";
 import { Tag } from "@/components/ui/Badge";
 import { BadgeGrid } from "@/components/BadgeGrid";
 import { formatNumber, formatUsd, formatPercent } from "@/lib/format";

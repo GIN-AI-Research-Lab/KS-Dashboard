@@ -3,7 +3,7 @@ import { MINUTES_SAVED_PER_TURN, DEV_HOURLY_USD } from "@/lib/roi-config";
 import { Card } from "@/components/ui/Card";
 import { StatCard } from "@/components/ui/StatCard";
 import { RangeSelector } from "@/components/RangeSelector";
-import { RankBarChart } from "@/components/charts/RankBarChart";
+import { RankBarChart } from "@/components/charts/lazy";
 import { Badge } from "@/components/ui/Badge";
 import { InfoTip } from "@/components/ui/InfoTip";
 import { METRIC_HELP } from "@/lib/glossary";

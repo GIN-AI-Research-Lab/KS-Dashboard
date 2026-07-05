@@ -1,7 +1,7 @@
 import { getModelLeaderboard, type RangeKey } from "@/lib/stats";
 import { Card } from "@/components/ui/Card";
 import { RangeSelector } from "@/components/RangeSelector";
-import { ModelDonut } from "@/components/charts/ModelDonut";
+import { ModelDonut } from "@/components/charts/lazy";
 import { formatNumber, formatUsd } from "@/lib/format";
 import { colorForModel } from "@/lib/chart-colors";
 
