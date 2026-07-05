@@ -5,6 +5,7 @@ import { Topbar } from "@/components/Topbar";
 import { AutoRefresh } from "@/components/AutoRefresh";
 import { CommandPalette } from "@/components/CommandPalette";
 import { SidebarProvider } from "@/components/sidebar/SidebarContext";
+import { SmoothScroll } from "@/components/SmoothScroll";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -23,7 +24,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <Sidebar orgTree={departments} role={user.role} />
         <div className="flex min-w-0 flex-1 flex-col">
           <Topbar name={user.name} role={user.role} />
-          <main className="flex-1 overflow-y-auto p-6">{children}</main>
+          <main id="scroll-main" className="flex-1 overflow-y-auto">
+            <div id="scroll-content" className="p-6">{children}</div>
+          </main>
+          <SmoothScroll />
         </div>
       </div>
     </SidebarProvider>
