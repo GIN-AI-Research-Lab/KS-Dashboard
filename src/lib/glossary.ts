@@ -38,3 +38,54 @@ export const METRIC_HELP: Record<string, string> = {
   // Models
   model: "Mô hình Claude được dùng (Opus/Sonnet/Haiku…). Mỗi model có tốc độ, chất lượng và đơn giá khác nhau.",
 };
+
+// Grouped, display-friendly version for the standalone glossary page. Reuses the
+// METRIC_HELP text where possible so tooltips and the glossary stay in sync.
+export const GLOSSARY: { group: string; items: { term: string; desc: string }[] }[] = [
+  {
+    group: "Token & chi phí",
+    items: [
+      { term: "Token", desc: "Đơn vị mà model đọc/ghi (≈ một mẩu chữ). Chi phí và giới hạn đều tính theo token." },
+      { term: "Input token", desc: METRIC_HELP.inputTokens },
+      { term: "Output token", desc: METRIC_HELP.outputTokens },
+      { term: "Chi phí ước tính", desc: METRIC_HELP.cost },
+      { term: "ROI", desc: METRIC_HELP.roi },
+    ],
+  },
+  {
+    group: "Cache (bộ nhớ đệm prompt)",
+    items: [
+      { term: "Cache hit ratio", desc: METRIC_HELP.cacheHitRatio },
+      { term: "Token đọc từ cache", desc: METRIC_HELP.cacheReadTokens },
+      { term: "Token tạo cache", desc: METRIC_HELP.cacheCreationTokens },
+    ],
+  },
+  {
+    group: "Phiên & hoạt động",
+    items: [
+      { term: "Phiên (session)", desc: "Một lần làm việc với Claude Code (mở tới khi kết thúc)." },
+      { term: "Turn (lượt)", desc: METRIC_HELP.turns },
+      { term: "Người dùng hoạt động", desc: METRIC_HELP.activeUsers },
+      { term: "DAU / WAU / MAU", desc: "Số người dùng hoạt động theo Ngày / Tuần / Tháng." },
+      { term: "Stickiness", desc: "DAU/MAU — mức độ quay lại đều đặn; càng cao càng 'dính'." },
+    ],
+  },
+  {
+    group: "Nhóm & tổ chức",
+    items: [
+      { term: "Độ phủ (coverage)", desc: METRIC_HELP.coverage },
+      { term: "Token/người", desc: METRIC_HELP.tokensPerMember },
+      { term: "Cohort", desc: "Nhóm người bắt đầu dùng trong cùng một kỳ; dùng để đo tỷ lệ giữ chân (retention) T+1, T+2…" },
+    ],
+  },
+  {
+    group: "Code & model",
+    items: [
+      { term: "Dòng code thêm/xoá", desc: METRIC_HELP.linesAdded },
+      { term: "Tỷ lệ chấp nhận sửa", desc: METRIC_HELP.acceptanceRate },
+      { term: "OTel (OpenTelemetry)", desc: METRIC_HELP.otel },
+      { term: "Model / tier", desc: "Model Claude (Opus/Sonnet/Haiku…); 'tier' là cấp model, đơn giá token khác nhau." },
+      { term: "Percentile (P50/P95)", desc: "P95 = 95% trường hợp nhanh hơn giá trị này; đo độ trễ ở phần 'xấu' chứ không chỉ trung bình." },
+    ],
+  },
+];

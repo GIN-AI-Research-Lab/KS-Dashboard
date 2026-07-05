@@ -1,5 +1,6 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
+import { getLastActivity } from "@/lib/stats";
 import { Sidebar } from "@/components/Sidebar";
 import { Topbar } from "@/components/Topbar";
 import { AutoRefresh } from "@/components/AutoRefresh";
@@ -11,10 +12,13 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const session = await auth();
   const user = session!.user;
 
-  const departments = await prisma.department.findMany({
-    orderBy: { name: "asc" },
-    include: { teams: { orderBy: { name: "asc" }, select: { id: true, name: true } } },
-  });
+  const [departments, lastActivity] = await Promise.all([
+    prisma.department.findMany({
+      orderBy: { name: "asc" },
+      include: { teams: { orderBy: { name: "asc" }, select: { id: true, name: true } } },
+    }),
+    getLastActivity(),
+  ]);
 
   return (
     <SidebarProvider>
@@ -23,7 +27,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <CommandPalette />
         <Sidebar orgTree={departments} role={user.role} />
         <div className="flex min-w-0 flex-1 flex-col">
-          <Topbar name={user.name} role={user.role} />
+          <Topbar name={user.name} role={user.role} lastActivity={lastActivity} />
           <main id="scroll-main" className="flex-1 overflow-y-auto">
             <div id="scroll-content" className="p-6">{children}</div>
           </main>

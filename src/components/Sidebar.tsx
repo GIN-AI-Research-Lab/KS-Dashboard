@@ -20,6 +20,7 @@ import {
   Radio,
   Settings,
   Building2,
+  BookOpen,
   ChevronDown,
   PanelLeftClose,
   PanelLeftOpen,
@@ -43,6 +44,7 @@ const ICONS: Record<string, LucideIcon> = {
   library: Lightbulb,
   integrate: Plug,
   live: Radio,
+  glossary: BookOpen,
   admin: Settings,
 };
 
@@ -131,6 +133,7 @@ export function Sidebar({ orgTree, role }: { orgTree: OrgTree; role: Role }) {
           <NavLink href="/library" label="Thư viện" icon={ICONS.library} />
           <NavLink href="/integrate" label="Tích hợp Claude" icon={ICONS.integrate} />
           <NavLink href="/live" label="Phiên trực tuyến" icon={ICONS.live} />
+          <NavLink href="/glossary" label="Thuật ngữ" icon={ICONS.glossary} />
 
           <div className={collapsed ? "md:hidden" : ""}>
             <button

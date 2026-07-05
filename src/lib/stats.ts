@@ -61,6 +61,18 @@ function pctDelta(current: number, previous: number): number | null {
   return ((current - previous) / previous) * 100;
 }
 
+// Timestamp of the most recent activity ingested — used as a "data freshness"
+// indicator in the topbar. Cached briefly like the other dashboard reads.
+export async function getLastActivity(): Promise<Date | null> {
+  return cached("last-activity", DASH_TTL, async () => {
+    const row = await prisma.turn.findFirst({
+      orderBy: { createdAt: "desc" },
+      select: { createdAt: true },
+    });
+    return row?.createdAt ?? null;
+  });
+}
+
 export async function getOverviewStats(range: RangeKey) {
   return cached(`overview:${range}`, DASH_TTL, async () => {
   const since = rangeToDate(range);
