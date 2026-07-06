@@ -1,15 +1,17 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ArrowDown, ArrowUp } from "lucide-react";
 import { formatNumber, formatUsd } from "@/lib/format";
 import { InfoTip } from "@/components/ui/InfoTip";
 import { METRIC_HELP } from "@/lib/glossary";
+import { UserChip } from "@/components/UserChip";
+import { useT } from "@/i18n/I18nProvider";
 
 type Member = {
   userId: string;
   userName: string;
+  image?: string | null;
   inputTokens: number;
   outputTokens: number;
   costUsd: number;
@@ -23,6 +25,7 @@ function SortIndicator({ active, dir }: { active: boolean; dir: "asc" | "desc" }
 }
 
 export function MemberTable({ members }: { members: Member[] }) {
+  const t = useT();
   const [sort, setSort] = useState<{ key: SortKey; dir: "asc" | "desc" }>({ key: "costUsd", dir: "desc" });
 
   const sorted = useMemo(() => {
@@ -38,7 +41,7 @@ export function MemberTable({ members }: { members: Member[] }) {
   }, [members, sort]);
 
   if (members.length === 0) {
-    return <p className="text-sm text-[var(--text-muted)]">Chưa có thành viên</p>;
+    return <p className="text-sm text-[var(--text-muted)]">{t("table.noMembers")}</p>;
   }
 
   function toggle(key: SortKey, defaultDir: "asc" | "desc") {
@@ -48,10 +51,10 @@ export function MemberTable({ members }: { members: Member[] }) {
   const thBtn = "inline-flex items-center gap-1 transition-colors hover:text-[var(--text-secondary)]";
 
   const numCols: { key: SortKey; label: string; tip?: string }[] = [
-    { key: "inputTokens", label: "Input", tip: METRIC_HELP.inputTokens },
-    { key: "outputTokens", label: "Output", tip: METRIC_HELP.outputTokens },
-    { key: "turnCount", label: "Turns", tip: METRIC_HELP.turns },
-    { key: "costUsd", label: "Chi phí" },
+    { key: "inputTokens", label: t("table.input"), tip: METRIC_HELP.inputTokens },
+    { key: "outputTokens", label: t("table.output"), tip: METRIC_HELP.outputTokens },
+    { key: "turnCount", label: t("table.turns"), tip: METRIC_HELP.turns },
+    { key: "costUsd", label: t("table.cost") },
   ];
 
   return (
@@ -61,7 +64,7 @@ export function MemberTable({ members }: { members: Member[] }) {
           <tr className="border-b border-[var(--gridline)] text-left text-xs uppercase tracking-wide text-[var(--text-muted)]">
             <th className="py-2 pr-3 font-medium">
               <button type="button" className={thBtn} onClick={() => toggle("userName", "asc")}>
-                Thành viên <SortIndicator active={sort.key === "userName"} dir={sort.dir} />
+                {t("table.member")} <SortIndicator active={sort.key === "userName"} dir={sort.dir} />
               </button>
             </th>
             {numCols.map((c) => (
@@ -83,9 +86,7 @@ export function MemberTable({ members }: { members: Member[] }) {
               className="border-b border-[var(--gridline)] transition-colors last:border-0 hover:bg-black/[0.03] dark:hover:bg-white/[0.04]"
             >
               <td className="py-2 pr-3 font-medium">
-                <Link href={`/users/${m.userId}`} className="transition-colors hover:text-accent">
-                  {m.userName}
-                </Link>
+                <UserChip userId={m.userId} name={m.userName} image={m.image} />
               </td>
               <td className="py-2 pr-3 text-right tabular-nums">{formatNumber(m.inputTokens)}</td>
               <td className="py-2 pr-3 text-right tabular-nums">{formatNumber(m.outputTokens)}</td>

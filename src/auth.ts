@@ -16,6 +16,7 @@ declare module "next-auth" {
       role: Role;
       teamId: string | null;
       departmentId: string | null;
+      image?: string | null;
     };
   }
   interface User {
@@ -31,6 +32,7 @@ interface AppTokenFields {
   role: Role;
   teamId: string | null;
   departmentId: string | null;
+  image?: string | null;
 }
 
 const providers: Provider[] = [
@@ -58,6 +60,7 @@ const providers: Provider[] = [
         role: user.role,
         teamId: user.teamId,
         departmentId: user.departmentId,
+        image: user.image,
       };
     },
   }),
@@ -108,12 +111,26 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           (profile?.email as string | undefined) ?? (profile?.preferred_username as string | undefined);
         const matched = email ? await findUserByIdentity(email) : null;
         if (matched) {
+          // Adopt the display name + profile photo from Microsoft. The Entra
+          // provider's profile() returns the 48x48 Graph photo as a base64 data
+          // URL on `user.image`; `profile.name` is the SSO display name.
+          const ssoName = typeof profile?.name === "string" && profile.name ? profile.name : matched.name;
+          const oauthImage = (user as { image?: string | null } | undefined)?.image;
+          const ssoImage = oauthImage ?? matched.image ?? null;
+          if (ssoName !== matched.name || ssoImage !== matched.image) {
+            await prisma.user
+              .update({ where: { id: matched.id }, data: { name: ssoName, image: ssoImage } })
+              .catch(() => {
+                // best-effort: still reflect SSO identity in the session below
+              });
+          }
           t.id = matched.id;
           t.role = matched.role;
           t.teamId = matched.teamId;
           t.departmentId = matched.departmentId;
           t.email = matched.email;
-          t.name = matched.name;
+          t.name = ssoName;
+          t.image = ssoImage;
         }
         return t;
       }
@@ -124,6 +141,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         t.role = u.role;
         t.teamId = u.teamId;
         t.departmentId = u.departmentId;
+        t.image = (u as { image?: string | null }).image ?? null;
       }
       return t;
     },
@@ -133,6 +151,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       session.user.role = t.role;
       session.user.teamId = t.teamId;
       session.user.departmentId = t.departmentId;
+      session.user.image = t.image ?? null;
       return session;
     },
   },

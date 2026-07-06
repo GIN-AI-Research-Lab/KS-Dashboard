@@ -1,9 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ArrowDown, ArrowUp } from "lucide-react";
 import { formatNumber, formatUsd, formatDuration } from "@/lib/format";
+import { UserChip } from "@/components/UserChip";
+import { useT } from "@/i18n/I18nProvider";
+import type { Translate } from "@/i18n/lookup";
 
 const MEDALS = ["🥇", "🥈", "🥉"];
 
@@ -14,6 +16,7 @@ const FORMATTERS = { number: formatNumber, usd: formatUsd, duration: formatDurat
 type Row = {
   userId: string;
   userName: string;
+  image?: string | null;
   team: string | null;
   department: string | null;
   value: number;
@@ -26,11 +29,11 @@ function SortIndicator({ active, dir }: { active: boolean; dir: "asc" | "desc" }
   return dir === "asc" ? <ArrowUp className="inline h-3 w-3" /> : <ArrowDown className="inline h-3 w-3" />;
 }
 
-// Rank change vs the previous period: ▲ up, ▼ down, – no change, "mới" = new.
-function MovementChip({ delta }: { delta?: number | null }) {
+// Rank change vs the previous period: ▲ up, ▼ down, – no change, "new" = new.
+function MovementChip({ delta, t }: { delta?: number | null; t: Translate }) {
   if (delta === undefined) return null;
   if (delta === null)
-    return <span className="rounded bg-accent/10 px-1 py-0.5 text-[10px] font-medium text-accent">mới</span>;
+    return <span className="rounded bg-accent/10 px-1 py-0.5 text-[10px] font-medium text-accent">{t("table.rankNew")}</span>;
   if (delta === 0) return <span className="text-[10px] text-[var(--text-muted)]">–</span>;
   const up = delta > 0;
   return (
@@ -38,7 +41,7 @@ function MovementChip({ delta }: { delta?: number | null }) {
       className={`inline-flex items-center gap-0.5 text-[10px] font-medium tabular-nums ${
         up ? "text-[#0ca30c]" : "text-[#e34948]"
       }`}
-      title={`${up ? "Tăng" : "Giảm"} ${Math.abs(delta)} hạng so với kỳ trước`}
+      title={`${t(up ? "table.rankUp" : "table.rankDown")} ${Math.abs(delta)} ${t("table.rankChangeSuffix")}`}
     >
       {up ? <ArrowUp className="h-2.5 w-2.5" /> : <ArrowDown className="h-2.5 w-2.5" />}
       {Math.abs(delta)}
@@ -55,6 +58,7 @@ export function LeaderboardTable({
   valueLabel: string;
   valueFormat: keyof typeof FORMATTERS;
 }) {
+  const t = useT();
   const fmt = FORMATTERS[valueFormat];
   const [sort, setSort] = useState<{ key: SortKey; dir: "asc" | "desc" }>({ key: "rank", dir: "asc" });
 
@@ -73,7 +77,7 @@ export function LeaderboardTable({
   }, [ranked, sort]);
 
   if (rows.length === 0) {
-    return <p className="text-sm text-[var(--text-muted)]">Chưa có dữ liệu trong khoảng thời gian này</p>;
+    return <p className="text-sm text-[var(--text-muted)]">{t("table.noData")}</p>;
   }
 
   function toggle(key: SortKey, defaultDir: "asc" | "desc") {
@@ -95,10 +99,10 @@ export function LeaderboardTable({
             </th>
             <th className="py-2 pr-3 font-medium">
               <button type="button" className={thBtn} onClick={() => toggle("name", "asc")}>
-                Nhân viên <SortIndicator active={sort.key === "name"} dir={sort.dir} />
+                {t("table.employee")} <SortIndicator active={sort.key === "name"} dir={sort.dir} />
               </button>
             </th>
-            <th className="py-2 pr-3 font-medium">Bộ phận / Nhóm</th>
+            <th className="py-2 pr-3 font-medium">{t("table.deptTeam")}</th>
             <th className="py-2 pr-0 text-right font-medium">
               <button type="button" className={`${thBtn} justify-end`} onClick={() => toggle("value", "desc")}>
                 {valueLabel} <SortIndicator active={sort.key === "value"} dir={sort.dir} />
@@ -115,10 +119,8 @@ export function LeaderboardTable({
               <td className="py-2.5 text-base">{MEDALS[row.rank - 1] ?? row.rank}</td>
               <td className="py-2.5 pr-3 font-medium">
                 <span className="inline-flex items-center gap-1.5">
-                  <Link href={`/users/${row.userId}`} className="transition-colors hover:text-accent">
-                    {row.userName}
-                  </Link>
-                  <MovementChip delta={row.rankDelta} />
+                  <UserChip userId={row.userId} name={row.userName} image={row.image} />
+                  <MovementChip delta={row.rankDelta} t={t} />
                 </span>
               </td>
               <td className="py-2.5 pr-3 text-xs text-[var(--text-muted)]">

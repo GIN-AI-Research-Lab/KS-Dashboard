@@ -38,19 +38,29 @@ export default async function UserPage({
   return (
     <div className="stagger flex flex-col gap-6">
       <div className="hero-panel relative flex flex-wrap items-center justify-between gap-4 overflow-hidden rounded-2xl border border-[var(--border)] p-6 shadow-[var(--shadow-xs)]">
-        <div className="min-w-0">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)]/60 px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-[0.1em] text-[var(--text-secondary)]">
-            <span className="gradient-brand h-1.5 w-1.5 rounded-full" />
-            THÀNH VIÊN
-          </span>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight">
-            <span className="gradient-text">Hồ sơ</span> {user.name}
-          </h1>
-          <p className="mt-1 text-sm text-[var(--text-secondary)]">
-            {ROLE_LABELS[user.role]}
-            {user.department ? ` · ${user.department.name}` : ""}
-            {user.team ? ` · ${user.team.name}` : ""}
-          </p>
+        <div className="flex min-w-0 items-center gap-4">
+          {user.image ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={user.image} alt="" className="h-16 w-16 shrink-0 rounded-full object-cover ring-2 ring-[var(--border)]" />
+          ) : (
+            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-[#4a3aa7]/15 text-2xl font-semibold text-[#4a3aa7]">
+              {user.name.slice(0, 1).toUpperCase()}
+            </div>
+          )}
+          <div className="min-w-0">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)]/60 px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-[0.1em] text-[var(--text-secondary)]">
+              <span className="gradient-brand h-1.5 w-1.5 rounded-full" />
+              THÀNH VIÊN
+            </span>
+            <h1 className="mt-2 text-3xl font-semibold tracking-tight">
+              <span className="gradient-text">Hồ sơ</span> {user.name}
+            </h1>
+            <p className="mt-1 text-sm text-[var(--text-secondary)]">
+              {ROLE_LABELS[user.role]}
+              {user.department ? ` · ${user.department.name}` : ""}
+              {user.team ? ` · ${user.team.name}` : ""}
+            </p>
+          </div>
         </div>
         <RangeSelector defaultRange={r} />
       </div>
