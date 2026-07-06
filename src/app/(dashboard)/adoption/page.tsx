@@ -5,7 +5,7 @@ import { RangeSelector } from "@/components/RangeSelector";
 import { TrendChart, RankBarChart } from "@/components/charts/lazy";
 import { Badge, Tag } from "@/components/ui/Badge";
 import { formatNumber, formatPercent, formatDay } from "@/lib/format";
-import { METRIC_HELP } from "@/lib/glossary";
+import { getMetricHelp } from "@/lib/glossary";
 import { colorForIndex } from "@/lib/chart-colors";
 import { ANNOTATIONS } from "@/lib/annotations";
 import { getT } from "@/i18n/server";
@@ -19,6 +19,7 @@ export default async function AdoptionPage({
   const { range } = await searchParams;
   const r = (range ?? "30d") as RangeKey;
   const [a, cohort, t] = await Promise.all([getAdoptionStats(r), getCohortRetention(8), getT()]);
+  const METRIC_HELP = getMetricHelp(t);
 
   const PHASE_LABELS: Record<AdoptionPhase, string> = {
     power: t("adoption.phasePower"),
@@ -83,22 +84,22 @@ export default async function AdoptionPage({
             </span>
           }
         >
-          {a.coverage.byTeam.length === 0 ? (
+          {a.coverage.byDepartment.length === 0 ? (
             <p className="text-sm text-[var(--text-muted)]">{t("adoption.noData")}</p>
           ) : (
             <div className="flex flex-col gap-3">
-              {a.coverage.byTeam.map((t, i) => (
-                <div key={t.team}>
+              {a.coverage.byDepartment.map((d, i) => (
+                <div key={d.department}>
                   <div className="mb-1 flex items-baseline justify-between text-sm">
-                    <span className="font-medium">{t.team}</span>
+                    <span className="font-medium">{d.department}</span>
                     <span className="text-xs text-[var(--text-muted)]">
-                      {t.active}/{t.total} · {formatPercent(t.pct)}
+                      {d.active}/{d.total} · {formatPercent(d.pct)}
                     </span>
                   </div>
                   <div className="h-2 w-full overflow-hidden rounded-full bg-black/5 dark:bg-white/10">
                     <div
                       className="h-full rounded-full"
-                      style={{ width: `${t.pct * 100}%`, background: colorForIndex(i) }}
+                      style={{ width: `${d.pct * 100}%`, background: colorForIndex(i) }}
                     />
                   </div>
                 </div>

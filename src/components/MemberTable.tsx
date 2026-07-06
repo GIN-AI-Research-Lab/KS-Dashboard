@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { ArrowDown, ArrowUp } from "lucide-react";
 import { formatNumber, formatUsd } from "@/lib/format";
 import { InfoTip } from "@/components/ui/InfoTip";
-import { METRIC_HELP } from "@/lib/glossary";
+import { getMetricHelp } from "@/lib/glossary";
 import { UserChip } from "@/components/UserChip";
 import { useT } from "@/i18n/I18nProvider";
 
@@ -26,6 +26,7 @@ function SortIndicator({ active, dir }: { active: boolean; dir: "asc" | "desc" }
 
 export function MemberTable({ members }: { members: Member[] }) {
   const t = useT();
+  const METRIC_HELP = getMetricHelp(t);
   const [sort, setSort] = useState<{ key: SortKey; dir: "asc" | "desc" }>({ key: "costUsd", dir: "desc" });
 
   const sorted = useMemo(() => {

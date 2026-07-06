@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { Image as ImageIcon } from "lucide-react";
 import { renderMarkdown } from "@/lib/markdown";
 import { useToast } from "@/components/ui/toast/ToastProvider";
+import { useT } from "@/i18n/I18nProvider";
 
 export function MarkdownEditor({
   value,
@@ -14,6 +15,7 @@ export function MarkdownEditor({
   onChange: (v: string) => void;
   placeholder?: string;
 }) {
+  const t = useT();
   const { toast } = useToast();
   const ref = useRef<HTMLTextAreaElement>(null);
   const imgInput = useRef<HTMLInputElement>(null);
@@ -47,10 +49,10 @@ export function MarkdownEditor({
     setUploading(false);
     if (res.ok) {
       const d = await res.json();
-      onChange(`${value}${value.endsWith("\n") || value === "" ? "" : "\n"}![ảnh](${d.url})\n`);
+      onChange(`${value}${value.endsWith("\n") || value === "" ? "" : "\n"}![${t("library.editorSampleImageAlt")}](${d.url})\n`);
     } else {
       const d = await res.json().catch(() => ({}));
-      toast(d.error ?? "Tải ảnh thất bại", "error");
+      toast(d.error ?? t("library.editorUploadFailed"), "error");
     }
   }
 
@@ -64,19 +66,19 @@ export function MarkdownEditor({
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-wrap items-center gap-1.5">
-        <button type="button" className={btn} onClick={() => insert("## ", "", "Tiêu đề")}>H2</button>
-        <button type="button" className={btn} onClick={() => insert("**", "**", "đậm")}>B</button>
-        <button type="button" className={btn} onClick={() => insert("*", "*", "nghiêng")}>i</button>
-        <button type="button" className={btn} onClick={() => insert("`", "`", "code")}>{"</>"}</button>
-        <button type="button" className={btn} onClick={() => insert("```\n", "\n```", "code block")}>Code block</button>
-        <button type="button" className={btn} onClick={() => insert("- ", "", "mục")}>Danh sách</button>
+        <button type="button" className={btn} onClick={() => insert("## ", "", t("library.editorSampleHeading"))}>H2</button>
+        <button type="button" className={btn} onClick={() => insert("**", "**", t("library.editorSampleBold"))}>B</button>
+        <button type="button" className={btn} onClick={() => insert("*", "*", t("library.editorSampleItalic"))}>i</button>
+        <button type="button" className={btn} onClick={() => insert("`", "`", t("library.editorSampleCode"))}>{"</>"}</button>
+        <button type="button" className={btn} onClick={() => insert("```\n", "\n```", t("library.editorSampleCodeBlock"))}>{t("library.editorCodeBlockBtn")}</button>
+        <button type="button" className={btn} onClick={() => insert("- ", "", t("library.editorSampleListItem"))}>{t("library.editorListBtn")}</button>
         <button type="button" className={`${btn} inline-flex items-center gap-1`} onClick={() => imgInput.current?.click()} disabled={uploading}>
           <ImageIcon className="h-4 w-4" />
-          {uploading ? "Đang tải..." : "Ảnh"}
+          {uploading ? t("library.editorUploading") : t("library.editorImageBtn")}
         </button>
-        <button type="button" className={btn} onClick={() => mdInput.current?.click()}>Nhập .md</button>
+        <button type="button" className={btn} onClick={() => mdInput.current?.click()}>{t("library.editorImportMdBtn")}</button>
         <button type="button" className={`${btn} ml-auto ${preview ? "border-accent bg-accent/10 text-accent" : ""}`} onClick={() => setPreview((p) => !p)}>
-          {preview ? "Soạn thảo" : "Xem trước"}
+          {preview ? t("library.editorEditBtn") : t("library.editorPreviewBtn")}
         </button>
         <input
           ref={imgInput}
@@ -104,7 +106,7 @@ export function MarkdownEditor({
 
       {preview ? (
         <div className="min-h-[160px] rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2">
-          {value.trim() ? renderMarkdown(value) : <span className="text-sm text-[var(--text-muted)]">Chưa có nội dung</span>}
+          {value.trim() ? renderMarkdown(value) : <span className="text-sm text-[var(--text-muted)]">{t("library.editorNoContent")}</span>}
         </div>
       ) : (
         <textarea
@@ -112,7 +114,7 @@ export function MarkdownEditor({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           rows={10}
-          placeholder={placeholder ?? "Viết nội dung (Markdown): **đậm**, `code`, ![ảnh](...), # tiêu đề…"}
+          placeholder={placeholder ?? t("library.editorDefaultPlaceholder")}
           className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 font-mono text-sm"
         />
       )}

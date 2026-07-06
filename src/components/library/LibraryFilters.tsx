@@ -4,20 +4,29 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useState } from "react";
 import { Search } from "lucide-react";
 import { SORTS } from "@/lib/library";
+import { useT } from "@/i18n/I18nProvider";
 
-const KINDS = [
-  { key: "", label: "Tất cả" },
-  { key: "PROMPT", label: "Prompt" },
-  { key: "SKILL", label: "Skill" },
-];
+const KIND_KEYS = ["", "PROMPT", "SKILL"] as const;
+
+const SORT_LABEL_KEY: Record<(typeof SORTS)[number], string> = {
+  new: "library.sortNew",
+  comments: "library.sortComments",
+  reactions: "library.sortReactions",
+  stars: "library.sortStars",
+};
 
 export function LibraryFilters() {
+  const t = useT();
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
   const kind = params.get("kind") ?? "";
   const sort = params.get("sort") ?? "new";
   const [q, setQ] = useState(params.get("q") ?? "");
+  const KINDS = KIND_KEYS.map((key) => ({
+    key,
+    label: key === "" ? t("library.filterAll") : key === "PROMPT" ? "Prompt" : "Skill",
+  }));
 
   function update(next: Record<string, string | null>) {
     const p = new URLSearchParams(params.toString());
@@ -47,7 +56,7 @@ export function LibraryFilters() {
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Tìm tiêu đề, nội dung, tag… (Enter)"
+            placeholder={t("library.searchPlaceholder")}
             className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] py-1.5 pl-8 pr-3 text-sm transition-colors duration-150 focus:border-accent"
           />
         </form>
@@ -55,11 +64,11 @@ export function LibraryFilters() {
       <div className="inline-flex w-fit rounded-lg border border-[var(--border)] bg-[var(--surface)] p-0.5">
         {SORTS.map((s) => (
           <button
-            key={s.key}
-            onClick={() => update({ sort: s.key === "new" ? null : s.key })}
-            className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors duration-150 ${sort === s.key ? "bg-accent/10 text-accent" : "text-[var(--text-secondary)] hover:bg-black/5 dark:hover:bg-white/10"}`}
+            key={s}
+            onClick={() => update({ sort: s === "new" ? null : s })}
+            className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors duration-150 ${sort === s ? "bg-accent/10 text-accent" : "text-[var(--text-secondary)] hover:bg-black/5 dark:hover:bg-white/10"}`}
           >
-            {s.label}
+            {t(SORT_LABEL_KEY[s])}
           </button>
         ))}
       </div>

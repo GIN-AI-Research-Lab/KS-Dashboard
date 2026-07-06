@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Globe, Lock, Trash2 } from "lucide-react";
+import { useT } from "@/i18n/I18nProvider";
 
 // Owner controls for a library item: toggle public/private and delete.
 export function ItemManageBar({
@@ -14,6 +15,7 @@ export function ItemManageBar({
   initialVisibility: "PUBLIC" | "PRIVATE";
   redirectOnDelete?: string;
 }) {
+  const t = useT();
   const router = useRouter();
   const [visibility, setVisibility] = useState(initialVisibility);
   const [busy, setBusy] = useState(false);
@@ -34,7 +36,7 @@ export function ItemManageBar({
   }
 
   async function remove() {
-    if (!confirm("Xoá bài này?")) return;
+    if (!confirm(t("library.deleteConfirm"))) return;
     setBusy(true);
     const res = await fetch(`/api/library/${itemId}`, { method: "DELETE" });
     setBusy(false);
@@ -55,13 +57,13 @@ export function ItemManageBar({
             className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium transition-colors duration-150 ${visibility === v ? "bg-accent/10 text-accent" : "text-[var(--text-secondary)] hover:bg-black/5 dark:hover:bg-white/10"}`}
           >
             {v === "PUBLIC" ? <Globe className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
-            {v === "PUBLIC" ? "Công khai" : "Riêng tư"}
+            {v === "PUBLIC" ? t("library.public") : t("library.private")}
           </button>
         ))}
       </div>
       <button onClick={remove} disabled={busy} className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium text-[#e34948] transition-colors duration-150 hover:bg-[#e34948]/10 disabled:opacity-60">
         <Trash2 className="h-4 w-4" />
-        Xoá
+        {t("library.delete")}
       </button>
     </div>
   );

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { formatRelativeTime } from "@/lib/format";
 import { useToast } from "@/components/ui/toast/ToastProvider";
+import { useT } from "@/i18n/I18nProvider";
 
 type Comment = { id: string; body: string; createdAt: string; authorName: string };
 
@@ -17,6 +18,7 @@ function renderBody(body: string) {
 }
 
 export function LibraryComments({ itemId, initialComments }: { itemId: string; initialComments: Comment[] }) {
+  const t = useT();
   const { toast } = useToast();
   const [comments, setComments] = useState(initialComments);
   const [body, setBody] = useState("");
@@ -35,15 +37,15 @@ export function LibraryComments({ itemId, initialComments }: { itemId: string; i
       const d = await res.json();
       setComments((c) => [...c, { id: d.comment.id, body: d.comment.body, createdAt: d.comment.createdAt, authorName: d.comment.author.name }]);
       setBody("");
-      toast("Đã gửi bình luận");
+      toast(t("library.commentSentToast"));
     } else {
-      toast("Gửi bình luận thất bại", "error");
+      toast(t("library.commentFailedToast"), "error");
     }
   }
 
   return (
     <div className="flex flex-col gap-3">
-      {comments.length === 0 && <p className="text-sm text-[var(--text-muted)]">Chưa có bình luận.</p>}
+      {comments.length === 0 && <p className="text-sm text-[var(--text-muted)]">{t("library.noComments")}</p>}
       {comments.map((c) => (
         <div key={c.id} className="rounded-lg border border-[var(--border)] px-3 py-2 transition-all duration-150 hover:border-[var(--border-strong)] hover:shadow-[var(--shadow-sm)]">
           <div className="mb-0.5 flex items-center gap-2 text-xs text-[var(--text-muted)]">
@@ -58,7 +60,7 @@ export function LibraryComments({ itemId, initialComments }: { itemId: string; i
           value={body}
           onChange={(e) => setBody(e.target.value)}
           rows={2}
-          placeholder="Trao đổi… dùng @tên để nhắc ai đó"
+          placeholder={t("library.commentPlaceholder")}
           className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm"
         />
         <button
@@ -66,7 +68,7 @@ export function LibraryComments({ itemId, initialComments }: { itemId: string; i
           disabled={posting || !body.trim()}
           className="self-start rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition-colors duration-150 hover:bg-[var(--accent-hover)] active:scale-95 disabled:opacity-60"
         >
-          {posting ? "Đang gửi..." : "Gửi"}
+          {posting ? t("library.sending") : t("library.send")}
         </button>
       </div>
     </div>

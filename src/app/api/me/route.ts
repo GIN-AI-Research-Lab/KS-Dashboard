@@ -14,7 +14,6 @@ export async function GET() {
       email: true,
       role: true,
       apiKey: true,
-      team: { select: { id: true, name: true } },
       department: { select: { id: true, name: true } },
     },
   });

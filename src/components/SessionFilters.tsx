@@ -3,22 +3,24 @@
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useState } from "react";
 import { Star } from "lucide-react";
-import { OUTCOME_LABEL } from "@/lib/session-outcome";
-
-const OUTCOME_OPTS = [
-  { key: "", label: "Tất cả" },
-  { key: "SOLVED", label: OUTCOME_LABEL.SOLVED },
-  { key: "IN_PROGRESS", label: OUTCOME_LABEL.IN_PROGRESS },
-  { key: "ABANDONED", label: OUTCOME_LABEL.ABANDONED },
-];
+import { getOutcomeLabel } from "@/lib/session-outcome";
+import { useT } from "@/i18n/I18nProvider";
 
 export function SessionFilters() {
+  const t = useT();
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
   const outcome = params.get("outcome") ?? "";
   const featured = params.get("featured") === "1";
   const [q, setQ] = useState(params.get("q") ?? "");
+  const OUTCOME_LABEL = getOutcomeLabel(t);
+  const OUTCOME_OPTS = [
+    { key: "", label: t("sessionsPage.outcomeAll") },
+    { key: "SOLVED", label: OUTCOME_LABEL.SOLVED },
+    { key: "IN_PROGRESS", label: OUTCOME_LABEL.IN_PROGRESS },
+    { key: "ABANDONED", label: OUTCOME_LABEL.ABANDONED },
+  ];
 
   function update(next: Record<string, string | null>) {
     const p = new URLSearchParams(params.toString());
@@ -56,7 +58,7 @@ export function SessionFilters() {
         }`}
       >
         <Star className={`h-4 w-4 ${featured ? "fill-current" : ""}`} />
-        Nổi bật
+        {t("sessionsPage.featuredLabel")}
       </button>
 
       <form
@@ -69,7 +71,7 @@ export function SessionFilters() {
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Tìm ghi chú, tag, dự án, người… (Enter)"
+          placeholder={t("sessionsPage.searchPlaceholder")}
           className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-sm transition-colors hover:border-[var(--border-strong)]"
         />
       </form>

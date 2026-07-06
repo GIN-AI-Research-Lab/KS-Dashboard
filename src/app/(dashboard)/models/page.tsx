@@ -63,7 +63,7 @@ export default async function ModelsPage({
                 </div>
               );
             })}
-            {models.length === 0 && <p className="text-sm text-[var(--text-muted)]">Chưa có dữ liệu</p>}
+            {models.length === 0 && <p className="text-sm text-[var(--text-muted)]">{t("common.noData")}</p>}
           </div>
         </Card>
       </div>

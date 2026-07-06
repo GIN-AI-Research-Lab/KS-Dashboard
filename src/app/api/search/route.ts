@@ -7,15 +7,14 @@ export async function GET(req: NextRequest) {
   if (response) return response;
 
   const q = (req.nextUrl.searchParams.get("q") ?? "").trim();
-  if (!q) return NextResponse.json({ users: [], teams: [], departments: [], sessions: [] });
+  if (!q) return NextResponse.json({ users: [], departments: [], sessions: [] });
 
-  const [users, teams, departments, sessions] = await Promise.all([
+  const [users, departments, sessions] = await Promise.all([
     prisma.user.findMany({
       where: { OR: [{ name: { contains: q, mode: "insensitive" } }, { email: { contains: q, mode: "insensitive" } }] },
       select: { id: true, name: true, email: true },
       take: 6,
     }),
-    prisma.team.findMany({ where: { name: { contains: q, mode: "insensitive" } }, select: { id: true, name: true }, take: 5 }),
     prisma.department.findMany({ where: { name: { contains: q, mode: "insensitive" } }, select: { id: true, name: true }, take: 5 }),
     prisma.claudeSession.findMany({
       where: {
@@ -31,5 +30,5 @@ export async function GET(req: NextRequest) {
     }),
   ]);
 
-  return NextResponse.json({ users, teams, departments, sessions });
+  return NextResponse.json({ users, departments, sessions });
 }

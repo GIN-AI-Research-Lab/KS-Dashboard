@@ -5,9 +5,8 @@ import { z } from "zod";
 
 const updateSchema = z.object({
   name: z.string().min(1).max(100).optional(),
-  role: z.enum(["ADMIN", "DEPARTMENT_HEAD", "TEAM_LEAD", "MEMBER"]).optional(),
+  role: z.enum(["ADMIN", "DEPARTMENT_HEAD", "MEMBER"]).optional(),
   departmentId: z.string().nullable().optional(),
-  teamId: z.string().nullable().optional(),
   note: z.string().max(1000).nullable().optional(),
 });
 

@@ -127,17 +127,6 @@ export async function getRankingMovement(metric: RankingMetric, range: RangeKey,
   });
 }
 
-// Month-to-date total cost (USD), for the budget alert banner.
-export async function getMonthToDateCost(): Promise<number> {
-  return cached("mtd-cost", DASH_TTL, async () => {
-    const agg = await prisma.turn.aggregate({
-      _sum: { costUsd: true },
-      where: { createdAt: { gte: startOfMonth() } },
-    });
-    return agg._sum.costUsd ?? 0;
-  });
-}
-
 export async function getOverviewStats(range: RangeKey) {
   return cached(`overview:${range}`, DASH_TTL, async () => {
   const since = rangeToDate(range);
@@ -274,7 +263,7 @@ export async function getRankings(metric: RankingMetric, range: RangeKey, limit 
           lastEventAt: true,
           externalId: true,
           projectLabel: true,
-          user: { select: { name: true, image: true, team: { select: { name: true } }, department: { select: { name: true } } } },
+          user: { select: { name: true, image: true, department: { select: { name: true } } } },
         },
       });
       return sessions
@@ -282,7 +271,6 @@ export async function getRankings(metric: RankingMetric, range: RangeKey, limit 
           userId: s.userId,
           userName: s.user.name,
           image: s.user.image ?? null,
-          team: s.user.team?.name ?? null,
           department: s.user.department?.name ?? null,
           value: (s.endedAt ?? s.lastEventAt).getTime() - s.startedAt.getTime(),
           sessionId: s.externalId,
@@ -325,10 +313,10 @@ export async function getRankings(metric: RankingMetric, range: RangeKey, limit 
       .sort((a, b) => b.value - a.value)
       .slice(0, limit);
 
-    // Fetch names/teams only for the top N.
+    // Fetch names/departments only for the top N.
     const users = await prisma.user.findMany({
       where: { id: { in: ranked.map((r) => r.userId) } },
-      select: { id: true, name: true, image: true, team: { select: { name: true } }, department: { select: { name: true } } },
+      select: { id: true, name: true, image: true, department: { select: { name: true } } },
     });
     const byId = new Map(users.map((u) => [u.id, u]));
 
@@ -338,7 +326,6 @@ export async function getRankings(metric: RankingMetric, range: RangeKey, limit 
         userId: r.userId,
         userName: u?.name ?? "?",
         image: u?.image ?? null,
-        team: u?.team?.name ?? null,
         department: u?.department?.name ?? null,
         value: r.value,
       };
@@ -614,10 +601,10 @@ export async function getUserGamification(userId: string) {
   };
 }
 
-// Per-member averages for a team, used to compare an individual against their
-// team on the personal page.
-export async function getTeamAverages(teamId: string, range: RangeKey) {
-  const members = await prisma.user.findMany({ where: { teamId }, select: { id: true } });
+// Per-member averages for a department, used to compare an individual against
+// their department on the personal page.
+export async function getDepartmentAverages(departmentId: string, range: RangeKey) {
+  const members = await prisma.user.findMany({ where: { departmentId }, select: { id: true } });
   const memberCount = members.length;
   const stats = await scopedStats({ userId: { in: members.map((m) => m.id) } }, rangeToDate(range));
   const div = memberCount > 0 ? memberCount : 1;
@@ -631,16 +618,9 @@ export async function getTeamAverages(teamId: string, range: RangeKey) {
   };
 }
 
-export async function getTeamStats(teamId: string, range: RangeKey) {
-  const users = await prisma.user.findMany({ where: { teamId }, select: { id: true } });
-  return scopedStats({ userId: { in: users.map((u) => u.id) } }, rangeToDate(range));
-}
-
 export async function getDepartmentStats(departmentId: string, range: RangeKey) {
   const users = await prisma.user.findMany({ where: { departmentId }, select: { id: true } });
-  const teamUsers = await prisma.user.findMany({ where: { team: { departmentId } }, select: { id: true } });
-  const ids = new Set([...users.map((u) => u.id), ...teamUsers.map((u) => u.id)]);
-  return scopedStats({ userId: { in: Array.from(ids) } }, rangeToDate(range));
+  return scopedStats({ userId: { in: users.map((u) => u.id) } }, rangeToDate(range));
 }
 
 export async function getMemberBreakdown(userIds: string[], range: RangeKey) {
@@ -684,7 +664,7 @@ export async function getSessionDetail(id: string) {
     where: { id },
     include: {
       user: {
-        select: { id: true, name: true, team: { select: { name: true } }, department: { select: { name: true } } },
+        select: { id: true, name: true, department: { select: { name: true } } },
       },
       turns: { orderBy: { createdAt: "asc" } },
       toolCalls: { orderBy: { startedAt: "asc" } },
@@ -815,7 +795,7 @@ export async function getRecentSessions(limit = 50) {
     orderBy: { lastEventAt: "desc" },
     take: limit,
     include: {
-      user: { select: { id: true, name: true, team: { select: { name: true } }, department: { select: { name: true } } } },
+      user: { select: { id: true, name: true, department: { select: { name: true } } } },
       toolCalls: { orderBy: { startedAt: "desc" }, take: 8 },
     },
   });
@@ -829,7 +809,6 @@ export type LiveSessionRow = {
   userName: string;
   image: string | null;
   department: string | null;
-  team: string | null;
   projectLabel: string | null;
   model: string | null;
   status: SessionStatus;
@@ -865,7 +844,7 @@ export async function getLiveSessions(opts: {
   }
 
   if (departmentId) {
-    where.user = { is: { OR: [{ departmentId }, { team: { is: { departmentId } } }] } };
+    where.user = { is: { departmentId } };
   }
 
   if (q) {
@@ -882,7 +861,7 @@ export async function getLiveSessions(opts: {
     take: limit,
     include: {
       user: {
-        select: { id: true, name: true, image: true, team: { select: { name: true } }, department: { select: { name: true } } },
+        select: { id: true, name: true, image: true, department: { select: { name: true } } },
       },
     },
   });
@@ -893,7 +872,6 @@ export async function getLiveSessions(opts: {
     userName: s.user.name,
     image: s.user.image ?? null,
     department: s.user.department?.name ?? null,
-    team: s.user.team?.name ?? null,
     projectLabel: s.projectLabel,
     model: s.model,
     status: s.status,
@@ -1249,6 +1227,122 @@ export async function getInsightsStats(range: RangeKey) {
   });
 }
 
+// Ước lượng loại tác vụ của mỗi session (research / code / lập kế hoạch /
+// điều tra-debug), ưu tiên tag người dùng tự gắn (ClaudeSession.tags), nếu
+// không có tag khớp thì suy ra từ loại tool được gọi nhiều nhất trong phiên.
+// Đây chỉ là ước lượng gần đúng (heuristic) -- không đọc nội dung prompt/tool
+// (không lưu, xem PRIVACY.md), nên không thể phân loại tuyệt đối.
+export type TaskCategory = "research" | "code" | "planning" | "investigation" | "other";
+
+export const TASK_CATEGORY_LABEL: Record<TaskCategory, string> = {
+  research: "Research / Tìm hiểu",
+  code: "Viết code",
+  planning: "Lập kế hoạch",
+  investigation: "Điều tra / Debug",
+  other: "Khác",
+};
+
+const TAG_CATEGORY_KEYWORDS: [TaskCategory, string[]][] = [
+  ["research", ["research", "tìm hiểu", "khảo sát", "tài liệu", "doc"]],
+  ["planning", ["kế hoạch", "plan", "thiết kế", "design"]],
+  ["investigation", ["sửa lỗi", "bug", "fix", "debug", "điều tra"]],
+  ["code", ["tính năng", "feature", "refactor", "viết test", "test", "review code", "code"]],
+];
+
+function taskCategoryFromTags(tags: string | null): TaskCategory | null {
+  if (!tags) return null;
+  const parts = tags.split(",").map((t) => t.trim().toLowerCase()).filter(Boolean);
+  for (const part of parts) {
+    for (const [category, keywords] of TAG_CATEGORY_KEYWORDS) {
+      if (keywords.some((k) => part.includes(k))) return category;
+    }
+  }
+  return null;
+}
+
+// Bash nhóm cùng Edit/Write (chạy build/test đi kèm sửa code) -- cùng cách
+// tính "hoạt động code trong project" mà getProjectStats từng dùng.
+const RESEARCH_TOOLS = new Set(["WebSearch", "WebFetch"]);
+const CODE_TOOLS = new Set(["Edit", "Write", "NotebookEdit", "Bash"]);
+const INVESTIGATION_TOOLS = new Set(["Read", "Grep", "Glob"]);
+const PLANNING_TOOLS = new Set(["TodoWrite", "AskUserQuestion"]);
+
+function taskCategoryFromTools(toolCounts: Record<string, number>): TaskCategory {
+  let research = 0, code = 0, investigation = 0, planning = 0;
+  for (const [name, count] of Object.entries(toolCounts)) {
+    if (RESEARCH_TOOLS.has(name)) research += count;
+    else if (CODE_TOOLS.has(name)) code += count;
+    else if (INVESTIGATION_TOOLS.has(name)) investigation += count;
+    else if (PLANNING_TOOLS.has(name)) planning += count;
+  }
+  const max = Math.max(research, code, investigation, planning);
+  if (max === 0) return "other";
+  if (max === code) return "code";
+  if (max === investigation) return "investigation";
+  if (max === research) return "research";
+  return "planning";
+}
+
+export type TaskCategoryRow = {
+  category: TaskCategory;
+  label: string;
+  sessions: number;
+  totalTokens: number;
+  costUsd: number;
+  byTagCount: number;
+};
+
+export async function getTaskCategoryStats(range: RangeKey, userId?: string) {
+  return cached(`taskcat:${range}:${userId ?? "all"}`, DASH_TTL, async () => {
+    const since = rangeToDate(range);
+
+    const [sessions, toolGroups] = await Promise.all([
+      prisma.claudeSession.findMany({
+        where: { ...(since ? { startedAt: { gte: since } } : {}), ...(userId ? { userId } : {}) },
+        select: { id: true, tags: true, inputTokens: true, outputTokens: true, costUsd: true },
+      }),
+      prisma.toolCall.groupBy({
+        by: ["sessionId", "toolName"],
+        where: { ...(since ? { session: { startedAt: { gte: since } } } : {}), ...(userId ? { userId } : {}) },
+        _count: { toolName: true },
+      }),
+    ]);
+
+    const toolsBySession = new Map<string, Record<string, number>>();
+    for (const g of toolGroups) {
+      const m = toolsBySession.get(g.sessionId) ?? toolsBySession.set(g.sessionId, {}).get(g.sessionId)!;
+      m[g.toolName] = g._count.toolName;
+    }
+
+    const buckets = new Map<TaskCategory, TaskCategoryRow>(
+      (Object.keys(TASK_CATEGORY_LABEL) as TaskCategory[]).map((category) => [
+        category,
+        { category, label: TASK_CATEGORY_LABEL[category], sessions: 0, totalTokens: 0, costUsd: 0, byTagCount: 0 },
+      ]),
+    );
+
+    for (const s of sessions) {
+      const fromTag = taskCategoryFromTags(s.tags);
+      const category = fromTag ?? taskCategoryFromTools(toolsBySession.get(s.id) ?? {});
+      const b = buckets.get(category)!;
+      b.sessions += 1;
+      b.totalTokens += s.inputTokens + s.outputTokens;
+      b.costUsd += s.costUsd;
+      if (fromTag) b.byTagCount += 1;
+    }
+
+    const rows = Array.from(buckets.values())
+      .filter((r) => r.sessions > 0)
+      .sort((a, b) => b.sessions - a.sessions);
+
+    return {
+      rows,
+      totalSessions: sessions.length,
+      totalTaggedSessions: rows.reduce((sum, r) => sum + r.byTagCount, 0),
+    };
+  });
+}
+
 // Weekly cohort retention: rows = cohort (week of first activity), columns =
 // week offset from that cohort, cell = share of the cohort still active.
 export async function getCohortRetention(weeksBack = 8) {
@@ -1297,106 +1391,39 @@ export async function getCohortRetention(weeksBack = 8) {
   });
 }
 
-// Pivot table: total tokens by team (rows) x model (columns).
-export async function getTeamModelPivot(range: RangeKey) {
+// Pivot table: total tokens by department (rows) x model (columns).
+export async function getDepartmentModelPivot(range: RangeKey) {
   return cached(`pivot:${range}`, DASH_TTL, async () => {
   const since = rangeToDate(range);
   const [users, turns] = await Promise.all([
-    prisma.user.findMany({ select: { id: true, team: { select: { name: true } } } }),
+    prisma.user.findMany({ select: { id: true, department: { select: { name: true } } } }),
     prisma.turn.findMany({
       where: since ? { createdAt: { gte: since } } : undefined,
       select: { userId: true, model: true, inputTokens: true, outputTokens: true },
     }),
   ]);
 
-  const teamByUser = new Map(users.map((u) => [u.id, u.team?.name ?? "(chưa gán nhóm)"]));
+  const deptByUser = new Map(users.map((u) => [u.id, u.department?.name ?? "(chưa gán bộ phận)"]));
   const modelTotals = new Map<string, number>();
   const grid = new Map<string, Map<string, number>>();
   for (const t of turns) {
-    const team = teamByUser.get(t.userId) ?? "(chưa gán nhóm)";
+    const dept = deptByUser.get(t.userId) ?? "(chưa gán bộ phận)";
     const tokens = t.inputTokens + t.outputTokens;
     modelTotals.set(t.model, (modelTotals.get(t.model) ?? 0) + tokens);
-    const row = grid.get(team) ?? grid.set(team, new Map()).get(team)!;
+    const row = grid.get(dept) ?? grid.set(dept, new Map()).get(dept)!;
     row.set(t.model, (row.get(t.model) ?? 0) + tokens);
   }
 
   const models = Array.from(modelTotals.entries()).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([m]) => m);
   const rows = Array.from(grid.entries())
-    .map(([team, row]) => ({
-      team,
+    .map(([department, row]) => ({
+      department,
       cells: models.map((m) => row.get(m) ?? 0),
       total: Array.from(row.values()).reduce((s, v) => s + v, 0),
     }))
     .sort((a, b) => b.total - a.total);
 
   return { models, rows };
-  });
-}
-
-export async function getProjectStats(range: RangeKey) {
-  return cached(`projects:${range}`, DASH_TTL, async () => {
-  const since = rangeToDate(range);
-
-  const [sessions, toolCalls] = await Promise.all([
-    prisma.claudeSession.findMany({
-      where: since ? { startedAt: { gte: since } } : undefined,
-      select: {
-        projectLabel: true,
-        costUsd: true,
-        inputTokens: true,
-        outputTokens: true,
-        turnCount: true,
-      },
-    }),
-    prisma.toolCall.findMany({
-      where: since ? { startedAt: { gte: since } } : undefined,
-      select: { toolName: true, session: { select: { projectLabel: true } } },
-    }),
-  ]);
-
-  const UNKNOWN = "(không rõ dự án)";
-  type Row = {
-    project: string;
-    sessions: number;
-    costUsd: number;
-    totalTokens: number;
-    turnCount: number;
-    editWrites: number;
-    bashRuns: number;
-    toolCalls: number;
-  };
-  const map = new Map<string, Row>();
-  const row = (name: string) =>
-    map.get(name) ??
-    map.set(name, { project: name, sessions: 0, costUsd: 0, totalTokens: 0, turnCount: 0, editWrites: 0, bashRuns: 0, toolCalls: 0 }).get(name)!;
-
-  for (const s of sessions) {
-    const b = row(s.projectLabel ?? UNKNOWN);
-    b.sessions += 1;
-    b.costUsd += s.costUsd;
-    b.totalTokens += s.inputTokens + s.outputTokens;
-    b.turnCount += s.turnCount;
-  }
-
-  let editWrites = 0;
-  let bashRuns = 0;
-  for (const tc of toolCalls) {
-    const b = row(tc.session?.projectLabel ?? UNKNOWN);
-    b.toolCalls += 1;
-    if (tc.toolName === "Edit" || tc.toolName === "Write") {
-      b.editWrites += 1;
-      editWrites += 1;
-    } else if (tc.toolName === "Bash") {
-      b.bashRuns += 1;
-      bashRuns += 1;
-    }
-  }
-
-  const projects = Array.from(map.values()).sort((a, b) => b.costUsd - a.costUsd);
-  return {
-    projects,
-    totals: { projectCount: map.size, editWrites, bashRuns, toolCalls: toolCalls.length },
-  };
   });
 }
 
@@ -1488,8 +1515,8 @@ export type AdoptionPhase = "power" | "regular" | "trial" | "inactive";
 
 // Company adoption & engagement metrics, modelled on GitHub Copilot's business
 // dashboard: active-user trends (DAU/WAU/MAU), a stickiness ratio, per-user
-// adoption phases over a rolling 28-day window, team coverage, and new vs
-// churned users.
+// adoption phases over a rolling 28-day window, department coverage, and new
+// vs churned users.
 export async function getAdoptionStats(range: RangeKey) {
   return cached(`adoption:${range}`, DASH_TTL, async () => {
   const since = rangeToDate(range);
@@ -1508,7 +1535,7 @@ export async function getAdoptionStats(range: RangeKey) {
     prisma.turn.findMany({ where: { createdAt: { gte: d14 } }, select: { userId: true }, distinct: ["userId"] }),
     prisma.turn.groupBy({ by: ["userId"], _min: { createdAt: true } }),
     prisma.user.findMany({
-      select: { id: true, name: true, team: { select: { id: true, name: true } } },
+      select: { id: true, name: true, department: { select: { id: true, name: true } } },
     }),
   ]);
 
@@ -1556,17 +1583,17 @@ export async function getAdoptionStats(range: RangeKey) {
   }
   powerUsers.sort((a, b) => b.activeDays - a.activeDays);
 
-  // Coverage: who used Claude at all within the selected range, overall + team.
+  // Coverage: who used Claude at all within the selected range, overall + department.
   const activeInRange = new Set(rangeTurns.map((t) => t.userId));
-  const teamAgg = new Map<string, { team: string; total: number; active: number }>();
+  const deptAgg = new Map<string, { department: string; total: number; active: number }>();
   for (const u of users) {
-    const teamName = u.team?.name ?? "(chưa gán nhóm)";
-    const b = teamAgg.get(teamName) ?? { team: teamName, total: 0, active: 0 };
+    const deptName = u.department?.name ?? "(chưa gán bộ phận)";
+    const b = deptAgg.get(deptName) ?? { department: deptName, total: 0, active: 0 };
     b.total += 1;
     if (activeInRange.has(u.id)) b.active += 1;
-    teamAgg.set(teamName, b);
+    deptAgg.set(deptName, b);
   }
-  const coverageByTeam = Array.from(teamAgg.values())
+  const coverageByDepartment = Array.from(deptAgg.values())
     .map((t) => ({ ...t, pct: t.total > 0 ? t.active / t.total : 0 }))
     .sort((a, b) => b.pct - a.pct);
 
@@ -1601,7 +1628,7 @@ export async function getAdoptionStats(range: RangeKey) {
       totalUsers: users.length,
       activeInRange: activeInRange.size,
       pct: users.length > 0 ? activeInRange.size / users.length : 0,
-      byTeam: coverageByTeam,
+      byDepartment: coverageByDepartment,
     },
     newAdopters,
     churned,
@@ -1609,29 +1636,30 @@ export async function getAdoptionStats(range: RangeKey) {
   });
 }
 
-// Per-team scorecard with per-capita normalisation and a company benchmark
-// (median tokens/member), so teams of different sizes compare fairly.
-export async function getTeamScorecards(range: RangeKey) {
-  return cached(`teamscore:${range}`, DASH_TTL, async () => {
+// Per-department scorecard with per-capita normalisation and a company
+// benchmark (median tokens/member), so departments of different sizes
+// compare fairly.
+export async function getDepartmentScorecards(range: RangeKey) {
+  return cached(`deptscore:${range}`, DASH_TTL, async () => {
   const since = rangeToDate(range);
-  const [teams, turns] = await Promise.all([
-    prisma.team.findMany({ select: { id: true, name: true, users: { select: { id: true } } } }),
+  const [departments, turns] = await Promise.all([
+    prisma.department.findMany({ select: { id: true, name: true, users: { select: { id: true } } } }),
     prisma.turn.findMany({
       where: since ? { createdAt: { gte: since } } : undefined,
       select: { userId: true, inputTokens: true, outputTokens: true, costUsd: true },
     }),
   ]);
 
-  const userTeam = new Map<string, string>();
-  for (const t of teams) for (const u of t.users) userTeam.set(u.id, t.id);
+  const userDept = new Map<string, string>();
+  for (const d of departments) for (const u of d.users) userDept.set(u.id, d.id);
 
-  type Agg = { teamId: string; name: string; members: number; active: Set<string>; tokens: number; cost: number };
+  type Agg = { departmentId: string; name: string; members: number; active: Set<string>; tokens: number; cost: number };
   const map = new Map<string, Agg>();
-  for (const t of teams) map.set(t.id, { teamId: t.id, name: t.name, members: t.users.length, active: new Set(), tokens: 0, cost: 0 });
+  for (const d of departments) map.set(d.id, { departmentId: d.id, name: d.name, members: d.users.length, active: new Set(), tokens: 0, cost: 0 });
   for (const turn of turns) {
-    const teamId = userTeam.get(turn.userId);
-    if (!teamId) continue;
-    const a = map.get(teamId)!;
+    const departmentId = userDept.get(turn.userId);
+    if (!departmentId) continue;
+    const a = map.get(departmentId)!;
     a.active.add(turn.userId);
     a.tokens += turn.inputTokens + turn.outputTokens;
     a.cost += turn.costUsd;
@@ -1639,7 +1667,7 @@ export async function getTeamScorecards(range: RangeKey) {
 
   const rows = Array.from(map.values())
     .map((a) => ({
-      teamId: a.teamId,
+      departmentId: a.departmentId,
       name: a.name,
       members: a.members,
       activeUsers: a.active.size,

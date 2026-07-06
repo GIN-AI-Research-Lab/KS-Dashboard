@@ -73,7 +73,6 @@ export default async function LiveDetailPage({ params }: { params: Promise<{ id:
             </Link>
             {s.model ? ` · ${s.model}` : ""}
             {s.user.department ? ` · ${s.user.department.name}` : ""}
-            {s.user.team ? ` · ${s.user.team.name}` : ""}
             {` · ${formatRelativeTime(s.startedAt)}`}
           </p>
         </div>

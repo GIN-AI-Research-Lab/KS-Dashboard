@@ -2,7 +2,7 @@
 #
 # Keeps the three pieces the public dashboard needs alive, and restarts whichever
 # one dies, so the ngrok URL never goes dark:
-#   1. PostgreSQL  (standalone postgres.exe on port 5433 -- not a Windows service)
+#   1. PostgreSQL  (Windows service "ks-postgres" on port 5433)
 #   2. Dev server  (next dev -p 4000)
 #   3. ngrok       (static domain tunnel -> localhost:4000)
 #
@@ -23,12 +23,13 @@ $mutex = New-Object System.Threading.Mutex($false, "KS-Dashboard-KeepAlive")
 if (-not $mutex.WaitOne(0)) { return }  # another copy already running
 
 # --- config (machine-specific) ---
-$Proj    = "e:\KS-Dashboard"
+$Proj    = "f:\Project Ai\KS-Dashboard"
 $Domain  = "patriot-tinwork-scabby.ngrok-free.dev"
 $Ngrok   = "$env:LOCALAPPDATA\Microsoft\WinGet\Links\ngrok.exe"
-$PgBin   = "$env:LOCALAPPDATA\ks-postgres\pgsql\bin\pg_ctl.exe"
-$PgData  = "$env:LOCALAPPDATA\ks-postgres\data"
-$PgLog   = "$env:LOCALAPPDATA\ks-postgres\pg.log"
+# PostgreSQL 16 on this machine is a real Windows Service (StartType Automatic,
+# name "ks-postgres") installed via winget -- not the portable pg_ctl binary
+# some earlier machines used. The service manager starts/restarts it on its
+# own, so this watchdog only needs to verify port 5433 is up, never call pg_ctl.
 $LogDir  = "$env:LOCALAPPDATA\ks-dashboard-keepalive"
 $WdLog   = "$LogDir\keepalive.log"
 
@@ -45,10 +46,11 @@ Log "keepalive started (pid $PID)"
 
 while ($true) {
   try {
-    # 1) PostgreSQL
+    # 1) PostgreSQL (Windows service "ks-postgres" -- Automatic start type already
+    # restarts it on boot; only nudge it here if something stopped it mid-session)
     if (-not (PortUp 5433)) {
-      Log "Postgres DOWN -> starting"
-      & $PgBin -D "$PgData" -o "-p 5433" -l "$PgLog" start | Out-Null
+      Log "Postgres DOWN -> starting service"
+      Start-Service -Name "ks-postgres" -ErrorAction SilentlyContinue
       Start-Sleep -Seconds 5
     }
 

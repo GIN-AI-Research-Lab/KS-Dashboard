@@ -14,9 +14,8 @@ export default async function AdminPage() {
   const session = await auth();
   if (session?.user.role !== "ADMIN") redirect("/");
 
-  const [departments, teams, users, health, menuSettings, t] = await Promise.all([
-    prisma.department.findMany({ orderBy: { name: "asc" }, include: { teams: true, users: true } }),
-    prisma.team.findMany({ orderBy: { name: "asc" }, include: { department: true, users: true } }),
+  const [departments, users, health, menuSettings, t] = await Promise.all([
+    prisma.department.findMany({ orderBy: { name: "asc" }, include: { users: true } }),
     prisma.user.findMany({
       orderBy: { name: "asc" },
       select: {
@@ -24,7 +23,6 @@ export default async function AdminPage() {
         name: true,
         email: true,
         role: true,
-        teamId: true,
         departmentId: true,
         createdAt: true,
       },
@@ -51,29 +49,27 @@ export default async function AdminPage() {
         <div className="min-w-0">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)]/60 px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-[0.1em] text-[var(--text-secondary)]">
             <span className="gradient-brand h-1.5 w-1.5 rounded-full" />
-            QUẢN TRỊ
+            {t("admin.title")}
           </span>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight">Quản <span className="gradient-text">trị</span></h1>
-          <p className="mt-1 text-sm text-[var(--text-secondary)]">Quản lý bộ phận, nhóm và tài khoản nhân viên</p>
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight"><span className="gradient-text">{t("admin.title")}</span></h1>
+          <p className="mt-1 text-sm text-[var(--text-secondary)]">{t("admin.subtitle")}</p>
         </div>
       </div>
 
       <div>
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[var(--text-muted)]">
-          Tình trạng thu thập dữ liệu
+          {t("ingestion.heading")}
         </h2>
-        <IngestionHealth summary={health.summary} rows={health.rows} />
+        <IngestionHealth summary={health.summary} rows={health.rows} t={t} />
       </div>
 
       <AdminPanel
-        initialDepartments={departments.map((d) => ({ id: d.id, name: d.name, teamCount: d.teams.length, userCount: d.users.length }))}
-        initialTeams={teams.map((t) => ({ id: t.id, name: t.name, departmentId: t.departmentId, departmentName: t.department.name, userCount: t.users.length }))}
+        initialDepartments={departments.map((d) => ({ id: d.id, name: d.name, userCount: d.users.length }))}
         initialUsers={users.map((u) => ({
           id: u.id,
           name: u.name,
           email: u.email,
           role: u.role,
-          teamId: u.teamId,
           departmentId: u.departmentId,
           createdAt: u.createdAt.toISOString(),
         }))}

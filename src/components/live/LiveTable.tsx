@@ -14,7 +14,6 @@ export type LiveRow = {
   userName: string;
   image?: string | null;
   department: string | null;
-  team: string | null;
   projectLabel: string | null;
   model: string | null;
   status: "ACTIVE" | "IDLE" | "ENDED";
@@ -151,7 +150,7 @@ export function LiveTable({ rows }: { rows: LiveRow[] }) {
                   <UserChip userId={row.userId} name={row.userName} image={row.image} />
                 </td>
                 <td className="py-2.5 pr-3 text-xs text-[var(--text-muted)]">
-                  {[row.department, row.team].filter(Boolean).join(" · ") || "—"}
+                  {row.department || "—"}
                 </td>
                 <td className="py-2.5 pr-3 text-[var(--text-secondary)]">{row.projectLabel ?? "—"}</td>
                 <td className="py-2.5 pr-3">

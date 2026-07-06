@@ -8,11 +8,15 @@ import { Badge } from "@/components/ui/Badge";
 import { SessionAnnotationForm } from "@/components/SessionAnnotationForm";
 import { SessionDiscussion } from "@/components/SessionDiscussion";
 import { formatNumber, formatUsd, formatDuration, formatRelativeTime } from "@/lib/format";
-import { METRIC_HELP } from "@/lib/glossary";
+import { getMetricHelp } from "@/lib/glossary";
+import { getT } from "@/i18n/server";
 import { ArrowDownToLine, ArrowUpFromLine, DollarSign, Repeat, Clock, Check, X, MoreHorizontal } from "lucide-react";
 import type { SessionStatus } from "@prisma/client";
+import type { Translate } from "@/i18n/lookup";
 
-const STATUS_LABEL: Record<SessionStatus, string> = { ACTIVE: "Đang chạy", IDLE: "Chờ", ENDED: "Kết thúc" };
+function statusLabel(status: SessionStatus, t: Translate): string {
+  return { ACTIVE: t("sessionDetail.statusActive"), IDLE: t("sessionDetail.statusIdle"), ENDED: t("sessionDetail.statusEnded") }[status];
+}
 
 type TimelineEvent =
   | { kind: "turn"; at: Date; model: string; inputTokens: number; outputTokens: number; costUsd: number; stopReason: string | null }
@@ -20,8 +24,9 @@ type TimelineEvent =
 
 export default async function SessionDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const [session, s] = await Promise.all([auth(), getSessionDetail(id)]);
+  const [session, s, t] = await Promise.all([auth(), getSessionDetail(id), getT()]);
   if (!s) notFound();
+  const METRIC_HELP = getMetricHelp(t);
 
   const canEdit = session!.user.role === "ADMIN" || session!.user.id === s.userId;
   const durationMs = (s.endedAt ?? s.lastEventAt).getTime() - s.startedAt.getTime();
@@ -54,38 +59,38 @@ export default async function SessionDetailPage({ params }: { params: Promise<{ 
   return (
     <div className="stagger flex flex-col gap-6">
       <Link href="/sessions" className="text-xs text-[var(--text-muted)] transition-colors hover:text-accent hover:underline">
-        ← Thư viện phiên
+        ← {t("nav.sessions")}
       </Link>
       <div className="hero-panel relative flex flex-wrap items-center justify-between gap-4 overflow-hidden rounded-2xl border border-[var(--border)] p-6 shadow-[var(--shadow-xs)]">
         <div className="min-w-0">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)]/60 px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-[0.1em] text-[var(--text-secondary)]">
             <span className="gradient-brand h-1.5 w-1.5 rounded-full" />
-            CHI TIẾT PHIÊN
+            {t("sessionDetail.badge")}
           </span>
           <h1 className="mt-2 text-3xl font-semibold tracking-tight">
-            <span className="gradient-text">Phiên</span> {s.projectLabel ?? "chưa rõ dự án"}
+            <span className="gradient-text">{t("sessionDetail.titlePrefix")}</span> {s.projectLabel ?? t("sessionDetail.unknownProject")}
           </h1>
           <p className="mt-1 text-sm text-[var(--text-secondary)]">
             <Link href={`/users/${s.userId}`} className="transition-colors hover:text-accent hover:underline">{s.user.name}</Link>
             {s.model ? ` · ${s.model}` : ""}
-            {s.user.team ? ` · ${s.user.team.name}` : ""}
-            {" · "}bắt đầu {formatRelativeTime(s.startedAt)}
+            {s.user.department ? ` · ${s.user.department.name}` : ""}
+            {" · "}{t("sessionDetail.startedPrefix")} {formatRelativeTime(s.startedAt)}
           </p>
         </div>
         <Badge variant={s.status === "ACTIVE" ? "good" : s.status === "IDLE" ? "warning" : "neutral"}>
-          {STATUS_LABEL[s.status]}
+          {statusLabel(s.status, t)}
         </Badge>
       </div>
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
-        <StatCard label="Token vào" value={formatNumber(s.inputTokens)} accent="#1baf7a" icon={<ArrowDownToLine className="h-4 w-4" />} tooltip={METRIC_HELP.inputTokens} />
-        <StatCard label="Token ra" value={formatNumber(s.outputTokens)} accent="#eb6834" icon={<ArrowUpFromLine className="h-4 w-4" />} tooltip={METRIC_HELP.outputTokens} />
-        <StatCard label="Chi phí" value={formatUsd(s.costUsd)} accent="#e34948" icon={<DollarSign className="h-4 w-4" />} tooltip={METRIC_HELP.cost} />
-        <StatCard label="Turns" value={formatNumber(s.turnCount)} accent="#2a78d6" icon={<Repeat className="h-4 w-4" />} tooltip={METRIC_HELP.turns} />
-        <StatCard label="Thời lượng" value={formatDuration(durationMs)} accent="#4a3aa7" icon={<Clock className="h-4 w-4" />} />
+        <StatCard label={t("sessionDetail.tokenInLabel")} value={formatNumber(s.inputTokens)} accent="#1baf7a" icon={<ArrowDownToLine className="h-4 w-4" />} tooltip={METRIC_HELP.inputTokens} />
+        <StatCard label={t("sessionDetail.tokenOutLabel")} value={formatNumber(s.outputTokens)} accent="#eb6834" icon={<ArrowUpFromLine className="h-4 w-4" />} tooltip={METRIC_HELP.outputTokens} />
+        <StatCard label={t("table.cost")} value={formatUsd(s.costUsd)} accent="#e34948" icon={<DollarSign className="h-4 w-4" />} tooltip={METRIC_HELP.cost} />
+        <StatCard label={t("table.turns")} value={formatNumber(s.turnCount)} accent="#2a78d6" icon={<Repeat className="h-4 w-4" />} tooltip={METRIC_HELP.turns} />
+        <StatCard label={t("sessionDetail.durationLabel")} value={formatDuration(durationMs)} accent="#4a3aa7" icon={<Clock className="h-4 w-4" />} />
       </div>
 
-      <Card title="Ghi chú & kết quả">
+      <Card title={t("sessionDetail.notesTitle")}>
         <div
           className={`mb-4 rounded-lg border px-3 py-2 text-xs ${
             auto.likely
@@ -93,8 +98,8 @@ export default async function SessionDetailPage({ params }: { params: Promise<{ 
               : "border-[var(--border)] bg-black/[0.02] text-[var(--text-muted)] dark:bg-white/[0.03]"
           }`}
         >
-          <span className="font-medium">Tự động nhận diện:</span>{" "}
-          {auto.likely ? "Có vẻ đã xử lý xong" : "Chưa rõ kết quả"} — {auto.reason}
+          <span className="font-medium">{t("sessionDetail.autoDetectedLabel")}</span>{" "}
+          {auto.likely ? t("sessionDetail.autoLikely") : t("sessionDetail.autoUnclear")} — {auto.reason}
         </div>
         <SessionAnnotationForm
           sessionId={s.id}
@@ -106,7 +111,7 @@ export default async function SessionDetailPage({ params }: { params: Promise<{ 
         />
       </Card>
 
-      <Card title="Thảo luận & đánh giá">
+      <Card title={t("sessionDetail.discussionTitle")}>
         <SessionDiscussion
           sessionId={s.id}
           initialUp={up}
@@ -121,9 +126,9 @@ export default async function SessionDetailPage({ params }: { params: Promise<{ 
         />
       </Card>
 
-      <Card title={`Dòng thời gian (${events.length} sự kiện)`}>
+      <Card title={`${t("sessionDetail.timelineTitle")} (${events.length} ${t("sessionDetail.eventsSuffix")})`}>
         {events.length === 0 ? (
-          <p className="text-sm text-[var(--text-muted)]">Chưa có sự kiện</p>
+          <p className="text-sm text-[var(--text-muted)]">{t("sessionDetail.noEvents")}</p>
         ) : (
           <div className="flex flex-col">
             {events.map((e, i) => (
@@ -133,10 +138,10 @@ export default async function SessionDetailPage({ params }: { params: Promise<{ 
                 </span>
                 {e.kind === "turn" ? (
                   <div className="min-w-0 flex-1 text-sm">
-                    <span className="font-medium">Turn</span>{" "}
+                    <span className="font-medium">{t("sessionDetail.turnLabel")}</span>{" "}
                     <span className="text-[var(--text-muted)]">{e.model}</span>
                     <div className="text-xs text-[var(--text-secondary)]">
-                      {formatNumber(e.inputTokens)} in / {formatNumber(e.outputTokens)} out · {formatUsd(e.costUsd)}
+                      {formatNumber(e.inputTokens)} {t("sessionDetail.inSuffix")} / {formatNumber(e.outputTokens)} {t("sessionDetail.outSuffix")} · {formatUsd(e.costUsd)}
                       {e.stopReason ? ` · ${e.stopReason}` : ""}
                     </div>
                   </div>

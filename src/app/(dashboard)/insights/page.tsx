@@ -1,11 +1,12 @@
-import { getInsightsStats, getToolSankey, getTeamModelPivot, getCodeStats, type RangeKey } from "@/lib/stats";
+import { getInsightsStats, getToolSankey, getDepartmentModelPivot, getCodeStats, getTaskCategoryStats, type RangeKey } from "@/lib/stats";
 import { Card } from "@/components/ui/Card";
 import { StatCard } from "@/components/ui/StatCard";
 import { RangeSelector } from "@/components/RangeSelector";
 import { RankBarChart, ToolSankey } from "@/components/charts/lazy";
-import { formatNumber, formatDuration, formatPercent, formatDay, formatRelativeTime } from "@/lib/format";
+import { formatNumber, formatUsd, formatDuration, formatPercent, formatDay, formatRelativeTime } from "@/lib/format";
 import { colorForModel } from "@/lib/chart-colors";
-import { METRIC_HELP } from "@/lib/glossary";
+import { getMetricHelp } from "@/lib/glossary";
+import { getT } from "@/i18n/server";
 import { Plus, Minus, Check, AlertTriangle, TrendingUp } from "lucide-react";
 
 function PercentileRow({ label, ms }: { label: string; ms: number }) {
@@ -24,12 +25,15 @@ export default async function InsightsPage({
 }) {
   const { range } = await searchParams;
   const r = (range ?? "30d") as RangeKey;
-  const [s, sankey, pivot, code] = await Promise.all([
+  const [s, sankey, pivot, code, taskCat, t] = await Promise.all([
     getInsightsStats(r),
     getToolSankey(r),
-    getTeamModelPivot(r),
+    getDepartmentModelPivot(r),
     getCodeStats(r),
+    getTaskCategoryStats(r),
+    getT(),
   ]);
+  const METRIC_HELP = getMetricHelp(t);
 
   return (
     <div className="stagger flex flex-col gap-6">
@@ -37,11 +41,11 @@ export default async function InsightsPage({
         <div className="min-w-0">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)]/60 px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-[0.1em] text-[var(--text-secondary)]">
             <span className="gradient-brand h-1.5 w-1.5 rounded-full" />
-            PHÂN TÍCH
+            {t("insights.badge")}
           </span>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight">Phân tích <span className="gradient-text">sâu</span></h1>
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight"><span className="gradient-text">{t("insights.title")}</span></h1>
           <p className="mt-1 text-sm text-[var(--text-secondary)]">
-            Độ trễ, chất lượng phiên, tỷ trọng model theo thời gian và đỉnh đồng thời
+            {t("insights.subtitle")}
           </p>
         </div>
         <RangeSelector defaultRange={r} />
@@ -49,118 +53,161 @@ export default async function InsightsPage({
 
       <div>
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[var(--text-muted)]">
-          Kỹ thuật &amp; chất lượng (dữ liệu mở rộng)
+          {t("insights.techQualityHeading")}
         </h2>
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          <StatCard label="Dòng code thêm" value={formatNumber(code.linesAdded)} tooltip={METRIC_HELP.linesAdded} accent="#008300" icon={<Plus className="h-4 w-4" />} />
-          <StatCard label="Dòng code xoá" value={formatNumber(code.linesRemoved)} tooltip={METRIC_HELP.linesRemoved} accent="#e34948" icon={<Minus className="h-4 w-4" />} />
+          <StatCard label={t("overview.linesAdded")} value={formatNumber(code.linesAdded)} tooltip={METRIC_HELP.linesAdded} accent="#008300" icon={<Plus className="h-4 w-4" />} />
+          <StatCard label={t("overview.linesRemoved")} value={formatNumber(code.linesRemoved)} tooltip={METRIC_HELP.linesRemoved} accent="#e34948" icon={<Minus className="h-4 w-4" />} />
           <StatCard
-            label="Tỷ lệ chấp nhận sửa"
+            label={t("overview.acceptanceRate")}
             value={code.editsAccepted + code.editsRejected > 0 ? formatPercent(code.acceptanceRate) : "—"}
-            hint={`${code.editsAccepted}/${code.editsAccepted + code.editsRejected} chấp nhận`}
+            hint={`${code.editsAccepted}/${code.editsAccepted + code.editsRejected} ${t("insights.acceptedSuffix")}`}
             tooltip={METRIC_HELP.acceptanceRate}
             accent="var(--accent)"
             icon={<Check className="h-4 w-4" />}
           />
-          <StatCard label="API errors" value={formatNumber(code.apiErrors)} tooltip="Số lỗi khi Claude gọi API (ví dụ quá tải, hết thời gian chờ)." accent="#eb6834" icon={<AlertTriangle className="h-4 w-4" />} />
+          <StatCard label={t("insights.apiErrorsLabel")} value={formatNumber(code.apiErrors)} tooltip={t("insights.apiErrorsTooltip")} accent="#eb6834" icon={<AlertTriangle className="h-4 w-4" />} />
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card
-          title={`Độ trễ API (${formatNumber(code.apiLatency.count)} request)`}
-          titleTip="Thời gian Claude phản hồi một yêu cầu; p50/p90/p99 là mức phân vị (p90 = 90% yêu cầu nhanh hơn giá trị này)."
+          title={t("insights.apiLatencyTitle").replace("{count}", formatNumber(code.apiLatency.count))}
+          titleTip={t("insights.apiLatencyTip")}
         >
           <div className="flex flex-col gap-2">
-            <PercentileRow label="p50 (trung vị)" ms={code.apiLatency.p50} />
-            <PercentileRow label="p90" ms={code.apiLatency.p90} />
-            <PercentileRow label="p99" ms={code.apiLatency.p99} />
+            <PercentileRow label={t("insights.p50Label")} ms={code.apiLatency.p50} />
+            <PercentileRow label={t("insights.p90Label")} ms={code.apiLatency.p90} />
+            <PercentileRow label={t("insights.p99Label")} ms={code.apiLatency.p99} />
           </div>
         </Card>
         <Card
-          title={`Time-to-first-token (${formatNumber(code.ttft.count)} request)`}
-          titleTip="Thời gian từ lúc gửi yêu cầu đến khi nhận được token đầu tiên của câu trả lời."
+          title={t("insights.ttftTitle").replace("{count}", formatNumber(code.ttft.count))}
+          titleTip={t("insights.ttftTip")}
         >
           <div className="flex flex-col gap-2">
-            <PercentileRow label="p50 (trung vị)" ms={code.ttft.p50} />
-            <PercentileRow label="p90" ms={code.ttft.p90} />
-            <PercentileRow label="p99" ms={code.ttft.p99} />
+            <PercentileRow label={t("insights.p50Label")} ms={code.ttft.p50} />
+            <PercentileRow label={t("insights.p90Label")} ms={code.ttft.p90} />
+            <PercentileRow label={t("insights.p99Label")} ms={code.ttft.p99} />
           </div>
         </Card>
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Card
-          title={`Độ trễ công cụ (${formatNumber(s.toolLatency.count)} lượt)`}
-          titleTip="Thời gian chạy một công cụ (đọc/sửa file, chạy lệnh…); p50/p90/p99 là mức phân vị."
+          title={t("insights.toolLatencyTitle").replace("{count}", formatNumber(s.toolLatency.count))}
+          titleTip={t("insights.toolLatencyTip")}
         >
           <div className="flex flex-col gap-2">
-            <PercentileRow label="p50 (trung vị)" ms={s.toolLatency.p50} />
-            <PercentileRow label="p90" ms={s.toolLatency.p90} />
-            <PercentileRow label="p99" ms={s.toolLatency.p99} />
+            <PercentileRow label={t("insights.p50Label")} ms={s.toolLatency.p50} />
+            <PercentileRow label={t("insights.p90Label")} ms={s.toolLatency.p90} />
+            <PercentileRow label={t("insights.p99Label")} ms={s.toolLatency.p99} />
           </div>
         </Card>
 
         <Card
-          title={`Thời lượng phiên (${formatNumber(s.sessionDuration.count)} phiên)`}
-          titleTip="Độ dài mỗi phiên làm việc; p50/p90/p99 là mức phân vị (p90 = 90% phiên ngắn hơn giá trị này)."
+          title={t("insights.sessionDurationTitle").replace("{count}", formatNumber(s.sessionDuration.count))}
+          titleTip={t("insights.sessionDurationTip")}
         >
           <div className="flex flex-col gap-2">
-            <PercentileRow label="p50 (trung vị)" ms={s.sessionDuration.p50} />
-            <PercentileRow label="p90" ms={s.sessionDuration.p90} />
-            <PercentileRow label="p99" ms={s.sessionDuration.p99} />
+            <PercentileRow label={t("insights.p50Label")} ms={s.sessionDuration.p50} />
+            <PercentileRow label={t("insights.p90Label")} ms={s.sessionDuration.p90} />
+            <PercentileRow label={t("insights.p99Label")} ms={s.sessionDuration.p99} />
           </div>
         </Card>
 
         <StatCard
-          label="Đỉnh phiên đồng thời"
-          tooltip="Số phiên chạy cùng lúc cao nhất ghi nhận trong kỳ."
+          label={t("insights.peakConcurrencyLabel")}
+          tooltip={t("insights.peakConcurrencyTip")}
           value={formatNumber(s.peakConcurrency.peak)}
-          hint={s.peakConcurrency.peakAt ? `Lúc ${formatRelativeTime(s.peakConcurrency.peakAt)}` : undefined}
+          hint={s.peakConcurrency.peakAt ? `${t("insights.peakAtPrefix")} ${formatRelativeTime(s.peakConcurrency.peakAt)}` : undefined}
           accent="#e34948"
           icon={<TrendingUp className="h-4 w-4" />}
         />
       </div>
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-        <Card title="Nguồn khởi tạo phiên">
+        <Card title={t("insights.sessionSourceTitle")}>
           <RankBarChart data={s.bySource.map((x) => ({ label: x.source, value: x.count }))} valueFormat="number" />
         </Card>
         <Card
-          title="Lý do kết thúc turn (stop reason)"
-          titleTip="Vì sao model dừng mỗi lượt trả lời (trả lời xong, gọi công cụ, chạm giới hạn độ dài…)."
+          title={t("insights.stopReasonTitle")}
+          titleTip={t("insights.stopReasonTip")}
         >
           <RankBarChart data={s.byStopReason.map((x) => ({ label: x.stopReason, value: x.count }))} valueFormat="number" />
         </Card>
       </div>
 
+      <Card
+        title={t("overview.taskCategoryTitle")}
+        titleTip={t("insights.taskCategoryTip")}
+      >
+        {taskCat.rows.length === 0 ? (
+          <p className="text-sm text-[var(--text-muted)]">{t("common.noData")}</p>
+        ) : (
+          <div className="flex flex-col gap-3">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-[var(--border)] text-left text-xs uppercase tracking-wide text-[var(--text-muted)]">
+                    <th className="py-2 pr-4 font-medium">{t("overview.colType")}</th>
+                    <th className="py-2 pr-4 text-right font-medium">{t("overview.colSessions")}</th>
+                    <th className="py-2 pr-4 text-right font-medium">{t("overview.colRatio")}</th>
+                    <th className="py-2 pr-4 text-right font-medium">{t("overview.colTokens")}</th>
+                    <th className="py-2 text-right font-medium">{t("overview.colCost")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {taskCat.rows.map((row) => (
+                    <tr key={row.category} className="border-b border-[var(--border)] last:border-0">
+                      <td className="py-2 pr-4 font-medium">{row.label}</td>
+                      <td className="py-2 pr-4 text-right tabular-nums">{formatNumber(row.sessions)}</td>
+                      <td className="py-2 pr-4 text-right tabular-nums text-[var(--text-secondary)]">
+                        {formatPercent(row.sessions / taskCat.totalSessions)}
+                      </td>
+                      <td className="py-2 pr-4 text-right tabular-nums">{formatNumber(row.totalTokens)}</td>
+                      <td className="py-2 text-right tabular-nums">{formatUsd(row.costUsd)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="text-xs text-[var(--text-muted)]">
+              {t("overview.taskCategoryFooter")
+                .replace("{tagged}", String(taskCat.totalTaggedSessions))
+                .replace("{total}", String(taskCat.totalSessions))}
+            </p>
+          </div>
+        )}
+      </Card>
+
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-        <Card title="Phân bố thời lượng phiên">
+        <Card title={t("insights.durationDistributionTitle")}>
           <RankBarChart data={s.durationHistogram.map((h) => ({ label: h.label, value: h.count }))} valueFormat="number" />
         </Card>
 
         <Card
-          title="Token theo nhóm × model (pivot)"
-          titleTip="Bảng chéo: mỗi ô là số token một nhóm dùng trên một model."
+          title={t("insights.pivotTitle")}
+          titleTip={t("insights.pivotTip")}
         >
           {pivot.rows.length === 0 ? (
-            <p className="text-sm text-[var(--text-muted)]">Chưa có dữ liệu</p>
+            <p className="text-sm text-[var(--text-muted)]">{t("common.noData")}</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b border-[var(--border)] text-[var(--text-muted)]">
-                    <th className="px-2 py-1 text-left font-medium">Nhóm</th>
+                    <th className="px-2 py-1 text-left font-medium">{t("table.department")}</th>
                     {pivot.models.map((m) => (
                       <th key={m} className="px-2 py-1 text-right font-medium">{m}</th>
                     ))}
-                    <th className="px-2 py-1 text-right font-medium">Tổng</th>
+                    <th className="px-2 py-1 text-right font-medium">{t("insights.pivotTotalCol")}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {pivot.rows.map((row) => (
-                    <tr key={row.team} className="border-b border-[var(--border)] last:border-0">
-                      <td className="px-2 py-1">{row.team}</td>
+                    <tr key={row.department} className="border-b border-[var(--border)] last:border-0">
+                      <td className="px-2 py-1">{row.department}</td>
                       {row.cells.map((c, k) => (
                         <td key={k} className="px-2 py-1 text-right tabular-nums text-[var(--text-secondary)]">
                           {c > 0 ? formatNumber(c) : "—"}
@@ -176,13 +223,13 @@ export default async function InsightsPage({
         </Card>
       </div>
 
-      <Card title="Luồng chuyển tiếp công cụ (tool này → tool kế tiếp)">
+      <Card title={t("insights.sankeyTitle")}>
         <ToolSankey nodes={sankey.nodes} links={sankey.links} />
       </Card>
 
-      <Card title="Tỷ trọng model theo tuần (theo token)">
+      <Card title={t("insights.modelMixTitle")}>
         {s.modelMix.length === 0 ? (
-          <p className="text-sm text-[var(--text-muted)]">Chưa có dữ liệu</p>
+          <p className="text-sm text-[var(--text-muted)]">{t("common.noData")}</p>
         ) : (
           <div className="flex flex-col gap-4">
             <div className="flex flex-wrap gap-3">
@@ -198,7 +245,7 @@ export default async function InsightsPage({
                 <div key={w.week}>
                   <div className="mb-1 flex justify-between text-xs">
                     <span className="font-medium">{formatDay(w.week)}</span>
-                    <span className="text-[var(--text-muted)]">{formatNumber(w.total)} token</span>
+                    <span className="text-[var(--text-muted)]">{formatNumber(w.total)} {t("insights.tokenSuffix")}</span>
                   </div>
                   <div className="flex h-4 w-full overflow-hidden rounded-md bg-black/5 dark:bg-white/10">
                     {w.segments.map((seg) => (

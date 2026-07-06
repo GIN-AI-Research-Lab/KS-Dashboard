@@ -37,7 +37,6 @@ export default async function LivePage({
     userName: s.userName,
     image: s.image,
     department: s.department,
-    team: s.team,
     projectLabel: s.projectLabel,
     model: s.model,
     status: s.status,

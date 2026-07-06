@@ -49,10 +49,9 @@ export default async function DepartmentsPage({
   let rows = lockedDeptMissing ? [] : await getRankingMovement(activeMetric.key, r, 1000);
 
   if (selectedDeptId && rows.length > 0) {
-    // Resolve department membership the same way getDepartmentStats does: direct
-    // members plus members via a team that belongs to the department.
+    // Resolve department membership the same way getDepartmentStats does.
     const members = await prisma.user.findMany({
-      where: { OR: [{ departmentId: selectedDeptId }, { team: { departmentId: selectedDeptId } }] },
+      where: { departmentId: selectedDeptId },
       select: { id: true },
     });
     const ids = new Set(members.map((m) => m.id));

@@ -9,7 +9,6 @@ import type { Prisma } from "@prisma/client";
 
 type Dump = {
   departments: Prisma.DepartmentCreateManyInput[];
-  teams: Prisma.TeamCreateManyInput[];
   users: Prisma.UserCreateManyInput[];
   sessions: Prisma.ClaudeSessionCreateManyInput[];
   turns: Prisma.TurnCreateManyInput[];
@@ -29,7 +28,6 @@ async function main() {
 
   // FK-safe order.
   await prisma.department.createMany({ data: d.departments });
-  await prisma.team.createMany({ data: d.teams });
   await prisma.user.createMany({ data: d.users });
   await prisma.claudeSession.createMany({ data: d.sessions });
   await prisma.turn.createMany({ data: d.turns });

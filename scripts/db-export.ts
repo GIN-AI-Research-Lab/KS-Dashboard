@@ -9,7 +9,6 @@ async function main() {
   // Order does not matter for export; import re-inserts in FK-safe order.
   const data = {
     departments: await prisma.department.findMany(),
-    teams: await prisma.team.findMany(),
     users: await prisma.user.findMany(),
     sessions: await prisma.claudeSession.findMany(),
     turns: await prisma.turn.findMany(),

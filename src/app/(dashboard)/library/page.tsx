@@ -10,6 +10,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { KIND_LABEL, KIND_VARIANT, parseTags } from "@/lib/library";
 import { markdownExcerpt, firstImage } from "@/lib/markdown";
 import { formatRelativeTime } from "@/lib/format";
+import { getT } from "@/i18n/server";
 import type { LibraryItemKind } from "@prisma/client";
 
 const VALID_KINDS: LibraryItemKind[] = ["PROMPT", "SKILL"];
@@ -20,7 +21,7 @@ export default async function LibraryPage({
   searchParams: Promise<{ kind?: string; sort?: string; q?: string }>;
 }) {
   const { kind, sort, q } = await searchParams;
-  const session = await auth();
+  const [session, t] = await Promise.all([auth(), getT()]);
   const items = await getLibraryFeed({
     kind: VALID_KINDS.includes((kind ?? "") as LibraryItemKind) ? (kind as LibraryItemKind) : undefined,
     sort: sort ?? "new",
@@ -34,13 +35,13 @@ export default async function LibraryPage({
         <div className="min-w-0">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)]/60 px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-[0.1em] text-[var(--text-secondary)]">
             <span className="gradient-brand h-1.5 w-1.5 rounded-full" />
-            THƯ VIỆN
+            {t("library.badge")}
           </span>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight">Thư <span className="gradient-text">viện</span></h1>
-          <p className="mt-1 text-sm text-[var(--text-secondary)]">Prompt &amp; skill mọi người chia sẻ — comment, react, lưu về tài khoản</p>
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight"><span className="gradient-text">{t("library.title")}</span></h1>
+          <p className="mt-1 text-sm text-[var(--text-secondary)]">{t("library.subtitle")}</p>
         </div>
         <Link href="/library/me" className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm font-medium transition-colors hover:bg-black/5 dark:hover:bg-white/10">
-          Thư viện của tôi
+          {t("library.myLibraryLink")}
         </Link>
       </div>
 
@@ -50,8 +51,8 @@ export default async function LibraryPage({
       {items.length === 0 ? (
         <EmptyState
           icon={<Lightbulb className="h-6 w-6" />}
-          title="Chưa có bài nào"
-          hint="Hãy đăng prompt hoặc skill đầu tiên để chia sẻ với mọi người"
+          title={t("library.noPosts")}
+          hint={t("library.noPostsHint")}
         />
       ) : (
         <div className="flex flex-col gap-4">

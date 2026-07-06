@@ -14,7 +14,6 @@ declare module "next-auth" {
       email: string;
       name: string;
       role: Role;
-      teamId: string | null;
       departmentId: string | null;
       image?: string | null;
     };
@@ -22,7 +21,6 @@ declare module "next-auth" {
   interface User {
     id: string;
     role: Role;
-    teamId: string | null;
     departmentId: string | null;
   }
 }
@@ -30,7 +28,6 @@ declare module "next-auth" {
 interface AppTokenFields {
   id: string;
   role: Role;
-  teamId: string | null;
   departmentId: string | null;
   image?: string | null;
 }
@@ -58,7 +55,6 @@ const providers: Provider[] = [
         email: user.email,
         name: user.name,
         role: user.role,
-        teamId: user.teamId,
         departmentId: user.departmentId,
         image: user.image,
       };
@@ -126,7 +122,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           }
           t.id = matched.id;
           t.role = matched.role;
-          t.teamId = matched.teamId;
           t.departmentId = matched.departmentId;
           t.email = matched.email;
           t.name = ssoName;
@@ -139,7 +134,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const u = user as typeof user & AppTokenFields;
         t.id = u.id;
         t.role = u.role;
-        t.teamId = u.teamId;
         t.departmentId = u.departmentId;
         t.image = (u as { image?: string | null }).image ?? null;
       }
@@ -149,7 +143,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       const t = token as typeof token & AppTokenFields;
       session.user.id = t.id;
       session.user.role = t.role;
-      session.user.teamId = t.teamId;
       session.user.departmentId = t.departmentId;
       session.user.image = t.image ?? null;
       return session;

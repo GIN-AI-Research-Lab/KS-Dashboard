@@ -1,10 +1,13 @@
 import type { SessionOutcome } from "@prisma/client";
+import type { Translate } from "@/i18n/lookup";
 
-export const OUTCOME_LABEL: Record<SessionOutcome, string> = {
-  SOLVED: "Đã xử lý xong",
-  IN_PROGRESS: "Đang xử lý",
-  ABANDONED: "Bỏ dở",
-};
+export function getOutcomeLabel(t: Translate): Record<SessionOutcome, string> {
+  return {
+    SOLVED: t("sessionsPage.outcomeSolved"),
+    IN_PROGRESS: t("sessionsPage.outcomeInProgress"),
+    ABANDONED: t("sessionsPage.outcomeAbandoned"),
+  };
+}
 
 export const OUTCOME_VARIANT: Record<SessionOutcome, "good" | "info" | "neutral"> = {
   SOLVED: "good",

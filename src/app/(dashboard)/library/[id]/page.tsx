@@ -13,10 +13,11 @@ import { CopyTextButton } from "@/components/CopyTextButton";
 import { KIND_LABEL, KIND_VARIANT, parseTags } from "@/lib/library";
 import { renderMarkdown } from "@/lib/markdown";
 import { formatRelativeTime } from "@/lib/format";
+import { getT } from "@/i18n/server";
 
 export default async function LibraryItemPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const session = await auth();
+  const [session, t] = await Promise.all([auth(), getT()]);
   const data = await getLibraryItem(id, session!.user.id);
   if (!data) notFound();
 
@@ -34,18 +35,18 @@ export default async function LibraryItemPage({ params }: { params: Promise<{ id
           className="inline-flex items-center gap-1 text-xs text-[var(--text-muted)] transition-colors hover:text-accent hover:underline"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
-          Thư viện
+          {t("library.title")}
         </Link>
         <div className="hero-panel relative mt-2 flex flex-wrap items-center justify-between gap-4 overflow-hidden rounded-2xl border border-[var(--border)] p-6 shadow-[var(--shadow-xs)]">
           <div className="min-w-0">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)]/60 px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-[0.1em] text-[var(--text-secondary)]">
               <span className="gradient-brand h-1.5 w-1.5 rounded-full" />
-              THƯ VIỆN
+              {t("library.badge")}
             </span>
             <div className="mt-2 flex flex-wrap items-center gap-2">
               <Badge variant={KIND_VARIANT[item.kind]}>{KIND_LABEL[item.kind]}</Badge>
               <h1 className="text-xl font-semibold tracking-tight">{item.title}</h1>
-              {item.visibility === "PRIVATE" && <Badge variant="neutral">Riêng tư</Badge>}
+              {item.visibility === "PRIVATE" && <Badge variant="neutral">{t("library.private")}</Badge>}
             </div>
             <p className="mt-1 text-sm text-[var(--text-secondary)]">
               {item.author.name} · {formatRelativeTime(item.createdAt)}
@@ -67,22 +68,22 @@ export default async function LibraryItemPage({ params }: { params: Promise<{ id
         </div>
       </div>
 
-      <Card title={item.kind === "PROMPT" ? "Nội dung prompt" : "Mô tả skill"}>
+      <Card title={item.kind === "PROMPT" ? t("library.promptContent") : t("library.skillDescriptionTitle")}>
         <div className="max-w-none">{renderMarkdown(item.body)}</div>
         {parseTags(item.tags).length > 0 && (
           <div className="mt-4 flex flex-wrap gap-1.5 border-t border-[var(--border)] pt-3">
-            {parseTags(item.tags).map((t) => (
-              <Tag key={t}>{t}</Tag>
+            {parseTags(item.tags).map((tag) => (
+              <Tag key={tag}>{tag}</Tag>
             ))}
           </div>
         )}
       </Card>
 
-      <Card title="React">
+      <Card title={t("library.reactTitle")}>
         <LibraryReactions itemId={item.id} initialCounts={data.reactionCounts} initialMine={data.myReactions} />
       </Card>
 
-      <Card title={`Bình luận (${item.comments.length})`}>
+      <Card title={`${t("library.commentsTitle")} (${item.comments.length})`}>
         <LibraryComments
           itemId={item.id}
           initialComments={item.comments.map((c) => ({

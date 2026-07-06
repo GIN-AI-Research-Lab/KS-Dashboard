@@ -26,8 +26,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ type
       : "totalTokens";
     const rows = await getRankings(metric, range, 1000);
     const csv = toCsv(
-      ["Hạng", "Tên", "Nhóm", "Bộ phận", metric],
-      rows.map((r, i) => [i + 1, r.userName, r.team ?? "", r.department ?? "", r.value]),
+      ["Hạng", "Tên", "Bộ phận", metric],
+      rows.map((r, i) => [i + 1, r.userName, r.department ?? "", r.value]),
     );
     return csvResponse(`rankings-${metric}-${range}.csv`, csv);
   }

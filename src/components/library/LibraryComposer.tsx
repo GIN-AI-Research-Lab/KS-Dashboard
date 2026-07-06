@@ -6,8 +6,10 @@ import { Plus } from "lucide-react";
 import { MarkdownEditor } from "@/components/library/MarkdownEditor";
 import { useToast } from "@/components/ui/toast/ToastProvider";
 import { slugifySkillName, isValidSkillName, SKILL_NAME_MAX } from "@/lib/library";
+import { useT } from "@/i18n/I18nProvider";
 
 export function LibraryComposer() {
+  const t = useT();
   const router = useRouter();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
@@ -68,11 +70,11 @@ export function LibraryComposer() {
     setSaving(false);
     if (res.ok) {
       reset();
-      toast("Đã đăng");
+      toast(t("library.postedToast"));
       router.refresh();
     } else {
       const data = await res.json().catch(() => null);
-      toast(data?.error || "Đăng thất bại", "error");
+      toast(data?.error || t("library.postFailedToast"), "error");
     }
   }
 
@@ -80,7 +82,7 @@ export function LibraryComposer() {
     return (
       <button onClick={() => setOpen(true)} className="inline-flex items-center gap-1.5 self-start rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white shadow-[var(--shadow-xs)] transition-colors duration-150 hover:bg-accent-hover active:scale-[0.98]">
         <Plus className="h-4 w-4" />
-        Đăng bài
+        {t("library.postButton")}
       </button>
     );
   }
@@ -104,7 +106,7 @@ export function LibraryComposer() {
               onClick={() => setVisibility(v)}
               className={`rounded-lg border px-3 py-1 text-xs font-medium transition-colors duration-150 ${visibility === v ? "border-accent bg-accent/10 text-accent" : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border-strong)] hover:text-[var(--text-primary)]"}`}
             >
-              {v === "PUBLIC" ? "Công khai" : "Riêng tư"}
+              {v === "PUBLIC" ? t("library.public") : t("library.private")}
             </button>
           ))}
         </div>
@@ -112,7 +114,7 @@ export function LibraryComposer() {
       <input
         value={title}
         onChange={(e) => onTitleChange(e.target.value)}
-        placeholder="Tiêu đề"
+        placeholder={t("library.titlePlaceholder")}
         className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm"
       />
 
@@ -120,7 +122,7 @@ export function LibraryComposer() {
         <div className="flex flex-col gap-2 rounded-lg border border-dashed border-[var(--border)] bg-[var(--surface-2,transparent)] p-3">
           <div>
             <label className="mb-1 block text-xs font-medium text-[var(--text-secondary)]">
-              Tên skill <span className="text-[var(--text-muted)]">(thư mục &amp; lệnh <code>/tên</code> trong Claude)</span>
+              {t("library.skillNameLabel")} <span className="text-[var(--text-muted)]">{t("library.skillNameHint")}</span>
             </label>
             <input
               value={skillName}
@@ -135,18 +137,18 @@ export function LibraryComposer() {
             />
             <p className={`mt-1 text-[11px] ${skillName && !skillNameValid ? "text-red-500" : "text-[var(--text-muted)]"}`}>
               {skillName && !skillNameValid
-                ? "Chỉ dùng a-z, 0-9 và dấu gạch nối (kebab-case), không khoảng trắng."
-                : "Phải duy nhất — trùng tên sẽ bị chặn khi đăng."}
+                ? t("library.skillNameInvalid")
+                : t("library.skillNameUnique")}
             </p>
           </div>
           <div>
             <label className="mb-1 block text-xs font-medium text-[var(--text-secondary)]">
-              Mô tả skill <span className="text-[var(--text-muted)]">(để Claude biết khi nào dùng)</span>
+              {t("library.skillDescLabel")} <span className="text-[var(--text-muted)]">{t("library.skillDescHint")}</span>
             </label>
             <input
               value={skillDescription}
               onChange={(e) => setSkillDescription(e.target.value)}
-              placeholder="Ví dụ: Dùng khi cần review code React về hiệu năng…"
+              placeholder={t("library.skillDescPlaceholder")}
               maxLength={300}
               className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm"
             />
@@ -157,12 +159,12 @@ export function LibraryComposer() {
       <MarkdownEditor
         value={body}
         onChange={setBody}
-        placeholder={kind === "PROMPT" ? "Nội dung prompt (Markdown, chèn ảnh được)…" : "Nội dung skill: hướng dẫn, cách dùng, ví dụ… (Markdown, chèn ảnh / nhập .md)"}
+        placeholder={kind === "PROMPT" ? t("library.promptBodyPlaceholder") : t("library.skillBodyPlaceholder")}
       />
       <input
         value={tags}
         onChange={(e) => setTags(e.target.value)}
-        placeholder="Tags (phân cách dấu phẩy)"
+        placeholder={t("library.tagsPlaceholder")}
         className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm"
       />
       <div className="flex items-center gap-2">
@@ -171,10 +173,10 @@ export function LibraryComposer() {
           disabled={!canSave}
           className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white shadow-[var(--shadow-xs)] transition-colors duration-150 hover:bg-accent-hover active:scale-[0.98] disabled:opacity-60"
         >
-          {saving ? "Đang đăng..." : "Đăng"}
+          {saving ? t("library.posting") : t("library.post")}
         </button>
         <button onClick={reset} className="text-sm text-[var(--text-muted)] hover:underline">
-          Huỷ
+          {t("library.cancel")}
         </button>
       </div>
     </div>

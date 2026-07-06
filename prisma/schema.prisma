@@ -10,7 +10,6 @@ datasource db {
 enum Role {
   ADMIN
   DEPARTMENT_HEAD
-  TEAM_LEAD
   MEMBER
 }
 
@@ -47,20 +46,7 @@ model Department {
   name      String   @unique
   createdAt DateTime @default(now())
 
-  teams Team[]
   users User[]
-}
-
-model Team {
-  id           String     @id @default(cuid())
-  name         String
-  departmentId String
-  department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
-  createdAt    DateTime   @default(now())
-
-  users User[]
-
-  @@unique([departmentId, name])
 }
 
 model User {
@@ -77,8 +63,6 @@ model User {
   image        String?
   departmentId String?
   department   Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
-  teamId       String?
-  team         Team?       @relation(fields: [teamId], references: [id], onDelete: SetNull)
   createdAt    DateTime    @default(now())
 
   amisEmployeeCode String?   @unique // upsert key for AMIS sync, when available

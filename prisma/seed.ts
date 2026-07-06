@@ -12,9 +12,9 @@ const ADMIN_EMAIL = "admin@company.com";
 
 // Idempotent: only ever ensures the admin account exists. Safe to re-run —
 // it will never touch or recreate an existing admin (preserves their
-// password and API key), and never generates demo departments/teams/usage
-// data. Use the Admin panel in the app to add real departments, teams, and
-// employees once real Claude Code usage is flowing in via the plugin.
+// password and API key), and never generates demo departments/usage data.
+// Use the Admin panel in the app to add real departments and employees once
+// real Claude Code usage is flowing in via the plugin.
 async function main() {
   const existing = await prisma.user.findUnique({ where: { email: ADMIN_EMAIL } });
   if (existing) {

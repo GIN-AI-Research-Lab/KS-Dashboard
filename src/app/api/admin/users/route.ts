@@ -17,10 +17,8 @@ export async function GET() {
       name: true,
       email: true,
       role: true,
-      teamId: true,
       departmentId: true,
       createdAt: true,
-      team: { select: { name: true } },
       department: { select: { name: true } },
     },
   });
@@ -31,9 +29,8 @@ const createSchema = z.object({
   name: z.string().min(1).max(100),
   email: z.string().email(),
   password: z.string().min(8),
-  role: z.enum(["ADMIN", "DEPARTMENT_HEAD", "TEAM_LEAD", "MEMBER"]),
+  role: z.enum(["ADMIN", "DEPARTMENT_HEAD", "MEMBER"]),
   departmentId: z.string().nullable().optional(),
-  teamId: z.string().nullable().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -43,7 +40,7 @@ export async function POST(req: NextRequest) {
   const parsed = createSchema.safeParse(await req.json());
   if (!parsed.success) return NextResponse.json({ error: "Invalid payload", issues: parsed.error.issues }, { status: 422 });
 
-  const { password, departmentId, teamId, ...rest } = parsed.data;
+  const { password, departmentId, ...rest } = parsed.data;
   const passwordHash = await bcrypt.hash(password, 10);
 
   const user = await prisma.user.create({
@@ -51,7 +48,6 @@ export async function POST(req: NextRequest) {
       ...rest,
       emailLocalPart: emailLocalPart(rest.email),
       departmentId: departmentId ?? null,
-      teamId: teamId ?? null,
       passwordHash,
       apiKey: generateApiKey(),
     },

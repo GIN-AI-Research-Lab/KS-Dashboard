@@ -12,7 +12,6 @@ export interface LiveSessionCard {
   externalId: string;
   userId: string;
   userName: string;
-  team: string | null;
   department: string | null;
   projectLabel: string | null;
   model: string | null;

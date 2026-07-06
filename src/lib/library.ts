@@ -13,14 +13,9 @@ export const KIND_VARIANT: Record<LibraryItemKind, "info" | "good"> = {
 // Small fixed set of reactions offered in the UI.
 export const REACTIONS = ["👍", "❤️", "🎉", "🚀", "👀"];
 
-export const SORTS = [
-  { key: "new", label: "Mới nhất" },
-  { key: "comments", label: "Nhiều bình luận" },
-  { key: "reactions", label: "Nhiều react" },
-  { key: "stars", label: "Nhiều lưu" },
-] as const;
+export const SORTS = ["new", "comments", "reactions", "stars"] as const;
 
-export type LibrarySort = (typeof SORTS)[number]["key"];
+export type LibrarySort = (typeof SORTS)[number];
 
 export function parseTags(tags: string | null | undefined): string[] {
   if (!tags) return [];

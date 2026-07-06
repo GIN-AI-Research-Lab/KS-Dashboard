@@ -17,7 +17,6 @@ type Row = {
   userId: string;
   userName: string;
   image?: string | null;
-  team: string | null;
   department: string | null;
   value: number;
   rankDelta?: number | null;
@@ -102,7 +101,7 @@ export function LeaderboardTable({
                 {t("table.employee")} <SortIndicator active={sort.key === "name"} dir={sort.dir} />
               </button>
             </th>
-            <th className="py-2 pr-3 font-medium">{t("table.deptTeam")}</th>
+            <th className="py-2 pr-3 font-medium">{t("table.department")}</th>
             <th className="py-2 pr-0 text-right font-medium">
               <button type="button" className={`${thBtn} justify-end`} onClick={() => toggle("value", "desc")}>
                 {valueLabel} <SortIndicator active={sort.key === "value"} dir={sort.dir} />
@@ -124,7 +123,7 @@ export function LeaderboardTable({
                 </span>
               </td>
               <td className="py-2.5 pr-3 text-xs text-[var(--text-muted)]">
-                {[row.department, row.team].filter(Boolean).join(" · ") || "—"}
+                {row.department || "—"}
               </td>
               <td className="py-2.5 pr-0 text-right font-semibold tabular-nums">{fmt(row.value)}</td>
             </tr>

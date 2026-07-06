@@ -83,14 +83,6 @@ export function colorForDepartment(name: string) {
   return SERIES[hash % SERIES.length];
 }
 
-// Stable team -> color, hashed the same way so a team reads consistently
-// wherever it appears.
-export function colorForTeam(name: string) {
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
-  return SERIES[hash % SERIES.length];
-}
-
 // Server Components can't read CSS vars, so they pass a light-palette hex for a
 // trend series. Map it to the matching theme-aware var so the line/area follows
 // the theme too; unknown colors pass through unchanged.

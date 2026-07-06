@@ -22,9 +22,8 @@ function resolveEmail(employee: AmisEmployee): string | null {
  * amisEmployeeCode is the primary match key on repeat syncs, but the first
  * sync for an employee may find an account that already exists (created by
  * an admin, or matched once via SSO) -- those are linked by emailLocalPart
- * instead of being duplicated. Team is intentionally left untouched: AMIS's
- * employee API exposes no team-level field, only OrganizationUnitName
- * (mapped to Department), so team assignment stays a manual admin action. */
+ * instead of being duplicated. AMIS's employee API exposes only
+ * OrganizationUnitName, which maps 1-1 onto Department. */
 export async function runAmisSync(): Promise<AmisSyncSummary> {
   const clientId = process.env.AMIS_CLIENT_ID;
   const secretKey = process.env.AMIS_SECRET_KEY;

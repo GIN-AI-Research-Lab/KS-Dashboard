@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ThumbsUp, ThumbsDown } from "lucide-react";
 import { formatRelativeTime } from "@/lib/format";
+import { useT } from "@/i18n/I18nProvider";
 
 type Comment = { id: string; body: string; createdAt: string; authorName: string };
 
@@ -32,6 +33,7 @@ export function SessionDiscussion({
   initialDown: number;
   initialMyVote: number;
 }) {
+  const t = useT();
   const [comments, setComments] = useState(initialComments);
   const [up, setUp] = useState(initialUp);
   const [down, setDown] = useState(initialDown);
@@ -96,7 +98,7 @@ export function SessionDiscussion({
       </div>
 
       <div className="flex flex-col gap-3">
-        {comments.length === 0 && <p className="text-sm text-[var(--text-muted)]">Chưa có bình luận.</p>}
+        {comments.length === 0 && <p className="text-sm text-[var(--text-muted)]">{t("sessionDetail.noCommentsYet")}</p>}
         {comments.map((c) => (
           <div key={c.id} className="card-surface rounded-2xl border border-[var(--border)] px-3 py-2 shadow-[var(--shadow-xs)] transition-all duration-150 hover:-translate-y-0.5 hover:shadow-[var(--shadow-sm)]">
             <div className="mb-0.5 flex items-center gap-2 text-xs text-[var(--text-muted)]">
@@ -113,7 +115,7 @@ export function SessionDiscussion({
           value={body}
           onChange={(e) => setBody(e.target.value)}
           rows={2}
-          placeholder="Viết bình luận… dùng @tên để nhắc ai đó"
+          placeholder={t("sessionDetail.commentPlaceholder")}
           className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm"
         />
         <button
@@ -121,7 +123,7 @@ export function SessionDiscussion({
           disabled={posting || !body.trim()}
           className="self-start rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white shadow-[var(--shadow-xs)] transition-all duration-150 hover:bg-accent-hover hover:shadow-[var(--shadow-sm)] active:scale-95 disabled:opacity-60 disabled:shadow-none"
         >
-          {posting ? "Đang gửi..." : "Gửi bình luận"}
+          {posting ? t("sessionDetail.sendingLabel") : t("sessionDetail.sendCommentButton")}
         </button>
       </div>
     </div>

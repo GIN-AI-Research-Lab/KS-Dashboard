@@ -5,6 +5,7 @@ import { Check, Loader2, X } from "lucide-react";
 import { Badge, Tag } from "@/components/ui/Badge";
 import { formatNumber, formatRelativeTime, formatUsd } from "@/lib/format";
 import { colorForIndex } from "@/lib/chart-colors";
+import { useT } from "@/i18n/I18nProvider";
 import type { LiveSessionCard, LiveToolCall } from "./types";
 
 type RawLiveEvent = {
@@ -36,12 +37,6 @@ const STATUS_VARIANT: Record<LiveSessionCard["status"], "good" | "warning" | "ne
   ENDED: "neutral",
 };
 
-const STATUS_LABEL: Record<LiveSessionCard["status"], string> = {
-  ACTIVE: "Đang chạy",
-  IDLE: "Chờ",
-  ENDED: "Kết thúc",
-};
-
 function mergeEvent(sessions: LiveSessionCard[], event: RawLiveEvent): LiveSessionCard[] {
   const idx = sessions.findIndex((s) => s.id === event.session.id);
   const base: LiveSessionCard =
@@ -52,7 +47,6 @@ function mergeEvent(sessions: LiveSessionCard[], event: RawLiveEvent): LiveSessi
           externalId: event.session.externalId,
           userId: event.userId,
           userName: event.userName,
-          team: null,
           department: null,
           projectLabel: event.session.projectLabel,
           model: event.session.model,
@@ -91,6 +85,12 @@ function mergeEvent(sessions: LiveSessionCard[], event: RawLiveEvent): LiveSessi
 }
 
 export function LiveFeed({ initialSessions }: { initialSessions: LiveSessionCard[] }) {
+  const t = useT();
+  const STATUS_LABEL: Record<LiveSessionCard["status"], string> = {
+    ACTIVE: t("live.running"),
+    IDLE: t("live.idle"),
+    ENDED: t("live.ended"),
+  };
   const [sessions, setSessions] = useState(initialSessions);
   const [connected, setConnected] = useState(false);
   const [, setTick] = useState(0);
@@ -124,12 +124,12 @@ export function LiveFeed({ initialSessions }: { initialSessions: LiveSessionCard
           }`}
           aria-hidden
         />
-        {connected ? "Đang kết nối trực tiếp" : "Đang kết nối lại..."}
+        {connected ? t("live.connectedLabel") : t("live.reconnectingLabel")}
       </div>
 
       {sessions.length === 0 && (
         <p className="text-sm text-[var(--text-muted)]">
-          Chưa có phiên nào. Cài plugin KS Dashboard vào Claude Code để bắt đầu ghi nhận.
+          {t("live.noSessionsHint")}
         </p>
       )}
 
@@ -159,19 +159,19 @@ export function LiveFeed({ initialSessions }: { initialSessions: LiveSessionCard
 
             <div className="mt-3 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
               <div>
-                <span className="text-[var(--text-muted)]">Input</span>
+                <span className="text-[var(--text-muted)]">{t("table.input")}</span>
                 <div className="font-semibold tabular-nums">{formatNumber(s.inputTokens)}</div>
               </div>
               <div>
-                <span className="text-[var(--text-muted)]">Output</span>
+                <span className="text-[var(--text-muted)]">{t("table.output")}</span>
                 <div className="font-semibold tabular-nums">{formatNumber(s.outputTokens)}</div>
               </div>
               <div>
-                <span className="text-[var(--text-muted)]">Turns</span>
+                <span className="text-[var(--text-muted)]">{t("table.turns")}</span>
                 <div className="font-semibold tabular-nums">{s.turnCount}</div>
               </div>
               <div>
-                <span className="text-[var(--text-muted)]">Chi phí</span>
+                <span className="text-[var(--text-muted)]">{t("table.cost")}</span>
                 <div className="font-semibold tabular-nums">{formatUsd(s.costUsd)}</div>
               </div>
             </div>
