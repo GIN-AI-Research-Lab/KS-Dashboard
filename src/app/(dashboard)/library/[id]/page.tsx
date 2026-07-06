@@ -50,6 +50,14 @@ export default async function LibraryItemPage({ params }: { params: Promise<{ id
             <p className="mt-1 text-sm text-[var(--text-secondary)]">
               {item.author.name} · {formatRelativeTime(item.createdAt)}
             </p>
+            {item.kind === "SKILL" && item.skillName && (
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <code className="rounded bg-black/5 px-2 py-0.5 font-mono text-xs text-[var(--text-secondary)] dark:bg-white/10">/{item.skillName}</code>
+                {item.skillDescription && (
+                  <span className="text-xs text-[var(--text-muted)]">{item.skillDescription}</span>
+                )}
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-2">
             <LibraryStar itemId={item.id} initialBookmarked={data.bookmarked} initialCount={data.bookmarkCount} />

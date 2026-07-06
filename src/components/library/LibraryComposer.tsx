@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { MarkdownEditor } from "@/components/library/MarkdownEditor";
 import { useToast } from "@/components/ui/toast/ToastProvider";
+import { slugifySkillName, isValidSkillName, SKILL_NAME_MAX } from "@/lib/library";
 
 export function LibraryComposer() {
   const router = useRouter();
@@ -14,27 +15,64 @@ export function LibraryComposer() {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [tags, setTags] = useState("");
+  const [skillName, setSkillName] = useState("");
+  const [skillNameEdited, setSkillNameEdited] = useState(false);
+  const [skillDescription, setSkillDescription] = useState("");
   const [visibility, setVisibility] = useState<"PUBLIC" | "PRIVATE">("PUBLIC");
   const [saving, setSaving] = useState(false);
 
+  const isSkill = kind === "SKILL";
+  const skillNameValid = isValidSkillName(skillName.trim());
+  const canSave =
+    !!title.trim() &&
+    !!body.trim() &&
+    !saving &&
+    (!isSkill || (skillNameValid && !!skillDescription.trim()));
+
+  function onTitleChange(v: string) {
+    setTitle(v);
+    // Auto-derive the skill name from the title until the user edits it directly.
+    if (!skillNameEdited) setSkillName(slugifySkillName(v));
+  }
+
+  function selectKind(k: "PROMPT" | "SKILL") {
+    setKind(k);
+    if (k === "SKILL" && !skillNameEdited && !skillName) setSkillName(slugifySkillName(title));
+  }
+
+  function reset() {
+    setTitle("");
+    setBody("");
+    setTags("");
+    setSkillName("");
+    setSkillNameEdited(false);
+    setSkillDescription("");
+    setOpen(false);
+  }
+
   async function save() {
-    if (!title.trim() || !body.trim()) return;
+    if (!canSave) return;
     setSaving(true);
     const res = await fetch("/api/library", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ kind, title, body, tags, visibility }),
+      body: JSON.stringify({
+        kind,
+        title,
+        body,
+        tags,
+        visibility,
+        ...(isSkill ? { skillName: skillName.trim(), skillDescription: skillDescription.trim() } : {}),
+      }),
     });
     setSaving(false);
     if (res.ok) {
-      setTitle("");
-      setBody("");
-      setTags("");
-      setOpen(false);
+      reset();
       toast("Đã đăng");
       router.refresh();
     } else {
-      toast("Đăng thất bại", "error");
+      const data = await res.json().catch(() => null);
+      toast(data?.error || "Đăng thất bại", "error");
     }
   }
 
@@ -53,7 +91,7 @@ export function LibraryComposer() {
         {(["PROMPT", "SKILL"] as const).map((k) => (
           <button
             key={k}
-            onClick={() => setKind(k)}
+            onClick={() => selectKind(k)}
             className={`rounded-lg border px-3 py-1 text-sm font-medium transition-colors duration-150 ${kind === k ? "border-accent bg-accent/10 text-accent" : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border-strong)] hover:text-[var(--text-primary)]"}`}
           >
             {k === "PROMPT" ? "Prompt" : "Skill"}
@@ -73,14 +111,53 @@ export function LibraryComposer() {
       </div>
       <input
         value={title}
-        onChange={(e) => setTitle(e.target.value)}
+        onChange={(e) => onTitleChange(e.target.value)}
         placeholder="Tiêu đề"
         className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm"
       />
+
+      {isSkill && (
+        <div className="flex flex-col gap-2 rounded-lg border border-dashed border-[var(--border)] bg-[var(--surface-2,transparent)] p-3">
+          <div>
+            <label className="mb-1 block text-xs font-medium text-[var(--text-secondary)]">
+              Tên skill <span className="text-[var(--text-muted)]">(thư mục &amp; lệnh <code>/tên</code> trong Claude)</span>
+            </label>
+            <input
+              value={skillName}
+              onChange={(e) => {
+                setSkillNameEdited(true);
+                setSkillName(e.target.value);
+              }}
+              placeholder="vi-du-ten-skill"
+              maxLength={SKILL_NAME_MAX}
+              spellCheck={false}
+              className={`w-full rounded-lg border bg-[var(--surface)] px-3 py-2 font-mono text-sm ${skillName && !skillNameValid ? "border-red-500/70" : "border-[var(--border)]"}`}
+            />
+            <p className={`mt-1 text-[11px] ${skillName && !skillNameValid ? "text-red-500" : "text-[var(--text-muted)]"}`}>
+              {skillName && !skillNameValid
+                ? "Chỉ dùng a-z, 0-9 và dấu gạch nối (kebab-case), không khoảng trắng."
+                : "Phải duy nhất — trùng tên sẽ bị chặn khi đăng."}
+            </p>
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-[var(--text-secondary)]">
+              Mô tả skill <span className="text-[var(--text-muted)]">(để Claude biết khi nào dùng)</span>
+            </label>
+            <input
+              value={skillDescription}
+              onChange={(e) => setSkillDescription(e.target.value)}
+              placeholder="Ví dụ: Dùng khi cần review code React về hiệu năng…"
+              maxLength={300}
+              className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm"
+            />
+          </div>
+        </div>
+      )}
+
       <MarkdownEditor
         value={body}
         onChange={setBody}
-        placeholder={kind === "PROMPT" ? "Nội dung prompt (Markdown, chèn ảnh được)…" : "Mô tả skill: cách dùng, khi nào dùng, ví dụ… (Markdown, chèn ảnh / nhập .md)"}
+        placeholder={kind === "PROMPT" ? "Nội dung prompt (Markdown, chèn ảnh được)…" : "Nội dung skill: hướng dẫn, cách dùng, ví dụ… (Markdown, chèn ảnh / nhập .md)"}
       />
       <input
         value={tags}
@@ -91,12 +168,12 @@ export function LibraryComposer() {
       <div className="flex items-center gap-2">
         <button
           onClick={save}
-          disabled={saving || !title.trim() || !body.trim()}
+          disabled={!canSave}
           className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white shadow-[var(--shadow-xs)] transition-colors duration-150 hover:bg-accent-hover active:scale-[0.98] disabled:opacity-60"
         >
           {saving ? "Đang đăng..." : "Đăng"}
         </button>
-        <button onClick={() => setOpen(false)} className="text-sm text-[var(--text-muted)] hover:underline">
+        <button onClick={reset} className="text-sm text-[var(--text-muted)] hover:underline">
           Huỷ
         </button>
       </div>

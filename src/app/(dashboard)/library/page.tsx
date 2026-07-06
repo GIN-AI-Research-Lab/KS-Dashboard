@@ -66,6 +66,9 @@ export default async function LibraryPage({
                 <div className="flex min-w-0 flex-1 flex-col gap-2">
                   <div className="flex items-center gap-2">
                     <Badge variant={KIND_VARIANT[it.kind]}>{KIND_LABEL[it.kind]}</Badge>
+                    {it.kind === "SKILL" && it.skillName && (
+                      <code className="rounded bg-black/5 px-1.5 py-0.5 font-mono text-[11px] text-[var(--text-secondary)] dark:bg-white/10">/{it.skillName}</code>
+                    )}
                     {parseTags(it.tags).slice(0, 3).map((t) => (
                       <Tag key={t}>{t}</Tag>
                     ))}
