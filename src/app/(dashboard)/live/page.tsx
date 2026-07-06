@@ -1,39 +1,51 @@
-import { getRecentSessions } from "@/lib/stats";
-import { LiveFeed } from "@/components/live/LiveFeed";
-import type { LiveSessionCard } from "@/components/live/types";
+import { prisma } from "@/lib/db";
+import { getLiveSessions, type LiveSessionStatusFilter } from "@/lib/stats";
+import { Card } from "@/components/ui/Card";
+import { LiveFilters } from "@/components/live/LiveFilters";
+import { LiveTable, type LiveRow } from "@/components/live/LiveTable";
+import { getT } from "@/i18n/server";
 
 export const dynamic = "force-dynamic";
 
-export default async function LivePage() {
-  const sessions = await getRecentSessions(50);
+function parseDate(value: string | undefined, endOfDay = false): Date | undefined {
+  if (!value || Number.isNaN(Date.parse(value))) return undefined;
+  return new Date(endOfDay ? `${value}T23:59:59` : value);
+}
 
-  const initialSessions: LiveSessionCard[] = sessions.map((s) => ({
+export default async function LivePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; department?: string; status?: string; from?: string; to?: string }>;
+}) {
+  const sp = await searchParams;
+  const q = sp.q?.trim() || undefined;
+  const departmentId = sp.department || undefined;
+  const status: LiveSessionStatusFilter | undefined =
+    sp.status === "online" || sp.status === "ended" ? sp.status : undefined;
+  const from = parseDate(sp.from);
+  const to = parseDate(sp.to, true);
+
+  const [t, departments, sessions] = await Promise.all([
+    getT(),
+    prisma.department.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    getLiveSessions({ q, departmentId, from, to, status, limit: 200 }),
+  ]);
+
+  const rows: LiveRow[] = sessions.map((s) => ({
     id: s.id,
-    externalId: s.externalId,
     userId: s.userId,
-    userName: s.user.name,
-    team: s.user.team?.name ?? null,
-    department: s.user.department?.name ?? null,
+    userName: s.userName,
+    image: s.image,
+    department: s.department,
+    team: s.team,
     projectLabel: s.projectLabel,
     model: s.model,
     status: s.status,
     startedAt: s.startedAt.toISOString(),
-    endedAt: s.endedAt ? s.endedAt.toISOString() : null,
     lastEventAt: s.lastEventAt.toISOString(),
-    inputTokens: s.inputTokens,
-    outputTokens: s.outputTokens,
     costUsd: s.costUsd,
     turnCount: s.turnCount,
-    promptCount: s.promptCount,
     toolCallCount: s.toolCallCount,
-    toolCalls: s.toolCalls.map((tc) => ({
-      id: tc.id,
-      toolName: tc.toolName,
-      status: tc.status,
-      startedAt: tc.startedAt.toISOString(),
-      endedAt: tc.endedAt ? tc.endedAt.toISOString() : null,
-      durationMs: tc.durationMs,
-    })),
   }));
 
   return (
@@ -42,17 +54,18 @@ export default async function LivePage() {
         <div className="min-w-0">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)]/60 px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-[0.1em] text-[var(--text-secondary)]">
             <span className="gradient-brand h-1.5 w-1.5 animate-pulse rounded-full" />
-            TRỰC TIẾP
+            {t("live.title")}
           </span>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight">
-            Phiên <span className="gradient-text">trực tuyến</span>
-          </h1>
-          <p className="mt-1 text-sm text-[var(--text-secondary)]">
-            Theo dõi các phiên Claude Code đang diễn ra theo thời gian thực
-          </p>
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight">{t("live.title")}</h1>
+          <p className="mt-1 text-sm text-[var(--text-secondary)]">{t("live.subtitle")}</p>
         </div>
       </div>
-      <LiveFeed initialSessions={initialSessions} />
+
+      <LiveFilters departments={departments} />
+
+      <Card title={`${rows.length} ${t("live.resultCount")}`}>
+        <LiveTable rows={rows} />
+      </Card>
     </div>
   );
 }

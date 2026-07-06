@@ -2,7 +2,7 @@ import { prisma } from "@/lib/db";
 import { cached } from "@/lib/cache";
 import { cacheReadSavingsUsd, modelTier } from "@/lib/pricing";
 import { MINUTES_SAVED_PER_TURN, DEV_HOURLY_USD } from "@/lib/roi-config";
-import type { Prisma, SessionOutcome, LibraryItemKind } from "@prisma/client";
+import type { Prisma, SessionOutcome, SessionStatus, LibraryItemKind } from "@prisma/client";
 
 // Company-wide aggregates are identical for every viewer and only need to be a
 // few seconds fresh, so cache them briefly to absorb the dashboard's 5s
@@ -274,13 +274,14 @@ export async function getRankings(metric: RankingMetric, range: RangeKey, limit 
           lastEventAt: true,
           externalId: true,
           projectLabel: true,
-          user: { select: { name: true, team: { select: { name: true } }, department: { select: { name: true } } } },
+          user: { select: { name: true, image: true, team: { select: { name: true } }, department: { select: { name: true } } } },
         },
       });
       return sessions
         .map((s) => ({
           userId: s.userId,
           userName: s.user.name,
+          image: s.user.image ?? null,
           team: s.user.team?.name ?? null,
           department: s.user.department?.name ?? null,
           value: (s.endedAt ?? s.lastEventAt).getTime() - s.startedAt.getTime(),
@@ -327,7 +328,7 @@ export async function getRankings(metric: RankingMetric, range: RangeKey, limit 
     // Fetch names/teams only for the top N.
     const users = await prisma.user.findMany({
       where: { id: { in: ranked.map((r) => r.userId) } },
-      select: { id: true, name: true, team: { select: { name: true } }, department: { select: { name: true } } },
+      select: { id: true, name: true, image: true, team: { select: { name: true } }, department: { select: { name: true } } },
     });
     const byId = new Map(users.map((u) => [u.id, u]));
 
@@ -336,6 +337,7 @@ export async function getRankings(metric: RankingMetric, range: RangeKey, limit 
       return {
         userId: r.userId,
         userName: u?.name ?? "?",
+        image: u?.image ?? null,
         team: u?.team?.name ?? null,
         department: u?.department?.name ?? null,
         value: r.value,
@@ -650,11 +652,11 @@ export async function getMemberBreakdown(userIds: string[], range: RangeKey) {
 
   const byUser = new Map<
     string,
-    { userId: string; userName: string; inputTokens: number; outputTokens: number; costUsd: number; turnCount: number }
+    { userId: string; userName: string; image: string | null; inputTokens: number; outputTokens: number; costUsd: number; turnCount: number }
   >();
 
   for (const id of userIds) {
-    byUser.set(id, { userId: id, userName: "", inputTokens: 0, outputTokens: 0, costUsd: 0, turnCount: 0 });
+    byUser.set(id, { userId: id, userName: "", image: null, inputTokens: 0, outputTokens: 0, costUsd: 0, turnCount: 0 });
   }
 
   for (const t of turns) {
@@ -666,10 +668,12 @@ export async function getMemberBreakdown(userIds: string[], range: RangeKey) {
     bucket.turnCount += 1;
   }
 
-  const users = await prisma.user.findMany({ where: { id: { in: userIds } }, select: { id: true, name: true } });
-  const nameMap = new Map(users.map((u) => [u.id, u.name]));
+  const users = await prisma.user.findMany({ where: { id: { in: userIds } }, select: { id: true, name: true, image: true } });
+  const userMap = new Map(users.map((u) => [u.id, u]));
   for (const [id, bucket] of byUser) {
-    if (!bucket.userName) bucket.userName = nameMap.get(id) ?? "?";
+    const u = userMap.get(id);
+    if (!bucket.userName) bucket.userName = u?.name ?? "?";
+    bucket.image = u?.image ?? null;
   }
 
   return Array.from(byUser.values()).sort((a, b) => b.inputTokens + b.outputTokens - (a.inputTokens + a.outputTokens));
@@ -757,6 +761,7 @@ export async function getLibraryFeed(opts: { kind?: LibraryItemKind; sort?: stri
     title: it.title,
     body: it.body,
     tags: it.tags,
+    skillName: it.skillName,
     author: it.author,
     createdAt: it.createdAt,
     counts: { comments: it._count.comments, reactions: it._count.reactions, bookmarks: it._count.bookmarks },
@@ -814,6 +819,93 @@ export async function getRecentSessions(limit = 50) {
       toolCalls: { orderBy: { startedAt: "desc" }, take: 8 },
     },
   });
+}
+
+export type LiveSessionStatusFilter = "online" | "ended";
+
+export type LiveSessionRow = {
+  id: string;
+  userId: string;
+  userName: string;
+  image: string | null;
+  department: string | null;
+  team: string | null;
+  projectLabel: string | null;
+  model: string | null;
+  status: SessionStatus;
+  startedAt: Date;
+  lastEventAt: Date;
+  endedAt: Date | null;
+  costUsd: number;
+  turnCount: number;
+  toolCallCount: number;
+  inputTokens: number;
+  outputTokens: number;
+};
+
+// Powers the /live browser: sessions with optional search (user/project/model),
+// department scope, start-date window, and online/ended status. Sorting is done
+// client-side on the returned rows. Not cached -- filters are per-viewer.
+export async function getLiveSessions(opts: {
+  q?: string;
+  departmentId?: string;
+  from?: Date;
+  to?: Date;
+  status?: LiveSessionStatusFilter;
+  limit?: number;
+}): Promise<LiveSessionRow[]> {
+  const { q, departmentId, from, to, status, limit = 200 } = opts;
+  const where: Prisma.ClaudeSessionWhereInput = {};
+
+  if (status === "online") where.status = { in: ["ACTIVE", "IDLE"] };
+  else if (status === "ended") where.status = "ENDED";
+
+  if (from || to) {
+    where.startedAt = { ...(from ? { gte: from } : {}), ...(to ? { lte: to } : {}) };
+  }
+
+  if (departmentId) {
+    where.user = { is: { OR: [{ departmentId }, { team: { is: { departmentId } } }] } };
+  }
+
+  if (q) {
+    where.OR = [
+      { projectLabel: { contains: q, mode: "insensitive" } },
+      { model: { contains: q, mode: "insensitive" } },
+      { user: { is: { name: { contains: q, mode: "insensitive" } } } },
+    ];
+  }
+
+  const rows = await prisma.claudeSession.findMany({
+    where,
+    orderBy: { lastEventAt: "desc" },
+    take: limit,
+    include: {
+      user: {
+        select: { id: true, name: true, image: true, team: { select: { name: true } }, department: { select: { name: true } } },
+      },
+    },
+  });
+
+  return rows.map((s) => ({
+    id: s.id,
+    userId: s.userId,
+    userName: s.user.name,
+    image: s.user.image ?? null,
+    department: s.user.department?.name ?? null,
+    team: s.user.team?.name ?? null,
+    projectLabel: s.projectLabel,
+    model: s.model,
+    status: s.status,
+    startedAt: s.startedAt,
+    lastEventAt: s.lastEventAt,
+    endedAt: s.endedAt,
+    costUsd: s.costUsd,
+    turnCount: s.turnCount,
+    toolCallCount: s.toolCallCount,
+    inputTokens: s.inputTokens,
+    outputTokens: s.outputTokens,
+  }));
 }
 
 export type ToolStatRow = {
