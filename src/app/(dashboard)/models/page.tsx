@@ -4,6 +4,7 @@ import { RangeSelector } from "@/components/RangeSelector";
 import { ModelDonut } from "@/components/charts/lazy";
 import { formatNumber, formatUsd } from "@/lib/format";
 import { colorForModel } from "@/lib/chart-colors";
+import { getT } from "@/i18n/server";
 
 export default async function ModelsPage({
   searchParams,
@@ -12,7 +13,7 @@ export default async function ModelsPage({
 }) {
   const { range } = await searchParams;
   const r = (range ?? "30d") as RangeKey;
-  const models = await getModelLeaderboard(r);
+  const [models, t] = await Promise.all([getModelLeaderboard(r), getT()]);
   const maxTokens = Math.max(1, ...models.map((m) => m.totalTokens));
 
   return (
@@ -21,20 +22,20 @@ export default async function ModelsPage({
         <div className="min-w-0">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)]/60 px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-[0.1em] text-[var(--text-secondary)]">
             <span className="gradient-brand h-1.5 w-1.5 rounded-full" />
-            MODEL
+            {t("models.badge")}
           </span>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight">Sử dụng theo <span className="gradient-text">Model</span></h1>
-          <p className="mt-1 text-sm text-[var(--text-secondary)]">Model nào được dùng nhiều nhất trong công ty</p>
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight">{t("models.title")}</h1>
+          <p className="mt-1 text-sm text-[var(--text-secondary)]">{t("models.subtitle")}</p>
         </div>
         <RangeSelector defaultRange={r} />
       </div>
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-        <Card title="Tỷ trọng token theo model" className="xl:col-span-1">
+        <Card title={t("models.tokenShare")} className="xl:col-span-1">
           <ModelDonut data={models} height={280} />
         </Card>
 
-        <Card title="Chi tiết theo model" className="xl:col-span-2">
+        <Card title={t("models.detail")} className="xl:col-span-2">
           <div className="flex flex-col gap-4">
             {models.map((m) => {
               const color = colorForModel(m.model);
@@ -47,7 +48,7 @@ export default async function ModelsPage({
                       {m.model}
                     </span>
                     <span className="text-xs text-[var(--text-muted)]">
-                      {m.turns} turns · {m.users} người dùng
+                      {m.turns} {t("metrics.unitTurns")} · {m.users} {t("models.users")}
                     </span>
                   </div>
                   <div className="h-2 w-full overflow-hidden rounded-full bg-black/5 dark:bg-white/10">

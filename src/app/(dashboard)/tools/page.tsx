@@ -6,6 +6,7 @@ import { RankBarChart } from "@/components/charts/lazy";
 import { ExportLink } from "@/components/ExportLink";
 import { InfoTip } from "@/components/ui/InfoTip";
 import { formatNumber, formatPercent, formatDuration } from "@/lib/format";
+import { getT } from "@/i18n/server";
 import { Zap, Wrench, AlertTriangle, Clock } from "lucide-react";
 
 export default async function ToolsPage({
@@ -15,7 +16,7 @@ export default async function ToolsPage({
 }) {
   const { range } = await searchParams;
   const r = (range ?? "30d") as RangeKey;
-  const { totals, tools } = await getToolStats(r);
+  const [{ totals, tools }, t] = await Promise.all([getToolStats(r), getT()]);
 
   return (
     <div className="stagger flex flex-col gap-6">
@@ -23,32 +24,28 @@ export default async function ToolsPage({
         <div className="min-w-0">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)]/60 px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-[0.1em] text-[var(--text-secondary)]">
             <span className="gradient-brand h-1.5 w-1.5 rounded-full" />
-            CÔNG CỤ
+            {t("tools.badge")}
           </span>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight">
-            Phân tích <span className="gradient-text">công cụ</span> (Tool)
-          </h1>
-          <p className="mt-1 text-sm text-[var(--text-secondary)]">
-            Công cụ Claude Code dùng nhiều nhất, tỷ lệ lỗi và thời gian trung bình
-          </p>
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight">{t("tools.title")}</h1>
+          <p className="mt-1 text-sm text-[var(--text-secondary)]">{t("tools.subtitle")}</p>
         </div>
         <RangeSelector defaultRange={r} />
       </div>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard label="Tổng lượt gọi" value={formatNumber(totals.total)} accent="var(--accent)" icon={<Zap className="h-4 w-4" />} />
-        <StatCard label="Số loại công cụ" value={formatNumber(totals.uniqueTools)} accent="#4a3aa7" icon={<Wrench className="h-4 w-4" />} />
+        <StatCard label={t("tools.totalCalls")} value={formatNumber(totals.total)} accent="var(--accent)" icon={<Zap className="h-4 w-4" />} />
+        <StatCard label={t("tools.uniqueTools")} value={formatNumber(totals.uniqueTools)} accent="#4a3aa7" icon={<Wrench className="h-4 w-4" />} />
         <StatCard
-          label="Tỷ lệ lỗi"
-          tooltip="Phần trăm lượt gọi công cụ bị lỗi trên tổng số lượt gọi."
+          label={t("tools.errorRate")}
+          tooltip={t("tools.errorRateTip")}
           value={formatPercent(totals.errorRate)}
-          hint={`${formatNumber(totals.errorTotal)} lượt lỗi`}
+          hint={`${formatNumber(totals.errorTotal)} ${t("tools.errorCountHint")}`}
           accent="#e34948"
           icon={<AlertTriangle className="h-4 w-4" />}
         />
         <StatCard
-          label="Thời gian TB"
-          tooltip="Thời gian chạy trung bình của mỗi lượt gọi công cụ."
+          label={t("tools.avgTime")}
+          tooltip={t("tools.avgTimeTip")}
           value={totals.avgDurationMs != null ? formatDuration(totals.avgDurationMs) : "—"}
           accent="#1baf7a"
           icon={<Clock className="h-4 w-4" />}
@@ -56,7 +53,7 @@ export default async function ToolsPage({
       </div>
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-        <Card title="Top công cụ theo lượt gọi" className="xl:col-span-1">
+        <Card title={t("tools.topByCalls")} className="xl:col-span-1">
           <RankBarChart
             data={tools.slice(0, 12).map((t) => ({ label: t.toolName, value: t.total }))}
             valueFormat="number"
@@ -64,24 +61,24 @@ export default async function ToolsPage({
         </Card>
 
         <Card
-          title="Chi tiết theo công cụ"
+          title={t("tools.detail")}
           className="xl:col-span-2"
           action={<ExportLink href={`/api/export/tools?range=${r}`} />}
         >
           {tools.length === 0 ? (
-            <p className="text-sm text-[var(--text-muted)]">Chưa có dữ liệu</p>
+            <p className="text-sm text-[var(--text-muted)]">{t("tools.noData")}</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full min-w-[520px] text-sm">
                 <thead>
                   <tr className="border-b border-[var(--border)] text-left text-xs uppercase tracking-wide text-[var(--text-muted)]">
-                    <th className="py-2 pr-4 font-medium">Công cụ</th>
-                    <th className="py-2 pr-4 text-right font-medium">Lượt gọi</th>
-                    <th className="py-2 pr-4 text-right font-medium">Thành công</th>
-                    <th className="py-2 pr-4 text-right font-medium">Lỗi</th>
-                    <th className="py-2 pr-4 text-right font-medium">Tỷ lệ lỗi</th>
+                    <th className="py-2 pr-4 font-medium">{t("tools.colTool")}</th>
+                    <th className="py-2 pr-4 text-right font-medium">{t("tools.colCalls")}</th>
+                    <th className="py-2 pr-4 text-right font-medium">{t("tools.colSuccess")}</th>
+                    <th className="py-2 pr-4 text-right font-medium">{t("tools.colError")}</th>
+                    <th className="py-2 pr-4 text-right font-medium">{t("tools.errorRate")}</th>
                     <th className="py-2 text-right font-medium">
-                      <span className="inline-flex items-center gap-1">Thời gian TB<InfoTip label="Thời gian chạy trung bình của mỗi lượt gọi công cụ." /></span>
+                      <span className="inline-flex items-center gap-1">{t("tools.avgTime")}<InfoTip label={t("tools.avgTimeTip")} /></span>
                     </th>
                   </tr>
                 </thead>

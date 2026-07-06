@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Sun, Monitor, Moon } from "lucide-react";
 import { ACCENTS, DENSITIES, THEMES, setAccent, setDensity, setTheme } from "./appearance/prefs";
+import { useT } from "@/i18n/I18nProvider";
 
 type Item = {
   label: string;
@@ -20,52 +21,28 @@ const THEME_ICONS: Record<string, ReactNode> = {
   dark: <Moon className="h-4 w-4" aria-hidden />,
 };
 
-// Appearance quick-actions: run a preference setter, then close the palette.
-const APPEARANCE: Item[] = [
-  ...THEMES.map((t) => ({
-    label: `Giao diện: ${t.label}`,
-    group: "Giao diện",
-    icon: THEME_ICONS[t.key],
-    onSelect: () => setTheme(t.key),
-  })),
-  ...ACCENTS.map((a) => ({
-    label: `Màu nhấn: ${a.label}`,
-    group: "Giao diện",
-    icon: (
-      <span
-        className="h-3 w-3 rounded-full ring-1 ring-black/10 dark:ring-white/15"
-        style={{ backgroundColor: a.color }}
-        aria-hidden
-      />
-    ),
-    onSelect: () => setAccent(a.key),
-  })),
-  ...DENSITIES.map((d) => ({
-    label: `Mật độ: ${d.label}`,
-    group: "Giao diện",
-    onSelect: () => setDensity(d.key),
-  })),
-];
-
-const PAGES: Item[] = [
-  { label: "Tổng quan", href: "/", group: "Trang" },
-  { label: "Cá nhân", href: "/me", group: "Trang" },
-  { label: "Xếp hạng", href: "/rankings", group: "Trang" },
-  { label: "Model", href: "/models", group: "Trang" },
-  { label: "Công cụ", href: "/tools", group: "Trang" },
-  { label: "Áp dụng", href: "/adoption", group: "Trang" },
-  { label: "Hiệu quả & Chi phí", href: "/roi", group: "Trang" },
-  { label: "Dự án", href: "/projects", group: "Trang" },
-  { label: "Phân tích sâu", href: "/insights", group: "Trang" },
-  { label: "Thư viện phiên", href: "/sessions", group: "Trang" },
-  { label: "Thư viện (prompt & skill)", href: "/library", group: "Trang" },
-  { label: "Thư viện của tôi", href: "/library/me", group: "Trang" },
-  { label: "Phiên trực tuyến", href: "/live", group: "Trang" },
-  { label: "Quản trị", href: "/admin", group: "Trang" },
+// Navigable pages, by i18n label key (translated at render time).
+const PAGE_LINKS: { labelKey: string; href: string }[] = [
+  { labelKey: "nav.overview", href: "/" },
+  { labelKey: "nav.me", href: "/me" },
+  { labelKey: "nav.rankings", href: "/rankings" },
+  { labelKey: "nav.models", href: "/models" },
+  { labelKey: "nav.tools", href: "/tools" },
+  { labelKey: "nav.adoption", href: "/adoption" },
+  { labelKey: "nav.roi", href: "/roi" },
+  { labelKey: "nav.insights", href: "/insights" },
+  { labelKey: "nav.sessions", href: "/sessions" },
+  { labelKey: "nav.library", href: "/library" },
+  { labelKey: "chrome.libraryMe", href: "/library/me" },
+  { labelKey: "nav.live", href: "/live" },
+  { labelKey: "nav.departments", href: "/departments" },
+  { labelKey: "nav.integrate", href: "/integrate" },
+  { labelKey: "nav.admin", href: "/admin" },
 ];
 
 export function CommandPalette() {
   const router = useRouter();
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
   const [remote, setRemote] = useState<Item[]>([]);
@@ -117,14 +94,13 @@ export function CommandPalette() {
         if (!res.ok) return;
         const d = await res.json();
         const items: Item[] = [
-          ...d.users.map((u: { id: string; name: string; email: string }) => ({ label: u.name, sub: u.email, href: `/users/${u.id}`, group: "Người dùng" })),
-          ...d.teams.map((t: { id: string; name: string }) => ({ label: t.name, href: `/teams/${t.id}`, group: "Nhóm" })),
-          ...d.departments.map((x: { id: string; name: string }) => ({ label: x.name, href: `/departments/${x.id}`, group: "Bộ phận" })),
+          ...d.users.map((u: { id: string; name: string; email: string }) => ({ label: u.name, sub: u.email, href: `/users/${u.id}`, group: t("chrome.groupUser") })),
+          ...d.departments.map((x: { id: string; name: string }) => ({ label: x.name, href: `/departments/${x.id}`, group: t("chrome.groupDepartment") })),
           ...d.sessions.map((s: { id: string; projectLabel: string | null; note: string | null }) => ({
-            label: s.projectLabel ?? "(phiên)",
+            label: s.projectLabel ?? "—",
             sub: s.note ?? undefined,
             href: `/sessions/${s.id}`,
-            group: "Phiên",
+            group: t("chrome.groupSession"),
           })),
         ];
         setRemote(items);
@@ -134,14 +110,44 @@ export function CommandPalette() {
       }
     }, 200);
     return () => clearTimeout(id);
-  }, [q, open]);
+  }, [q, open, t]);
+
+  // Local (translated) entries: pages + appearance quick-actions.
+  const local = useMemo<Item[]>(() => {
+    const pages: Item[] = PAGE_LINKS.map((p) => ({ label: t(p.labelKey), href: p.href, group: t("chrome.groupPage") }));
+    const appearance: Item[] = [
+      ...THEMES.map((th) => ({
+        label: `${t("chrome.appearance")}: ${th.label}`,
+        group: t("chrome.appearance"),
+        icon: THEME_ICONS[th.key],
+        onSelect: () => setTheme(th.key),
+      })),
+      ...ACCENTS.map((a) => ({
+        label: `${t("chrome.accent")}: ${a.label}`,
+        group: t("chrome.appearance"),
+        icon: (
+          <span
+            className="h-3 w-3 rounded-full ring-1 ring-black/10 dark:ring-white/15"
+            style={{ backgroundColor: a.color }}
+            aria-hidden
+          />
+        ),
+        onSelect: () => setAccent(a.key),
+      })),
+      ...DENSITIES.map((d) => ({
+        label: `${t("chrome.density")}: ${d.label}`,
+        group: t("chrome.appearance"),
+        onSelect: () => setDensity(d.key),
+      })),
+    ];
+    return [...pages, ...appearance];
+  }, [t]);
 
   const items = useMemo(() => {
     const term = q.trim().toLowerCase();
-    const local = [...PAGES, ...APPEARANCE];
     const filtered = term ? local.filter((p) => p.label.toLowerCase().includes(term)) : local;
     return [...filtered, ...remote];
-  }, [q, remote]);
+  }, [q, local, remote]);
 
   function go(item: Item | undefined) {
     if (!item) return;
@@ -184,11 +190,11 @@ export function CommandPalette() {
               go(items[active]);
             }
           }}
-          placeholder="Tìm trang, người dùng, nhóm, dự án, phiên…"
+          placeholder={t("chrome.palettePlaceholder")}
           className="w-full border-b border-[var(--border)] bg-transparent px-4 py-3 text-sm outline-none"
         />
         <div className="max-h-[50vh] overflow-y-auto py-1">
-          {items.length === 0 && <div className="px-4 py-6 text-center text-sm text-[var(--text-muted)]">Không có kết quả</div>}
+          {items.length === 0 && <div className="px-4 py-6 text-center text-sm text-[var(--text-muted)]">{t("chrome.paletteNoResults")}</div>}
           {items.map((item, i) => (
             <button
               key={`${item.group}-${item.label}-${i}`}
@@ -210,7 +216,7 @@ export function CommandPalette() {
           ))}
         </div>
         <div className="border-t border-[var(--border)] px-4 py-2 text-[11px] text-[var(--text-muted)]">
-          ↑↓ di chuyển · ↵ mở · Esc đóng · ⌘/Ctrl+K bật tắt
+          {t("chrome.paletteHints")}
         </div>
       </div>
     </div>

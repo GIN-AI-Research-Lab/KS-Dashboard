@@ -11,10 +11,12 @@ import {
   setAccent,
   setDensity,
 } from "@/components/appearance/prefs";
+import { useT } from "@/i18n/I18nProvider";
 
 const THEME_ICONS: Record<string, LucideIcon> = { light: Sun, system: Monitor, dark: Moon };
 
 export function AppearanceMenu() {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -53,7 +55,7 @@ export function AppearanceMenu() {
     <div ref={ref} className="relative">
       <button
         type="button"
-        aria-label="Tuỳ chỉnh giao diện"
+        aria-label={t("chrome.appearanceAria")}
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
         className={`flex h-9 w-9 items-center justify-center rounded-lg border transition-colors ${
@@ -71,7 +73,7 @@ export function AppearanceMenu() {
           className="absolute right-0 z-50 mt-2 w-64 rounded-xl border border-[var(--border)] bg-[var(--surface-raised)] p-3 shadow-[var(--shadow-md)]"
         >
           <div className="mb-1.5 text-[11px] font-medium uppercase tracking-[0.08em] text-[var(--text-muted)]">
-            Giao diện
+            {t("chrome.appearance")}
           </div>
           <div className="mb-3 flex gap-1 rounded-lg border border-[var(--border)] p-0.5">
             {THEMES.map((t) => {
@@ -96,7 +98,7 @@ export function AppearanceMenu() {
           </div>
 
           <div className="mb-1.5 text-[11px] font-medium uppercase tracking-[0.08em] text-[var(--text-muted)]">
-            Màu nhấn
+            {t("chrome.accent")}
           </div>
           <div className="mb-3 flex gap-2">
             {ACCENTS.map((a) => {
@@ -122,7 +124,7 @@ export function AppearanceMenu() {
           </div>
 
           <div className="mb-1.5 text-[11px] font-medium uppercase tracking-[0.08em] text-[var(--text-muted)]">
-            Mật độ
+            {t("chrome.density")}
           </div>
           <div className="flex gap-1 rounded-lg border border-[var(--border)] p-0.5">
             {DENSITIES.map((d) => {

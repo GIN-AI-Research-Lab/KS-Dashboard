@@ -1,19 +1,15 @@
 "use client";
 
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { useT } from "@/i18n/I18nProvider";
 
-const OPTIONS: { key: string; label: string }[] = [
-  { key: "24h", label: "24h" },
-  { key: "7d", label: "7 ngày" },
-  { key: "30d", label: "30 ngày" },
-  { key: "90d", label: "90 ngày" },
-  { key: "all", label: "Tất cả" },
-];
+const OPTION_KEYS = ["24h", "7d", "30d", "90d", "all"] as const;
 
 export function RangeSelector({ defaultRange = "30d" }: { defaultRange?: string }) {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
+  const t = useT();
   const current = params.get("range") ?? defaultRange;
 
   function setRange(key: string) {
@@ -24,17 +20,17 @@ export function RangeSelector({ defaultRange = "30d" }: { defaultRange?: string 
 
   return (
     <div className="inline-flex rounded-lg border border-[var(--border)] bg-[var(--surface)] p-0.5">
-      {OPTIONS.map((opt) => (
+      {OPTION_KEYS.map((key) => (
         <button
-          key={opt.key}
-          onClick={() => setRange(opt.key)}
+          key={key}
+          onClick={() => setRange(key)}
           className={`rounded-md px-2.5 py-1 text-xs font-medium transition-all duration-150 active:scale-95 ${
-            current === opt.key
+            current === key
               ? "bg-accent/10 text-accent"
               : "text-[var(--text-secondary)] hover:bg-black/5 hover:text-[var(--text-primary)] dark:hover:bg-white/10"
           }`}
         >
-          {opt.label}
+          {t(`ranges.${key}`)}
         </button>
       ))}
     </div>
