@@ -2,8 +2,6 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useState } from "react";
-import type { Role } from "@prisma/client";
 import {
   LayoutDashboard,
   User,
@@ -12,7 +10,6 @@ import {
   Wrench,
   TrendingUp,
   DollarSign,
-  FolderKanban,
   FlaskConical,
   Library,
   Lightbulb,
@@ -22,14 +19,21 @@ import {
   Building2,
   BookOpen,
   CalendarCheck,
-  ChevronDown,
   PanelLeftClose,
   PanelLeftOpen,
   type LucideIcon,
 } from "lucide-react";
 import { useSidebar } from "@/components/sidebar/SidebarContext";
+import { useT } from "@/i18n/I18nProvider";
 
-type OrgTree = { id: string; name: string; teams: { id: string; name: string }[] }[];
+/** Serializable menu item passed from the server (see resolveSidebarItems). */
+export type SidebarItem = {
+  key: string;
+  href: string;
+  icon: string;
+  labelKey: string;
+  exact?: boolean;
+};
 
 const ICONS: Record<string, LucideIcon> = {
   overview: LayoutDashboard,
@@ -39,7 +43,7 @@ const ICONS: Record<string, LucideIcon> = {
   tools: Wrench,
   adoption: TrendingUp,
   roi: DollarSign,
-  projects: FolderKanban,
+  departments: Building2,
   insights: FlaskConical,
   sessions: Library,
   library: Lightbulb,
@@ -50,23 +54,16 @@ const ICONS: Record<string, LucideIcon> = {
   admin: Settings,
 };
 
-function NavLink({
-  href,
-  label,
-  icon: Icon,
-  exact,
-}: {
-  href: string;
-  label: string;
-  icon: LucideIcon;
-  exact?: boolean;
-}) {
+function NavLink({ item }: { item: SidebarItem }) {
+  const t = useT();
   const pathname = usePathname();
   const range = useSearchParams().get("range");
   const { collapsed, setMobileOpen } = useSidebar();
-  const active = exact ? pathname === href : pathname.startsWith(href);
+  const Icon = ICONS[item.icon] ?? LayoutDashboard;
+  const label = t(item.labelKey);
+  const active = item.exact ? pathname === item.href : pathname.startsWith(item.href);
   // Carry the active time range across navigation so it doesn't reset per page.
-  const target = range ? `${href}?range=${range}` : href;
+  const target = range ? `${item.href}?range=${range}` : item.href;
   return (
     <Link
       href={target}
@@ -90,11 +87,8 @@ function NavLink({
   );
 }
 
-export function Sidebar({ orgTree, role }: { orgTree: OrgTree; role: Role }) {
-  const [orgOpen, setOrgOpen] = useState(true);
-  const pathname = usePathname();
-  const range = useSearchParams().get("range");
-  const withRange = (h: string) => (range ? `${h}?range=${range}` : h);
+export function Sidebar({ items }: { items: SidebarItem[] }) {
+  const t = useT();
   const { collapsed, toggleCollapsed, mobileOpen, setMobileOpen } = useSidebar();
 
   return (
@@ -122,85 +116,26 @@ export function Sidebar({ orgTree, role }: { orgTree: OrgTree; role: Role }) {
           </div>
           <div className={collapsed ? "md:hidden" : ""}>
             <div className="text-sm font-semibold leading-tight tracking-tight">KS Dashboard</div>
-            <div className="text-[11px] leading-tight text-[var(--text-muted)]">Claude usage analytics</div>
+            <div className="text-[11px] leading-tight text-[var(--text-muted)]">{t("nav.brandSubtitle")}</div>
           </div>
         </div>
 
         <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto">
-          <NavLink href="/" label="Tổng quan" icon={ICONS.overview} exact />
-          <NavLink href="/me" label="Cá nhân" icon={ICONS.me} />
-          <NavLink href="/rankings" label="Xếp hạng" icon={ICONS.rankings} />
-          <NavLink href="/models" label="Model" icon={ICONS.models} />
-          <NavLink href="/tools" label="Công cụ" icon={ICONS.tools} />
-          <NavLink href="/adoption" label="Áp dụng" icon={ICONS.adoption} />
-          <NavLink href="/roi" label="Hiệu quả & Chi phí" icon={ICONS.roi} />
-          <NavLink href="/projects" label="Dự án" icon={ICONS.projects} />
-          <NavLink href="/insights" label="Phân tích sâu" icon={ICONS.insights} />
-          <NavLink href="/sessions" label="Thư viện phiên" icon={ICONS.sessions} />
-          <NavLink href="/library" label="Thư viện" icon={ICONS.library} />
-          <NavLink href="/integrate" label="Tích hợp Claude" icon={ICONS.integrate} />
-          <NavLink href="/live" label="Phiên trực tuyến" icon={ICONS.live} />
-          <NavLink href="/summary" label="Tóm tắt tuần" icon={ICONS.summary} />
-          <NavLink href="/glossary" label="Thuật ngữ" icon={ICONS.glossary} />
-
-          <div className={collapsed ? "md:hidden" : ""}>
-            <button
-              onClick={() => setOrgOpen((v) => !v)}
-              className="mt-3 flex w-full items-center justify-between rounded-lg px-3 py-2 text-xs font-semibold uppercase tracking-[0.06em] text-[var(--text-muted)] transition-colors hover:text-[var(--text-secondary)]"
-            >
-              <span className="flex items-center gap-2">
-                <Building2 className="h-[18px] w-[18px]" /> Bộ phận / Nhóm
-              </span>
-              <ChevronDown
-                className={`h-4 w-4 transition-transform duration-200 ${orgOpen ? "" : "-rotate-90"}`}
-              />
-            </button>
-            {orgOpen && (
-              <div className="ml-2 flex flex-col gap-0.5 border-l border-[var(--border)] pl-3">
-                {orgTree.map((dept) => (
-                  <div key={dept.id}>
-                    <Link
-                      href={withRange(`/departments/${dept.id}`)}
-                      onClick={() => setMobileOpen(false)}
-                      className={`block truncate rounded-md px-2 py-1.5 text-sm transition-colors ${
-                        pathname === `/departments/${dept.id}`
-                          ? "font-medium text-[var(--accent)]"
-                          : "text-[var(--text-secondary)] hover:bg-black/[0.04] hover:text-[var(--text-primary)] dark:hover:bg-white/[0.06]"
-                      }`}
-                    >
-                      {dept.name}
-                    </Link>
-                    {dept.teams.map((team) => (
-                      <Link
-                        key={team.id}
-                        href={withRange(`/teams/${team.id}`)}
-                        onClick={() => setMobileOpen(false)}
-                        className={`ml-3 block truncate rounded-md px-2 py-1 text-[13px] transition-colors ${
-                          pathname === `/teams/${team.id}`
-                            ? "font-medium text-[var(--accent)]"
-                            : "text-[var(--text-muted)] hover:bg-black/[0.04] hover:text-[var(--text-secondary)] dark:hover:bg-white/[0.06]"
-                        }`}
-                      >
-                        · {team.name}
-                      </Link>
-                    ))}
-                  </div>
-                ))}
+          {items.map((item, i) => {
+            // Visually separate the admin console from the main nav.
+            const dividerBefore = item.key === "admin" && i > 0;
+            return (
+              <div key={item.key} className={dividerBefore ? "mt-3 border-t border-[var(--border)] pt-3" : undefined}>
+                <NavLink item={item} />
               </div>
-            )}
-          </div>
-
-          {role === "ADMIN" && (
-            <div className="mt-3 border-t border-[var(--border)] pt-3">
-              <NavLink href="/admin" label="Quản trị" icon={ICONS.admin} />
-            </div>
-          )}
+            );
+          })}
         </nav>
 
         <button
           onClick={toggleCollapsed}
-          title={collapsed ? "Mở rộng thanh bên" : "Thu gọn thanh bên"}
-          aria-label={collapsed ? "Mở rộng thanh bên" : "Thu gọn thanh bên"}
+          title={collapsed ? t("nav.expand") : t("nav.collapse")}
+          aria-label={collapsed ? t("nav.expand") : t("nav.collapse")}
           className={`mt-2 hidden items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-black/[0.04] hover:text-[var(--text-primary)] md:flex dark:hover:bg-white/[0.06] ${
             collapsed ? "md:justify-center" : ""
           }`}
@@ -210,7 +145,7 @@ export function Sidebar({ orgTree, role }: { orgTree: OrgTree; role: Role }) {
           ) : (
             <PanelLeftClose className="h-[18px] w-[18px] shrink-0" strokeWidth={2} />
           )}
-          <span className={collapsed ? "md:hidden" : ""}>Thu gọn</span>
+          <span className={collapsed ? "md:hidden" : ""}>{t("nav.collapse")}</span>
         </button>
       </aside>
     </>

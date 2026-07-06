@@ -3,13 +3,18 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { AdminPanel } from "@/components/admin/AdminPanel";
 import { IngestionHealth } from "@/components/admin/IngestionHealth";
+import { MenuSettings, type MenuSettingRow } from "@/components/admin/MenuSettings";
+import { Card } from "@/components/ui/Card";
 import { getIngestionHealth } from "@/lib/stats";
+import { getMenuSettings } from "@/lib/menu-config";
+import { resolveMenuItems, type ResolvedMenuItem } from "@/lib/menu";
+import { getT } from "@/i18n/server";
 
 export default async function AdminPage() {
   const session = await auth();
   if (session?.user.role !== "ADMIN") redirect("/");
 
-  const [departments, teams, users, health] = await Promise.all([
+  const [departments, teams, users, health, menuSettings, t] = await Promise.all([
     prisma.department.findMany({ orderBy: { name: "asc" }, include: { teams: true, users: true } }),
     prisma.team.findMany({ orderBy: { name: "asc" }, include: { department: true, users: true } }),
     prisma.user.findMany({
@@ -25,7 +30,20 @@ export default async function AdminPage() {
       },
     }),
     getIngestionHealth(),
+    getMenuSettings(),
+    getT(),
   ]);
+
+  const toMenuRow = (m: ResolvedMenuItem): MenuSettingRow => ({
+    key: m.key,
+    labelKey: m.labelKey,
+    href: m.href,
+    visible: m.visible,
+    restricted: !!m.roles,
+    alwaysAccessible: !!m.alwaysAccessible,
+  });
+  const menuItems = resolveMenuItems("ADMIN", menuSettings).map(toMenuRow);
+  const menuDefaults = resolveMenuItems("ADMIN", {}).map(toMenuRow);
 
   return (
     <div className="stagger flex flex-col gap-6">
@@ -60,6 +78,10 @@ export default async function AdminPage() {
           createdAt: u.createdAt.toISOString(),
         }))}
       />
+
+      <Card title={t("settings.title")}>
+        <MenuSettings initialItems={menuItems} defaultItems={menuDefaults} />
+      </Card>
     </div>
   );
 }

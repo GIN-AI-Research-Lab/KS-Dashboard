@@ -86,6 +86,8 @@ model User {
 
   note String? // free-text admin note about this employee (on leave, new hire, ...)
 
+  locale String? // UI language preference: "vi" | "en" | "ja". null = app default (vi)
+
   sessions         ClaudeSession[]
   turns            Turn[]
   toolCalls        ToolCall[]
@@ -243,6 +245,13 @@ model LibraryItem {
   title      String
   body       String
   tags       String? // comma-separated
+  // For kind=SKILL only: maps 1-1 onto a Claude Code skill folder.
+  // `skillName` is the kebab-case folder name + `/name` invocation and must be
+  // globally unique so starred skills never collide on disk. PROMPT items leave
+  // it null (Postgres allows many NULLs under a unique index). `skillDescription`
+  // becomes the SKILL.md frontmatter `description`.
+  skillName        String? @unique
+  skillDescription String?
   visibility Visibility      @default(PUBLIC)
   authorId   String
   author     User            @relation(fields: [authorId], references: [id], onDelete: Cascade)
@@ -295,4 +304,15 @@ model LibraryBookmark {
 
   @@unique([itemId, userId])
   @@index([itemId])
+}
+
+// Admin-controlled, global sidebar navigation config. One row per menu `key`
+// (see src/lib/menu.ts MENU_ITEMS). Only rows that override a code default need
+// to exist; missing keys fall back to the registry defaults. Role gating and
+// "always accessible" flags live in code, not here.
+model MenuSetting {
+  key       String   @id // MenuKey from src/lib/menu.ts
+  visible   Boolean
+  sortOrder Int
+  updatedAt DateTime @updatedAt
 }
