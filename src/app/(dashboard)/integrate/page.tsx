@@ -1,12 +1,38 @@
+import { stat } from "node:fs/promises";
+import path from "node:path";
+import { auth } from "@/auth";
+import { prisma } from "@/lib/db";
 import { Card } from "@/components/ui/Card";
 import { ExportLink } from "@/components/ExportLink";
+import { ApiKeyBox } from "@/components/ApiKeyBox";
 
-export default function IntegratePage() {
+async function fileExists(rel: string): Promise<boolean> {
+  try {
+    await stat(path.join(process.cwd(), rel));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export default async function IntegratePage() {
+  const session = await auth();
+  const [user, hasExe, hasMsi] = await Promise.all([
+    prisma.user.findUnique({ where: { id: session!.user.id }, select: { apiKey: true } }),
+    fileExists("deploy/ks-widget-setup.exe"),
+    fileExists("deploy/ks-widget-setup.msi"),
+  ]);
+  const installer = hasExe
+    ? { file: "ks-widget-setup.exe", label: "Tải bộ cài (.exe)" }
+    : hasMsi
+      ? { file: "ks-widget-setup.msi", label: "Tải bộ cài (.msi)" }
+      : null;
+
   return (
     <div className="stagger mx-auto flex w-full max-w-3xl flex-col gap-6">
       <div className="hero-panel relative flex flex-wrap items-center justify-between gap-4 overflow-hidden rounded-2xl border border-[var(--border)] p-6 shadow-[var(--shadow-xs)]">
         <div className="min-w-0">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)]/60 px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-[0.1em] text-[var(--text-secondary)] backdrop-blur">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)]/60 px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-[0.1em] text-[var(--text-secondary)]">
             <span className="gradient-brand h-1.5 w-1.5 rounded-full" />
             TÍCH HỢP
           </span>
@@ -17,7 +43,7 @@ export default function IntegratePage() {
         </div>
       </div>
 
-      <Card title="Cách 1 — Cá nhân (tự cài, không cần admin)">
+      <Card title="Cài đặt cho cá nhân (không cần admin)">
         <ol className="flex list-decimal flex-col gap-2 pl-5 text-sm">
           <li>Tải script và lưu vào máy:
             <div className="mt-1"><ExportLink href="/api/download/setup-telemetry.ps1" label="Tải setup-telemetry.ps1" /></div>
@@ -33,28 +59,54 @@ export default function IntegratePage() {
         </p>
       </Card>
 
-      <Card title="Cách 2 — IT triển khai toàn công ty (cần admin)">
-        <ol className="flex list-decimal flex-col gap-2 pl-5 text-sm">
-          <li>Tải script (self-elevate admin, áp cho <b>CLI + VS Code + WSL</b> trên máy):
-            <div className="mt-1"><ExportLink href="/api/download/install-managed-settings.ps1" label="Tải install-managed-settings.ps1" /></div>
-          </li>
-          <li>Chạy (chuột phải → Run with PowerShell, hoặc):
-            <pre className="mt-1 overflow-x-auto rounded-lg bg-black/[0.04] p-2 font-mono text-xs dark:bg-white/5">powershell -ExecutionPolicy Bypass -File install-managed-settings.ps1</pre>
-          </li>
-          <li>Đẩy hàng loạt (GPO/Intune): chạy <code className="font-mono">-DumpJson</code> để sinh <code className="font-mono">managed-settings.json</code> rồi đẩy tới <code className="font-mono">C:\Program Files\ClaudeCode\</code> cho mọi máy.</li>
-          <li>Người dùng thoát hẳn &amp; mở lại Claude Code / VS Code.</li>
-        </ol>
-        <p className="mt-3 text-xs text-[var(--text-muted)]">
-          Cách này người dùng <b>không thể tắt</b> và không để lại file lạ trong project.
-        </p>
-      </Card>
-
       <Card title="Lưu ý quan trọng">
         <ul className="flex list-disc flex-col gap-1.5 pl-5 text-sm text-[var(--text-secondary)]">
           <li><b>Đổi endpoint khi địa chỉ dashboard thay đổi</b>: sửa biến <code className="font-mono">$ENDPOINT</code> đầu file <code className="font-mono">.ps1</code> rồi phát lại cho mọi người chạy lại.</li>
           <li>Endpoint phải là địa chỉ mà <b>máy nhân viên truy cập được</b> (cùng LAN, hoặc URL công khai qua tunnel/domain).</li>
           <li>Dashboard gán dữ liệu theo <b>email tài khoản Claude</b> (khớp phần trước dấu <code className="font-mono">@</code>). Bạn cần đã có tài khoản trong hệ thống.</li>
         </ul>
+      </Card>
+
+      <Card title="Widget desktop (tuỳ chọn)">
+        <p className="text-sm text-[var(--text-secondary)]">
+          Xem nhanh số liệu Claude Code của <b>riêng bạn</b> ngay trên desktop: ẩn dưới khay hệ thống,
+          bấm để bật lên cạnh taskbar, hoặc ghim nổi luôn trên màn hình.
+        </p>
+        <p className="mt-2 text-sm text-[var(--text-secondary)]">
+          Widget <b>chạy độc lập</b> — đọc trực tiếp dữ liệu Claude Code trên chính máy này
+          (<code className="font-mono">~/.claude/projects</code>), chỉ đo <b>hôm nay</b> và tự reset lúc
+          nửa đêm. Không cần kết nối dashboard, không cần API key.
+        </p>
+
+        {installer ? (
+          <ol className="mt-3 flex list-decimal flex-col gap-2 pl-5 text-sm">
+            <li>Tải và chạy bộ cài:
+              <div className="mt-1"><ExportLink href={`/api/download/${installer.file}`} label={installer.label} /></div>
+            </li>
+            <li>Mở widget bất kỳ lúc nào từ <b>khay hệ thống</b> (góc phải taskbar) — nó tự hiển thị số liệu hôm nay của bạn.</li>
+          </ol>
+        ) : (
+          <p className="mt-3 rounded-lg border border-[var(--border)] bg-black/[0.03] p-3 text-xs text-[var(--text-muted)] dark:bg-white/5">
+            Chưa có bản cài sẵn. Admin build từ mã nguồn thư mục <code className="font-mono">widget/</code> bằng{" "}
+            <code className="font-mono">npm run tauri build</code>, rồi đặt file cài vào{" "}
+            <code className="font-mono">deploy/ks-widget-setup.exe</code> — nút tải sẽ tự xuất hiện ở đây.
+          </p>
+        )}
+
+      </Card>
+
+      <Card title="API key cá nhân">
+        <p className="text-sm text-[var(--text-secondary)]">
+          Dùng cho các tích hợp xác thực bằng <code className="font-mono">Bearer</code> (ví dụ plugin ghi dữ liệu).
+          Cách cài telemetry ở trên <b>không</b> cần key này, và widget desktop cũng không cần.
+        </p>
+        <div className="mt-3">
+          {user?.apiKey ? (
+            <ApiKeyBox initialKey={user.apiKey} />
+          ) : (
+            <p className="text-xs text-[var(--text-muted)]">Không lấy được API key. Thử tải lại trang.</p>
+          )}
+        </div>
       </Card>
 
       <Card title="Kiểm tra">

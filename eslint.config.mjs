@@ -15,6 +15,9 @@ const eslintConfig = defineConfig([
     // Standalone CommonJS Node scripts invoked directly by Claude Code hooks
     // (`node script.js`), not part of the Next.js/TypeScript app.
     "claude-code-plugin/**",
+    // The desktop widget is a self-contained Tauri app with its own toolchain,
+    // tsconfig and node_modules -- not part of the Next.js build.
+    "widget/**",
   ]),
 ]);
 

@@ -205,22 +205,22 @@ OTel thay vì hook. Đã code + test thật thành công:
 - **BẪY: `next dev -H 0.0.0.0` làm Next.js 16 Turbopack 404 TOÀN BỘ route** (kể cả `/`). Bỏ `-H` đi thì
   chạy đúng, và Next 16 dev **mặc định đã bind ra LAN** rồi (log hiện `Network: http://<lan-ip>:4000`).
   → **Không dùng `-H 0.0.0.0`.**
-- **nip.io hoạt động tốt** (đã test end-to-end: `http://192.168.1.93.nip.io:4000/login` → 200, POST
+- **nip.io hoạt động tốt** (đã test end-to-end: `http://192.168.1.92.nip.io:4000/login` → 200, POST
   `/api/otel/logs` → tạo session gán đúng user). nip.io chỉ là DNS wildcard: `<ip>.nip.io` → `<ip>`.
 - **Đã bake URL nip.io:4000 vào:** `.claude/settings.local.json` (OTel endpoint, máy này) +
   `claude-code-plugin/scripts/config.js` `DEFAULT_API_ENDPOINT` (đường CLI). Bump plugin `1.0.6 → 1.0.7`,
   đã sync vào cache.
 - **`src/auth.ts`: thêm `trustHost: true`** để đăng nhập hoạt động khi truy cập qua hostname nip.io (không
   chỉ localhost). An toàn vì đây là mạng nội bộ tin cậy.
-- **CẢNH BÁO QUAN TRỌNG về "public":** `192.168.1.93` là **IP LAN** → chỉ máy **cùng mạng nội bộ** mới
+- **CẢNH BÁO QUAN TRỌNG về "public":** `192.168.1.92` là **IP LAN** → chỉ máy **cùng mạng nội bộ** mới
   vào được. nip.io KHÔNG làm nó public. Để người ở mạng khác / internet truy cập thật cần: (a) tunnel như
   `cloudflared`/`ngrok` (cho URL https public, KHÔNG cần mở router — cách khuyến nghị cho "public dev"),
   hoặc (b) IP public + port-forward trên router. Ngoài ra IP LAN có thể đổi (DHCP) → nên đặt static IP /
   DHCP reservation, nếu không URL bake cứng sẽ hỏng. **Nếu chuyển sang tunnel/domain thật, phải sửa lại URL
   ở 2 chỗ đã bake + settings client.**
 - **Setup máy khác (client):** thêm vào `~/.claude/settings.json` của họ 4 biến OTel trỏ
-  `OTEL_EXPORTER_OTLP_LOGS_ENDPOINT=http://192.168.1.93.nip.io:4000/api/otel/logs`, restart hẳn VS Code.
-  Xem dashboard tại `http://192.168.1.93.nip.io:4000` (cần có tài khoản đăng nhập).
+  `OTEL_EXPORTER_OTLP_LOGS_ENDPOINT=http://192.168.1.92.nip.io:4000/api/otel/logs`, restart hẳn VS Code.
+  Xem dashboard tại `http://192.168.1.92.nip.io:4000` (cần có tài khoản đăng nhập).
 
 ## Quyết định kiến trúc đã chốt với user (không đổi, đã code đúng theo)
 
