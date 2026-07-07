@@ -34,41 +34,53 @@ function renderSetupTelemetry(base: string): string {
 
 $ErrorActionPreference = "Stop"
 
-$ENDPOINT = "${endpoint}"
-$METRICS_ENDPOINT = $ENDPOINT -replace '/logs$', '/metrics'
+try {
+  $ENDPOINT = "${endpoint}"
+  $METRICS_ENDPOINT = $ENDPOINT -replace '/logs$', '/metrics'
 
-$dir = Join-Path $HOME ".claude"
-$path = Join-Path $dir "settings.json"
-if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir | Out-Null }
+  $dir = Join-Path $HOME ".claude"
+  $path = Join-Path $dir "settings.json"
+  if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir | Out-Null }
 
-if (Test-Path $path) {
-  $settings = Get-Content $path -Raw | ConvertFrom-Json
-} else {
-  $settings = [pscustomobject]@{}
+  if (Test-Path $path) {
+    $settings = Get-Content $path -Raw | ConvertFrom-Json
+  } else {
+    $settings = [pscustomobject]@{}
+  }
+  if (-not $settings.PSObject.Properties.Match("env").Count) {
+    $settings | Add-Member -NotePropertyName env -NotePropertyValue ([pscustomobject]@{}) -Force
+  }
+
+  $vars = @{
+    "CLAUDE_CODE_ENABLE_TELEMETRY"                       = "1"
+    "OTEL_LOG_USER_PROMPTS"                              = "0"
+    "OTEL_LOGS_EXPORTER"                                 = "otlp"
+    "OTEL_METRICS_EXPORTER"                              = "otlp"
+    "OTEL_EXPORTER_OTLP_PROTOCOL"                        = "http/json"
+    "OTEL_EXPORTER_OTLP_LOGS_ENDPOINT"                   = $ENDPOINT
+    "OTEL_EXPORTER_OTLP_METRICS_ENDPOINT"               = $METRICS_ENDPOINT
+    "OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE" = "delta"
+  }
+  foreach ($k in $vars.Keys) {
+    $settings.env | Add-Member -NotePropertyName $k -NotePropertyValue $vars[$k] -Force
+  }
+
+  $settings | ConvertTo-Json -Depth 20 | Set-Content $path -Encoding utf8
+
+  Write-Host ""
+  Write-Host "OK. Telemetry env written to: $path" -ForegroundColor Green
+  Write-Host "Endpoint: $ENDPOINT"
+  Write-Host ""
+  Write-Host "NEXT: fully quit VS Code / Claude Code (not just Reload Window), reopen, then chat once." -ForegroundColor Yellow
+} catch {
+  Write-Host ""
+  Write-Host "FAILED to set up telemetry:" -ForegroundColor Red
+  Write-Host $_.Exception.Message -ForegroundColor DarkGray
 }
-if (-not $settings.PSObject.Properties.Match("env").Count) {
-  $settings | Add-Member -NotePropertyName env -NotePropertyValue ([pscustomobject]@{}) -Force
-}
 
-$vars = @{
-  "CLAUDE_CODE_ENABLE_TELEMETRY"                       = "1"
-  "OTEL_LOG_USER_PROMPTS"                              = "0"
-  "OTEL_LOGS_EXPORTER"                                 = "otlp"
-  "OTEL_METRICS_EXPORTER"                              = "otlp"
-  "OTEL_EXPORTER_OTLP_PROTOCOL"                        = "http/json"
-  "OTEL_EXPORTER_OTLP_LOGS_ENDPOINT"                   = $ENDPOINT
-  "OTEL_EXPORTER_OTLP_METRICS_ENDPOINT"               = $METRICS_ENDPOINT
-  "OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE" = "delta"
-}
-foreach ($k in $vars.Keys) {
-  $settings.env | Add-Member -NotePropertyName $k -NotePropertyValue $vars[$k] -Force
-}
-
-$settings | ConvertTo-Json -Depth 20 | Set-Content $path -Encoding utf8
-
-Write-Host "Done. Wrote telemetry env to $path" -ForegroundColor Green
-Write-Host "Endpoint: $ENDPOINT"
-Write-Host "Now FULLY restart VS Code (quit + reopen), then chat once." -ForegroundColor Yellow
+# Keep the window open so you can read the result (the window would otherwise
+# close instantly when run by double-click / right-click > Run with PowerShell).
+Read-Host "Press Enter to close"
 `;
 }
 
