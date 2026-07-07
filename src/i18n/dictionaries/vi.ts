@@ -259,7 +259,7 @@ const vi = {
     step4: "Chat vài câu, rồi mở trang Phiên trực tuyến (/live) — phiên của bạn sẽ xuất hiện sau ~30–60 giây.",
     scriptNote: "Script ghi biến OTel vào ~/.claude/settings.json (áp dụng cho mọi project trên máy).",
     noteTitle: "Lưu ý quan trọng",
-    noteEndpoint: "Đổi endpoint khi địa chỉ dashboard thay đổi: sửa biến $ENDPOINT ở đầu file .ps1 rồi phát lại cho mọi người chạy lại.",
+    noteEndpoint: "Endpoint được tự động điền theo địa chỉ dashboard bạn tải về — không cần sửa tay. Nếu địa chỉ dashboard đổi, chỉ cần tải lại script và chạy lại.",
     noteReachable: "Endpoint phải là địa chỉ mà máy nhân viên truy cập được (cùng LAN, hoặc URL công khai qua tunnel/domain).",
     noteEmailMatch: "Dashboard gán dữ liệu theo email tài khoản Claude (khớp phần trước dấu @). Bạn cần đã có tài khoản trong hệ thống.",
     checkTitle: "Kiểm tra",

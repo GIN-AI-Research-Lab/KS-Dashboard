@@ -257,7 +257,7 @@ const en: Dictionary = {
     step4: "Chat a few times, then open the Live sessions page (/live) — your session will appear after ~30–60 seconds.",
     scriptNote: "The script writes OTel env vars to ~/.claude/settings.json (applies to every project on this machine).",
     noteTitle: "Important notes",
-    noteEndpoint: "Change the endpoint whenever the dashboard's address changes: edit the $ENDPOINT variable at the top of the .ps1 file and redistribute it for everyone to re-run.",
+    noteEndpoint: "The endpoint is filled in automatically from the dashboard URL you download from — no manual editing needed. If the dashboard address changes, just re-download and re-run the script.",
     noteReachable: "The endpoint must be an address employees' machines can reach (same LAN, or a public URL via tunnel/domain).",
     noteEmailMatch: "The dashboard matches data by Claude account email (the part before @). You need an existing account in the system.",
     checkTitle: "Verify",
