@@ -84,6 +84,42 @@ Read-Host "Press Enter to close"
 `;
 }
 
+// A double-clickable .bat: runs the telemetry setup via PowerShell and PAUSES,
+// so a colleague just double-clicks it (no admin, no execution-policy prompt, no
+// "the window vanished"). The PowerShell payload uses ONLY single quotes so it
+// nests cleanly inside cmd's double-quoted -Command (no escaping, no
+// -EncodedCommand which some AV flags). The endpoint (a URL, no single quotes)
+// is injected safely.
+function renderSetupBat(base: string): string {
+  const endpoint = `${base}/api/otel/logs`;
+  const ps =
+    `$ErrorActionPreference='Stop'; try { ` +
+    `$e='${endpoint}'; $m=$e -replace '/logs$','/metrics'; ` +
+    `$dir=Join-Path $HOME '.claude'; $p=Join-Path $dir 'settings.json'; ` +
+    `if(-not(Test-Path $dir)){ New-Item -ItemType Directory -Path $dir | Out-Null }; ` +
+    `if(Test-Path $p){ $s=Get-Content $p -Raw | ConvertFrom-Json } else { $s=[pscustomobject]@{} }; ` +
+    `if(-not $s.PSObject.Properties.Match('env').Count){ $s | Add-Member -NotePropertyName env -NotePropertyValue ([pscustomobject]@{}) -Force }; ` +
+    `$v=@{ 'CLAUDE_CODE_ENABLE_TELEMETRY'='1'; 'OTEL_LOG_USER_PROMPTS'='0'; 'OTEL_LOGS_EXPORTER'='otlp'; 'OTEL_METRICS_EXPORTER'='otlp'; 'OTEL_EXPORTER_OTLP_PROTOCOL'='http/json'; 'OTEL_EXPORTER_OTLP_LOGS_ENDPOINT'=$e; 'OTEL_EXPORTER_OTLP_METRICS_ENDPOINT'=$m; 'OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE'='delta' }; ` +
+    `foreach($k in $v.Keys){ $s.env | Add-Member -NotePropertyName $k -NotePropertyValue $v[$k] -Force }; ` +
+    `$s | ConvertTo-Json -Depth 20 | Set-Content $p -Encoding utf8; ` +
+    `Write-Host ('OK. Wrote ' + $p) -ForegroundColor Green; Write-Host ('Endpoint: ' + $e) -ForegroundColor Green } ` +
+    `catch { Write-Host 'FAILED to set up telemetry:' -ForegroundColor Red; Write-Host $_.Exception.Message -ForegroundColor DarkGray }`;
+
+  // CRLF line endings + ASCII only (safe for cmd.exe, no BOM).
+  return [
+    "@echo off",
+    "title KS Dashboard - Claude telemetry setup",
+    "echo Setting up Claude Code telemetry...",
+    "echo.",
+    `powershell -NoProfile -ExecutionPolicy Bypass -Command "${ps}"`,
+    "echo.",
+    "echo Now FULLY quit and reopen VS Code / Claude Code, then chat once.",
+    "echo.",
+    "pause",
+    "",
+  ].join("\r\n");
+}
+
 // Files served from disk. Their hardcoded endpoint/URL lines are rewritten to the
 // current public base URL at download time (see rewriteEndpoints).
 const STATIC_FILES: Record<string, string> = {
@@ -105,7 +141,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ file
 
   let body: string | null = null;
 
-  if (file === "setup-telemetry.ps1") {
+  if (file === "setup-telemetry.bat") {
+    body = renderSetupBat(base);
+  } else if (file === "setup-telemetry.ps1") {
     body = renderSetupTelemetry(base);
   } else if (STATIC_FILES[file]) {
     try {

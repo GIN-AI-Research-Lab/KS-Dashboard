@@ -20,6 +20,21 @@ export default async function IntegratePage() {
         </div>
       </div>
 
+      <Card title={t("integrate.batSetupTitle")}>
+        <ol className="flex list-decimal flex-col gap-2 pl-5 text-sm">
+          <li>
+            {t("integrate.batStep1")}
+            <div className="mt-1">
+              <ExportLink href="/api/download/setup-telemetry.bat" label={t("integrate.downloadBat")} />
+            </div>
+          </li>
+          <li>{t("integrate.batStep2")}</li>
+          <li>{t("integrate.step3")}</li>
+          <li>{t("integrate.step4")}</li>
+        </ol>
+        <p className="mt-3 text-xs text-[var(--text-muted)]">{t("integrate.scriptNote")}</p>
+      </Card>
+
       <Card title={t("integrate.adminSetupTitle")}>
         <ol className="flex list-decimal flex-col gap-2 pl-5 text-sm">
           <li>
@@ -35,24 +50,6 @@ export default async function IntegratePage() {
           <li>{t("integrate.adminStep3")}</li>
         </ol>
         <p className="mt-3 text-xs text-[var(--text-muted)]">{t("integrate.adminNote")}</p>
-      </Card>
-
-      <Card title={t("integrate.setupTitle")}>
-        <ol className="flex list-decimal flex-col gap-2 pl-5 text-sm">
-          <li>
-            {t("integrate.step1")}
-            <div className="mt-1">
-              <ExportLink href="/api/download/setup-telemetry.ps1" label={t("integrate.downloadScript")} />
-            </div>
-          </li>
-          <li>
-            {t("integrate.step2")}
-            <pre className="mt-1 overflow-x-auto rounded-lg bg-black/[0.04] p-2 font-mono text-xs dark:bg-white/5">powershell -ExecutionPolicy Bypass -File setup-telemetry.ps1</pre>
-          </li>
-          <li>{t("integrate.step3")}</li>
-          <li>{t("integrate.step4")}</li>
-        </ol>
-        <p className="mt-3 text-xs text-[var(--text-muted)]">{t("integrate.scriptNote")}</p>
       </Card>
 
       <Card title={t("integrate.noteTitle")}>
