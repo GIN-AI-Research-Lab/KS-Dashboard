@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useRef, useState, type ReactNode } from "react";
 import { Check, CircleAlert, Info, X, type LucideIcon } from "lucide-react";
+import { useT } from "@/i18n/I18nProvider";
 
 type Variant = "success" | "error" | "info";
 type ToastItem = { id: number; message: string; variant: Variant };
@@ -20,6 +21,7 @@ const VARIANTS: Record<Variant, { Icon: LucideIcon; color: string }> = {
 };
 
 export function ToastProvider({ children }: { children: ReactNode }) {
+  const t = useT();
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const idRef = useRef(0);
 
@@ -40,11 +42,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     <ToastContext.Provider value={{ toast }}>
       {children}
       <div className="pointer-events-none fixed right-4 top-4 z-[100] flex w-[calc(100%-2rem)] max-w-sm flex-col gap-2">
-        {toasts.map((t) => {
-          const { Icon, color } = VARIANTS[t.variant];
+        {toasts.map((item) => {
+          const { Icon, color } = VARIANTS[item.variant];
           return (
             <div
-              key={t.id}
+              key={item.id}
               role="status"
               aria-live="polite"
               className="toast-in pointer-events-auto flex items-start gap-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface-raised)] px-3.5 py-2.5 shadow-[var(--shadow-md)]"
@@ -55,11 +57,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               >
                 <Icon className="h-3.5 w-3.5" />
               </span>
-              <div className="flex-1 text-sm leading-snug text-[var(--text-primary)]">{t.message}</div>
+              <div className="flex-1 text-sm leading-snug text-[var(--text-primary)]">{item.message}</div>
               <button
                 type="button"
-                onClick={() => remove(t.id)}
-                aria-label="Đóng"
+                onClick={() => remove(item.id)}
+                aria-label={t("ui.close")}
                 className="mt-0.5 shrink-0 text-[var(--text-muted)] transition-colors hover:text-[var(--text-primary)]"
               >
                 <X className="h-4 w-4" />

@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 import { requireSession } from "@/lib/api-helpers";
 import { prisma } from "@/lib/db";
 import { isValidSkillName, SKILL_NAME_MAX } from "@/lib/library";
+import { getT } from "@/i18n/server";
 import { z } from "zod";
 
 const schema = z.object({
@@ -17,6 +18,7 @@ const schema = z.object({
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { session, response } = await requireSession();
   if (response) return response;
+  const t = await getT();
   const { id } = await params;
 
   const item = await prisma.libraryItem.findUnique({ where: { id }, select: { authorId: true, kind: true } });
@@ -37,18 +39,18 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   // rules as creation (kebab-case name, non-empty description).
   if (d.skillName !== undefined || d.skillDescription !== undefined) {
     if (item.kind !== "SKILL") {
-      return NextResponse.json({ error: "Chỉ skill mới có tên/mô tả skill." }, { status: 422 });
+      return NextResponse.json({ error: t("api.skillOnlyName") }, { status: 422 });
     }
     if (d.skillName !== undefined) {
       const name = d.skillName.trim();
       if (!isValidSkillName(name)) {
-        return NextResponse.json({ error: "Tên skill không hợp lệ — chỉ dùng a-z, 0-9 và dấu gạch nối (kebab-case)." }, { status: 422 });
+        return NextResponse.json({ error: t("api.skillNameInvalid") }, { status: 422 });
       }
       data.skillName = name;
     }
     if (d.skillDescription !== undefined) {
       const desc = d.skillDescription?.trim() || "";
-      if (!desc) return NextResponse.json({ error: "Skill cần có mô tả ngắn." }, { status: 422 });
+      if (!desc) return NextResponse.json({ error: t("api.skillDescRequired") }, { status: 422 });
       data.skillDescription = desc;
     }
   }
@@ -58,7 +60,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json({ item: updated });
   } catch (e) {
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
-      return NextResponse.json({ error: `Tên skill "${d.skillName?.trim()}" đã tồn tại — hãy chọn tên khác.` }, { status: 409 });
+      return NextResponse.json({ error: t("api.skillNameTaken").replace("{name}", d.skillName?.trim() ?? "") }, { status: 409 });
     }
     throw e;
   }

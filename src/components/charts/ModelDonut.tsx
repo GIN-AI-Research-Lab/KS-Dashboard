@@ -4,6 +4,7 @@ import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend, Label } from
 import { colorForModel, CHART_INK } from "@/lib/chart-colors";
 import { ChartTooltip } from "@/components/charts/ChartTooltip";
 import { formatNumber } from "@/lib/format";
+import { useT } from "@/i18n/I18nProvider";
 
 function DonutCenter({ viewBox, total }: { viewBox?: { cx?: number; cy?: number }; total: number }) {
   const cx = viewBox?.cx ?? 0;
@@ -27,10 +28,11 @@ export function ModelDonut({
   data: { model: string; totalTokens: number }[];
   height?: number;
 }) {
+  const t = useT();
   if (data.length === 0) {
     return (
       <div className="flex items-center justify-center text-sm text-[var(--text-muted)]" style={{ height }}>
-        Chưa có dữ liệu
+        {t("common.noData")}
       </div>
     );
   }

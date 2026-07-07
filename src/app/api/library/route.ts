@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 import { requireSession } from "@/lib/api-helpers";
 import { prisma } from "@/lib/db";
 import { isValidSkillName, SKILL_NAME_MAX } from "@/lib/library";
+import { getT } from "@/i18n/server";
 import { z } from "zod";
 
 const schema = z.object({
@@ -19,6 +20,7 @@ const schema = z.object({
 export async function POST(req: NextRequest) {
   const { session, response } = await requireSession();
   if (response) return response;
+  const t = await getT();
 
   const parsed = schema.safeParse(await req.json());
   if (!parsed.success) return NextResponse.json({ error: "Invalid payload", issues: parsed.error.issues }, { status: 422 });
@@ -33,10 +35,10 @@ export async function POST(req: NextRequest) {
     skillName = parsed.data.skillName?.trim() ?? "";
     skillDescription = parsed.data.skillDescription?.trim() ?? "";
     if (!isValidSkillName(skillName)) {
-      return NextResponse.json({ error: "Tên skill không hợp lệ — chỉ dùng a-z, 0-9 và dấu gạch nối (kebab-case)." }, { status: 422 });
+      return NextResponse.json({ error: t("api.skillNameInvalid") }, { status: 422 });
     }
     if (!skillDescription) {
-      return NextResponse.json({ error: "Skill cần có mô tả ngắn (để Claude biết khi nào dùng)." }, { status: 422 });
+      return NextResponse.json({ error: t("api.skillDescRequired") }, { status: 422 });
     }
   }
 
@@ -56,7 +58,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ item }, { status: 201 });
   } catch (e) {
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
-      return NextResponse.json({ error: `Tên skill "${skillName}" đã tồn tại — hãy chọn tên khác.` }, { status: 409 });
+      return NextResponse.json({ error: t("api.skillNameTaken").replace("{name}", skillName ?? "") }, { status: 409 });
     }
     throw e;
   }

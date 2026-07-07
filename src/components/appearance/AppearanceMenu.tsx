@@ -76,17 +76,18 @@ export function AppearanceMenu() {
             {t("chrome.appearance")}
           </div>
           <div className="mb-3 flex gap-1 rounded-lg border border-[var(--border)] p-0.5">
-            {THEMES.map((t) => {
-              const Icon = THEME_ICONS[t.key];
-              const active = theme === t.key;
+            {THEMES.map((th) => {
+              const Icon = THEME_ICONS[th.key];
+              const active = theme === th.key;
+              const label = t(th.labelKey);
               return (
                 <button
-                  key={t.key}
+                  key={th.key}
                   type="button"
-                  title={t.label}
-                  aria-label={t.label}
+                  title={label}
+                  aria-label={label}
                   aria-pressed={active}
-                  onClick={() => setTheme(t.key)}
+                  onClick={() => setTheme(th.key)}
                   className={`flex flex-1 items-center justify-center rounded-md py-1.5 transition-colors ${
                     active ? "bg-accent/10 text-accent" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
                   }`}
@@ -107,8 +108,8 @@ export function AppearanceMenu() {
                 <button
                   key={a.key}
                   type="button"
-                  title={a.label}
-                  aria-label={a.label}
+                  title={t(a.labelKey)}
+                  aria-label={t(a.labelKey)}
                   aria-pressed={active}
                   onClick={() => setAccent(a.key)}
                   className="h-7 w-7 rounded-full transition-transform hover:scale-110"
@@ -139,7 +140,7 @@ export function AppearanceMenu() {
                     active ? "bg-accent/10 text-accent" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
                   }`}
                 >
-                  {d.label}
+                  {t(d.labelKey)}
                 </button>
               );
             })}

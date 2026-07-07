@@ -2,6 +2,7 @@
 
 import { Sankey, Tooltip, ResponsiveContainer, Rectangle } from "recharts";
 import { CHART_INK } from "@/lib/chart-colors";
+import { useT } from "@/i18n/I18nProvider";
 
 type NodeProps = {
   x?: number;
@@ -39,10 +40,11 @@ export function ToolSankey({
   nodes: { name: string }[];
   links: { source: number; target: number; value: number }[];
 }) {
+  const t = useT();
   if (links.length === 0) {
     return (
       <div className="flex h-[200px] items-center justify-center text-sm text-[var(--text-muted)]">
-        Chưa đủ dữ liệu chuỗi công cụ
+        {t("ui.noSankeyData")}
       </div>
     );
   }

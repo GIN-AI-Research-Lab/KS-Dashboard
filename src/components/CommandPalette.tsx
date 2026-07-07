@@ -117,13 +117,13 @@ export function CommandPalette() {
     const pages: Item[] = PAGE_LINKS.map((p) => ({ label: t(p.labelKey), href: p.href, group: t("chrome.groupPage") }));
     const appearance: Item[] = [
       ...THEMES.map((th) => ({
-        label: `${t("chrome.appearance")}: ${th.label}`,
+        label: `${t("chrome.appearance")}: ${t(th.labelKey)}`,
         group: t("chrome.appearance"),
         icon: THEME_ICONS[th.key],
         onSelect: () => setTheme(th.key),
       })),
       ...ACCENTS.map((a) => ({
-        label: `${t("chrome.accent")}: ${a.label}`,
+        label: `${t("chrome.accent")}: ${t(a.labelKey)}`,
         group: t("chrome.appearance"),
         icon: (
           <span
@@ -135,7 +135,7 @@ export function CommandPalette() {
         onSelect: () => setAccent(a.key),
       })),
       ...DENSITIES.map((d) => ({
-        label: `${t("chrome.density")}: ${d.label}`,
+        label: `${t("chrome.density")}: ${t(d.labelKey)}`,
         group: t("chrome.appearance"),
         onSelect: () => setDensity(d.key),
       })),

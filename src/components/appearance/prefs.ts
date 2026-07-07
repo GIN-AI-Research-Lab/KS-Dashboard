@@ -8,22 +8,22 @@ import { useSyncExternalStore } from "react";
 // runtime and are shared by the AppearanceMenu and the command palette.
 
 export const ACCENTS = [
-  { key: "blue", label: "Xanh dương", color: "#2a78d6" },
-  { key: "violet", label: "Tím", color: "#6d5ae6" },
-  { key: "emerald", label: "Emerald", color: "#0f9d6b" },
-  { key: "amber", label: "Amber", color: "#b8730a" },
-  { key: "rose", label: "Hồng", color: "#e03e6d" },
+  { key: "blue", labelKey: "ui.accentBlue", color: "#2a78d6" },
+  { key: "violet", labelKey: "ui.accentViolet", color: "#6d5ae6" },
+  { key: "emerald", labelKey: "ui.accentEmerald", color: "#0f9d6b" },
+  { key: "amber", labelKey: "ui.accentAmber", color: "#b8730a" },
+  { key: "rose", labelKey: "ui.accentRose", color: "#e03e6d" },
 ] as const;
 
 export const DENSITIES = [
-  { key: "comfortable", label: "Thoáng" },
-  { key: "compact", label: "Gọn" },
+  { key: "comfortable", labelKey: "ui.densityComfortable" },
+  { key: "compact", labelKey: "ui.densityCompact" },
 ] as const;
 
 export const THEMES = [
-  { key: "light", label: "Sáng" },
-  { key: "system", label: "Theo hệ thống" },
-  { key: "dark", label: "Tối" },
+  { key: "light", labelKey: "ui.themeLight" },
+  { key: "system", labelKey: "ui.themeSystem" },
+  { key: "dark", labelKey: "ui.themeDark" },
 ] as const;
 
 const EVENT = "app-pref-change";

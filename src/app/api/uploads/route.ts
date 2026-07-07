@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/api-helpers";
+import { getT } from "@/i18n/server";
 import { writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 import { randomBytes } from "node:crypto";
@@ -19,13 +20,14 @@ export async function POST(req: NextRequest) {
   const { response } = await requireSession();
   if (response) return response;
 
+  const t = await getT();
   const form = await req.formData();
   const file = form.get("file");
-  if (!(file instanceof File)) return NextResponse.json({ error: "Thiếu file" }, { status: 422 });
+  if (!(file instanceof File)) return NextResponse.json({ error: t("api.missingFile") }, { status: 422 });
 
   const ext = ALLOWED[file.type];
-  if (!ext) return NextResponse.json({ error: "Chỉ nhận ảnh PNG/JPG/GIF/WebP" }, { status: 422 });
-  if (file.size > MAX_BYTES) return NextResponse.json({ error: "Ảnh quá lớn (>5MB)" }, { status: 422 });
+  if (!ext) return NextResponse.json({ error: t("api.imageTypeOnly") }, { status: 422 });
+  if (file.size > MAX_BYTES) return NextResponse.json({ error: t("api.imageTooLarge") }, { status: 422 });
 
   const buf = Buffer.from(await file.arrayBuffer());
   await mkdir(UPLOAD_DIR, { recursive: true });

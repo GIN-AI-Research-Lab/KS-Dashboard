@@ -52,11 +52,9 @@ export default async function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col">
-        <Providers>
-          <I18nProvider locale={locale} dict={dict}>
-            {children}
-          </I18nProvider>
-        </Providers>
+        <I18nProvider locale={locale} dict={dict}>
+          <Providers>{children}</Providers>
+        </I18nProvider>
       </body>
     </html>
   );

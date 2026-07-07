@@ -3,16 +3,18 @@
 import { useState } from "react";
 import { Check, Copy } from "lucide-react";
 import { useToast } from "@/components/ui/toast/ToastProvider";
+import { useT } from "@/i18n/I18nProvider";
 
-export function CopyTextButton({ text, label = "Chép" }: { text: string; label?: string }) {
+export function CopyTextButton({ text, label }: { text: string; label?: string }) {
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
+  const t = useT();
   return (
     <button
       onClick={async () => {
         await navigator.clipboard.writeText(text);
         setCopied(true);
-        toast("Đã sao chép");
+        toast(t("ui.copiedToast"));
         setTimeout(() => setCopied(false), 1500);
       }}
       className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium transition-all duration-150 active:scale-95 ${
@@ -22,7 +24,7 @@ export function CopyTextButton({ text, label = "Chép" }: { text: string; label?
       }`}
     >
       {copied ? <Check className="h-4 w-4" aria-hidden /> : <Copy className="h-4 w-4" aria-hidden />}
-      {copied ? "Đã chép" : label}
+      {copied ? t("ui.copied") : (label ?? t("ui.copy"))}
     </button>
   );
 }

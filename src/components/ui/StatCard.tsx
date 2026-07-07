@@ -1,8 +1,11 @@
+"use client";
+
 import { ReactNode, CSSProperties } from "react";
 import { ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { CountUp } from "./CountUp";
 import { Sparkline } from "./Sparkline";
 import { InfoTip } from "./InfoTip";
+import { useT } from "@/i18n/I18nProvider";
 
 export function StatCard({
   label,
@@ -27,6 +30,7 @@ export function StatCard({
   spark?: number[];
   tooltip?: string;
 }) {
+  const t = useT();
   const hasDelta = typeof deltaPct === "number" && isFinite(deltaPct);
   const up = hasDelta && (deltaPct as number) >= 0;
   const tint = accent ?? "var(--accent)";
@@ -74,7 +78,7 @@ export function StatCard({
             {up ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
             {Math.abs(deltaPct as number).toFixed(1)}%
           </span>
-          <span className="text-[var(--text-muted)]">vs kỳ trước</span>
+          <span className="text-[var(--text-muted)]">{t("ui.vsPrevious")}</span>
         </div>
       )}
       {hint && <div className="mt-1.5 text-xs leading-relaxed text-[var(--text-secondary)]">{hint}</div>}

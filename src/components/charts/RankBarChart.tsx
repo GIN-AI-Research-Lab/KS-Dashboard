@@ -4,6 +4,7 @@ import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Cell } from 
 import { CHART_INK, colorForIndex } from "@/lib/chart-colors";
 import { ChartTooltip } from "@/components/charts/ChartTooltip";
 import { formatNumber, formatUsd, formatDuration } from "@/lib/format";
+import { useT } from "@/i18n/I18nProvider";
 
 // Server Components can't pass function props into a "use client" component,
 // so the caller picks a format by name and the formatter is resolved here.
@@ -18,13 +19,14 @@ export function RankBarChart({
   valueFormat: keyof typeof FORMATTERS;
   height?: number;
 }) {
+  const t = useT();
   const valueFormatter = FORMATTERS[valueFormat];
   const h = height ?? Math.max(180, data.length * 34);
 
   if (data.length === 0) {
     return (
       <div className="flex items-center justify-center text-sm text-[var(--text-muted)]" style={{ height: h }}>
-        Chưa có dữ liệu
+        {t("common.noData")}
       </div>
     );
   }

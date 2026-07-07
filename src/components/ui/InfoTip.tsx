@@ -3,11 +3,13 @@
 import { useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Info } from "lucide-react";
+import { useT } from "@/i18n/I18nProvider";
 
 // Small "?" info affordance that shows a styled explanation on hover/focus.
 // The bubble is portalled to <body> so it is never clipped by a card's
 // overflow-hidden, and positioned as `fixed` from the trigger's rect.
 export function InfoTip({ label, className }: { label: string; className?: string }) {
+  const t = useT();
   const ref = useRef<HTMLButtonElement>(null);
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
   const id = useId();
@@ -27,7 +29,7 @@ export function InfoTip({ label, className }: { label: string; className?: strin
       <button
         ref={ref}
         type="button"
-        aria-label="Giải thích chỉ số"
+        aria-label={t("ui.metricInfo")}
         aria-describedby={pos ? id : undefined}
         onMouseEnter={show}
         onMouseLeave={hide}

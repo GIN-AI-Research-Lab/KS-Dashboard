@@ -14,6 +14,7 @@ import {
 import { CHART_INK, themedSeries } from "@/lib/chart-colors";
 import { ChartTooltip } from "@/components/charts/ChartTooltip";
 import { formatDay, formatNumber, formatUsd } from "@/lib/format";
+import { useT } from "@/i18n/I18nProvider";
 
 export interface TrendSeries {
   key: string;
@@ -44,6 +45,7 @@ export function TrendChart({
   height?: number;
   annotations?: TrendAnnotation[];
 }) {
+  const t = useT();
   const valueFormatter = FORMATTERS[valueFormat];
   if (data.length === 0) {
     return (
@@ -51,7 +53,7 @@ export function TrendChart({
         className="flex items-center justify-center text-sm text-[var(--text-muted)]"
         style={{ height }}
       >
-        Chưa có dữ liệu trong khoảng thời gian này
+        {t("table.noData")}
       </div>
     );
   }

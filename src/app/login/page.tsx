@@ -4,11 +4,12 @@ import { signIn } from "next-auth/react";
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowRight } from "lucide-react";
+import { useT } from "@/i18n/I18nProvider";
 
-const SSO_ERROR_MESSAGES: Record<string, string> = {
-  NoEmailFromProvider: "Tài khoản Microsoft này không trả về địa chỉ email.",
-  DomainNotAllowed: "Email này không thuộc domain công ty được phép đăng nhập.",
-  UnknownEmployee: "Không tìm thấy nhân viên khớp với email này trong hệ thống.",
+const SSO_ERROR_KEYS: Record<string, string> = {
+  NoEmailFromProvider: "login.ssoNoEmail",
+  DomainNotAllowed: "login.ssoDomainNotAllowed",
+  UnknownEmployee: "login.ssoUnknownEmployee",
 };
 
 function MicrosoftLogo() {
@@ -25,6 +26,7 @@ function MicrosoftLogo() {
 function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
+  const t = useT();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -35,7 +37,7 @@ function LoginForm() {
   // since it's just a projection of `params`, not something to subscribe to.
   const ssoErrorCode = params.get("error");
   const ssoError = ssoErrorCode
-    ? (SSO_ERROR_MESSAGES[ssoErrorCode] ?? "Đăng nhập thất bại. Vui lòng thử lại.")
+    ? t(SSO_ERROR_KEYS[ssoErrorCode] ?? "login.ssoDefaultError")
     : null;
 
   useEffect(() => {
@@ -56,7 +58,7 @@ function LoginForm() {
     });
     setLoading(false);
     if (res?.error) {
-      setError("Email hoặc mật khẩu không đúng.");
+      setError(t("login.credentialsError"));
       return;
     }
     router.push(params.get("callbackUrl") ?? "/");
@@ -71,9 +73,7 @@ function LoginForm() {
             KS
           </div>
           <h1 className="text-lg font-semibold">KS Dashboard</h1>
-          <p className="text-center text-sm text-[var(--text-muted)]">
-            Đăng nhập để xem mức sử dụng Claude Code của công ty
-          </p>
+          <p className="text-center text-sm text-[var(--text-muted)]">{t("login.subtitle")}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
@@ -89,7 +89,7 @@ function LoginForm() {
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-[var(--text-secondary)]">Mật khẩu</label>
+            <label className="mb-1 block text-xs font-medium text-[var(--text-secondary)]">{t("login.password")}</label>
             <input
               type="password"
               required
@@ -107,7 +107,7 @@ function LoginForm() {
             disabled={loading}
             className="group mt-2 flex items-center justify-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white shadow-[var(--shadow-xs)] transition-all duration-200 hover:bg-accent-hover active:scale-[0.98] disabled:opacity-60"
           >
-            {loading ? "Đang đăng nhập…" : "Đăng nhập"}
+            {loading ? t("login.signingIn") : t("login.signIn")}
             {!loading && (
               <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/20 transition-transform duration-200 group-hover:translate-x-0.5">
                 <ArrowRight className="h-3 w-3" />
@@ -120,7 +120,7 @@ function LoginForm() {
           <>
             <div className="my-4 flex items-center gap-3 text-xs text-[var(--text-muted)]">
               <div className="h-px flex-1 bg-[var(--border)]" />
-              hoặc
+              {t("login.or")}
               <div className="h-px flex-1 bg-[var(--border)]" />
             </div>
             <button
@@ -129,13 +129,13 @@ function LoginForm() {
               className="flex w-full items-center justify-center gap-2 rounded-lg border border-[var(--border)] px-4 py-2 text-sm font-medium transition-colors hover:bg-[var(--page)]"
             >
               <MicrosoftLogo />
-              Đăng nhập bằng Microsoft
+              {t("login.microsoftSignIn")}
             </button>
           </>
         )}
 
         <p className="mt-6 text-center text-xs text-[var(--text-muted)]">
-          Tài khoản demo: <code>admin@company.com</code> / <code>admin1234</code>
+          {t("login.demoAccount")} <code>admin@company.com</code> / <code>admin1234</code>
         </p>
       </div>
     </div>

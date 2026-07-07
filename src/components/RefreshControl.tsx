@@ -56,7 +56,7 @@ export function RefreshControl() {
           className="inline-flex items-center gap-1.5 px-2.5 text-xs font-medium text-[var(--text-secondary)] transition-colors hover:bg-black/[0.04] hover:text-accent dark:hover:bg-white/[0.06]"
         >
           <RefreshCw className={`h-4 w-4 ${spinning ? "animate-spin" : ""}`} aria-hidden />
-          <span className="hidden sm:inline">{active ? `${t("chrome.autoPrefix")} · ${active.label}` : t("chrome.refresh")}</span>
+          <span className="hidden sm:inline">{active ? `${t("chrome.autoPrefix")} · ${t(active.labelKey)}` : t("chrome.refresh")}</span>
         </button>
         <button
           type="button"
@@ -99,7 +99,7 @@ export function RefreshControl() {
                     : "text-[var(--text-secondary)] hover:bg-black/[0.04] dark:hover:bg-white/[0.06]"
                 }`}
               >
-                {o.label}
+                {t(o.labelKey)}
                 {isActive && <Check className="h-3.5 w-3.5" aria-hidden />}
               </button>
             );

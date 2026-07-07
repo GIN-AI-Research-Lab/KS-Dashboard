@@ -10,13 +10,13 @@ import { useSyncExternalStore } from "react";
 export const REFRESH_KEY = "ks-refresh-interval-ms";
 export const REFRESH_EVENT = "ks-refresh-interval-change";
 
-// ms === 0 means "off" (manual refresh only).
-export const REFRESH_OPTIONS: { label: string; ms: number }[] = [
-  { label: "Tắt", ms: 0 },
-  { label: "10 giây", ms: 10_000 },
-  { label: "30 giây", ms: 30_000 },
-  { label: "1 phút", ms: 60_000 },
-  { label: "5 phút", ms: 300_000 },
+// ms === 0 means "off" (manual refresh only). labelKey resolves via i18n at render.
+export const REFRESH_OPTIONS: { labelKey: string; ms: number }[] = [
+  { labelKey: "ui.refreshOff", ms: 0 },
+  { labelKey: "ui.refresh10s", ms: 10_000 },
+  { labelKey: "ui.refresh30s", ms: 30_000 },
+  { labelKey: "ui.refresh1m", ms: 60_000 },
+  { labelKey: "ui.refresh5m", ms: 300_000 },
 ];
 
 export function getRefreshInterval(): number {

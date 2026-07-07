@@ -1,9 +1,10 @@
 import type { Badge, BadgeCategory } from "@/lib/stats";
 import { BADGE_CATEGORY_LABEL } from "@/lib/stats";
+import { getT } from "@/i18n/server";
 
 const ORDER: BadgeCategory[] = ["streak", "volume", "money", "efficiency", "tools", "time", "community", "fun"];
 
-export function BadgeGrid({
+export async function BadgeGrid({
   badges,
   earnedCount,
   totalCount,
@@ -12,6 +13,10 @@ export function BadgeGrid({
   earnedCount: number;
   totalCount: number;
 }) {
+  const t = await getT();
+  const earnedLabel = t("ui.badgesEarned")
+    .replace("{earned}", String(earnedCount))
+    .replace("{total}", String(totalCount));
   const byCat = new Map<BadgeCategory, Badge[]>();
   for (const b of badges) {
     const arr = byCat.get(b.category) ?? byCat.set(b.category, []).get(b.category)!;
@@ -20,9 +25,7 @@ export function BadgeGrid({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="text-sm text-[var(--text-muted)]">
-        Đã đạt <span className="font-semibold text-[var(--text-primary)]">{earnedCount}/{totalCount}</span> huy hiệu
-      </div>
+      <div className="text-sm text-[var(--text-muted)]">{earnedLabel}</div>
       {ORDER.filter((c) => byCat.has(c)).map((cat) => (
         <div key={cat}>
           <div className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">

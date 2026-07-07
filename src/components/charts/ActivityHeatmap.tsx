@@ -2,13 +2,15 @@
 // Intensity is a single-hue sequential encoding over the accent color, mixed
 // toward transparent by count; the accent var adapts to light/dark themes.
 
-const WEEKDAYS = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
+import { getT } from "@/i18n/server";
 
-export function ActivityHeatmap({ grid, max }: { grid: number[][]; max: number }) {
+export async function ActivityHeatmap({ grid, max }: { grid: number[][]; max: number }) {
+  const t = await getT();
+  const WEEKDAYS = t("ui.weekdaysShort").split(",");
   if (max === 0) {
     return (
       <div className="flex h-[180px] items-center justify-center text-sm text-[var(--text-muted)]">
-        Chưa có dữ liệu trong khoảng thời gian này
+        {t("table.noData")}
       </div>
     );
   }

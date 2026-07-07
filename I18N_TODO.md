@@ -135,6 +135,35 @@ Các vị trí đã biết có pattern "chữ cái đầu trong vòng tròn màu
 initial-letter, rồi quyết định 1 component chung (ví dụ mở rộng `UserChip` hoặc tạo `Avatar` component mới)
 để mọi nơi tái dùng, tránh lặp code 5-6 chỗ khác nhau.
 
+## ✅ ĐÃ HOÀN THÀNH (phiên 2026-07-07)
+
+- **#1 Component UI chung** — xong hết: gom vào namespace `ui` (close/metricInfo/openMenu/vsPrevious/
+  refresh*/theme*/accent*/density*/print/exportCsv/copy*/noSankeyData/badgesEarned/note*/weekdaysShort).
+  Đã sửa: `ToastProvider`, `InfoTip`, `MobileMenuButton`, `StatCard` (→ client), `PrintButton`, `ExportLink`
+  (→ client), `CopyTextButton`, `UserNoteEditor`, `BadgeGrid` (→ async server + getT; **category label +
+  tên/mô tả badge trong `getUserGamification` vẫn còn tiếng Việt** — xem "còn lại"), 5 charts
+  (`TrendChart`/`ToolSankey`/`RankBarChart`/`ModelDonut`/`ActivityHeatmap` — kèm dịch nhãn thứ `WEEKDAYS`),
+  `appearance/prefs.ts` + `refresh/refreshPrefs.ts` (đổi `label` → `labelKey`, cập nhật `AppearanceMenu`/
+  `CommandPalette`/`RefreshControl`). Đưa `I18nProvider` ra ngoài `Providers` (root layout) để `ToastProvider`
+  dùng được `useT`.
+- **#2 API errors + CSV** — xong: namespace `api` (uploads/library errors + CSV headers/status). Sửa
+  `api/uploads`, `api/library`, `api/library/[id]`, `api/export/[type]` (dùng `getT()` trong route handler).
+- **#3 Login** — xong: namespace `login` (subtitle/password/signIn/SSO errors/or/microsoft/demo).
+  `opengraph-image.tsx` **CỐ Ý BỎ QUA** (crawler không gửi cookie → luôn về default `vi`; giá trị thấp).
+- **Avatar audit** — xong: tạo `src/components/Avatar.tsx` (ảnh thật nếu có, nếu không → icon ẩn danh
+  `lucide UserRound`, KHÔNG dùng chữ cái đầu). Áp dụng: `UserChip`, `Topbar`, `me`, `users/[id]`,
+  `library` (tác giả — thêm `image` vào `getLibraryFeed`/`Item`/`MyLibrary` author select), `sessions` list
+  + `sessions/[id]` (dùng `UserChip`), `admin AdminPanel` (thêm `image` vào query + `UserRow`). Đã luồng
+  `image` vào các user/session select trong `stats.ts`. `live/LiveFeed.tsx` **mồ côi** (không còn import — /live
+  dùng `LiveTable`) nên bỏ qua.
+- `rtk tsc` sạch, `npm run lint` sạch. grep `[À-ỹ]` còn lại chỉ là ký hiệu `· — → × ▲▼` + OG image (đã nêu).
+
+### Còn lại (chưa làm)
+- **Nội dung huy hiệu**: `BADGE_CATEGORY_LABEL` + tên/mô tả badge sinh trong `getUserGamification` (`stats.ts`)
+  vẫn tiếng Việt. Cần refactor để nhận `t`/trả key (khối lượng vừa, ~8 category + ~30 badge).
+- **`opengraph-image.tsx`**: 1 dòng tiếng Việt (ảnh OG social preview).
+- (Tuỳ chọn) avatar cho tác giả bình luận (`SessionDiscussion`/`LibraryComments`) — hiện chưa hiển thị avatar.
+
 ## Sau khi xong cả 2 việc trên
 
 - Chạy lại `rtk tsc` + `npm run lint` để đảm bảo sạch.
