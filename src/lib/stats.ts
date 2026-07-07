@@ -627,7 +627,7 @@ export async function getMemberBreakdown(userIds: string[], range: RangeKey) {
   const since = rangeToDate(range);
   const turns = await prisma.turn.findMany({
     where: { userId: { in: userIds }, ...(since ? { createdAt: { gte: since } } : {}) },
-    include: { user: { select: { id: true, name: true } } },
+    include: { user: { select: { id: true, name: true, image: true } } },
   });
 
   const byUser = new Map<
@@ -664,11 +664,11 @@ export async function getSessionDetail(id: string) {
     where: { id },
     include: {
       user: {
-        select: { id: true, name: true, department: { select: { name: true } } },
+        select: { id: true, name: true, image: true, department: { select: { name: true } } },
       },
       turns: { orderBy: { createdAt: "asc" } },
       toolCalls: { orderBy: { startedAt: "asc" } },
-      comments: { include: { author: { select: { id: true, name: true } } }, orderBy: { createdAt: "asc" } },
+      comments: { include: { author: { select: { id: true, name: true, image: true } } }, orderBy: { createdAt: "asc" } },
       feedback: { select: { userId: true, value: true } },
     },
   });
@@ -696,7 +696,7 @@ export async function getSessionLibrary(opts: {
     where,
     orderBy: [{ featured: "desc" }, { lastEventAt: "desc" }],
     take: limit,
-    include: { user: { select: { id: true, name: true } } },
+    include: { user: { select: { id: true, name: true, image: true } } },
   });
 }
 
@@ -729,7 +729,7 @@ export async function getLibraryFeed(opts: { kind?: LibraryItemKind; sort?: stri
     orderBy: librarySortOrder(sort),
     take: limit,
     include: {
-      author: { select: { id: true, name: true } },
+      author: { select: { id: true, name: true, image: true } },
       _count: { select: { comments: true, reactions: true, bookmarks: true } },
       bookmarks: { where: { userId: viewerId }, select: { id: true } },
     },
@@ -753,8 +753,8 @@ export async function getLibraryItem(id: string, viewerId: string) {
   const item = await prisma.libraryItem.findUnique({
     where: { id },
     include: {
-      author: { select: { id: true, name: true } },
-      comments: { include: { author: { select: { id: true, name: true } } }, orderBy: { createdAt: "asc" } },
+      author: { select: { id: true, name: true, image: true } },
+      comments: { include: { author: { select: { id: true, name: true, image: true } } }, orderBy: { createdAt: "asc" } },
       reactions: { select: { userId: true, emoji: true } },
       bookmarks: { select: { userId: true } },
     },
@@ -784,7 +784,7 @@ export async function getMyLibrary(userId: string) {
     prisma.libraryItem.findMany({
       where: { bookmarks: { some: { userId } }, OR: [{ visibility: "PUBLIC" }, { authorId: userId }] },
       orderBy: { createdAt: "desc" },
-      include: { author: { select: { id: true, name: true } }, ...countSelect },
+      include: { author: { select: { id: true, name: true, image: true } }, ...countSelect },
     }),
   ]);
   return { mine, saved };

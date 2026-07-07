@@ -24,6 +24,7 @@ export default async function AdminPage() {
         email: true,
         role: true,
         departmentId: true,
+        image: true,
         createdAt: true,
       },
     }),
@@ -71,6 +72,7 @@ export default async function AdminPage() {
           email: u.email,
           role: u.role,
           departmentId: u.departmentId,
+          image: u.image,
           createdAt: u.createdAt.toISOString(),
         }))}
       />

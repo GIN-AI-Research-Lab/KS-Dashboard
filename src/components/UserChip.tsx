@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { Avatar } from "@/components/Avatar";
 import { useT } from "@/i18n/I18nProvider";
 
 type Badge = { key: string; label: string; icon: string };
@@ -64,16 +65,7 @@ export function UserChip({
       onMouseEnter={onEnter}
       onMouseLeave={() => setOpen(false)}
     >
-      {image ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={image} alt="" className={`${avatarClassName} shrink-0 rounded-full object-cover`} />
-      ) : (
-        <span
-          className={`${avatarClassName} flex shrink-0 items-center justify-center rounded-full bg-[#4a3aa7]/15 text-[10px] font-semibold text-[#4a3aa7]`}
-        >
-          {name.slice(0, 1).toUpperCase()}
-        </span>
-      )}
+      <Avatar image={image} name={name} className={avatarClassName} iconClassName="h-3.5 w-3.5" />
       <Link
         href={`/users/${userId}`}
         onClick={(e) => e.stopPropagation()}

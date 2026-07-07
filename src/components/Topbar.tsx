@@ -6,6 +6,7 @@ import { RefreshControl } from "@/components/RefreshControl";
 import { AppearanceMenu } from "@/components/appearance/AppearanceMenu";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { MobileMenuButton } from "@/components/sidebar/MobileMenuButton";
+import { Avatar } from "@/components/Avatar";
 import { formatRelativeTime } from "@/lib/format";
 import { getT } from "@/i18n/server";
 import Link from "next/link";
@@ -46,14 +47,7 @@ export async function Topbar({
           href="/me"
           className="flex h-9 items-center gap-2 rounded-lg px-2 transition-colors hover:bg-black/[0.04] dark:hover:bg-white/[0.06]"
         >
-          {image ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={image} alt="" className="h-7 w-7 shrink-0 rounded-full object-cover" />
-          ) : (
-            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#4a3aa7]/15 text-xs font-semibold text-[#4a3aa7]">
-              {name.slice(0, 1).toUpperCase()}
-            </div>
-          )}
+          <Avatar image={image} name={name} className="h-7 w-7" />
           <div className="text-right">
             <div className="text-xs font-medium leading-tight">{name}</div>
             <div className="text-[11px] leading-tight text-[var(--text-muted)]">{t(`roles.${role}`)}</div>

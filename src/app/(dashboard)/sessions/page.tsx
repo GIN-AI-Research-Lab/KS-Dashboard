@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/Card";
 import { Badge, Tag } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SessionFilters } from "@/components/SessionFilters";
+import { UserChip } from "@/components/UserChip";
 import { getOutcomeLabel, OUTCOME_VARIANT, parseTags } from "@/lib/session-outcome";
 import { formatUsd, formatRelativeTime } from "@/lib/format";
 import { getT } from "@/i18n/server";
@@ -79,7 +80,7 @@ export default async function SessionsPage({
                       </Link>
                       {s.note && <div className="max-w-[280px] truncate text-xs text-[var(--text-muted)]">{s.note}</div>}
                     </td>
-                    <td className="py-2 pr-4 text-[var(--text-secondary)]">{s.user.name}</td>
+                    <td className="py-2 pr-4"><UserChip userId={s.user.id} name={s.user.name} image={s.user.image} /></td>
                     <td className="py-2 pr-4">
                       {s.outcome ? (
                         <Badge variant={OUTCOME_VARIANT[s.outcome]}>{OUTCOME_LABEL[s.outcome]}</Badge>

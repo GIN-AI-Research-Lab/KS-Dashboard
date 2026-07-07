@@ -7,6 +7,7 @@ import { RangeSelector } from "@/components/RangeSelector";
 import { TrendChart } from "@/components/charts/lazy";
 import { Tag } from "@/components/ui/Badge";
 import { BadgeGrid } from "@/components/BadgeGrid";
+import { Avatar } from "@/components/Avatar";
 import { formatNumber, formatUsd, formatPercent } from "@/lib/format";
 import { colorForIndex } from "@/lib/chart-colors";
 import { getMetricHelp } from "@/lib/glossary";
@@ -69,14 +70,7 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
     <div className="stagger flex flex-col gap-6">
       <div className="hero-panel relative flex flex-wrap items-center justify-between gap-4 overflow-hidden rounded-2xl border border-[var(--border)] p-6 shadow-[var(--shadow-xs)]">
         <div className="flex min-w-0 items-center gap-4">
-          {user.image ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={user.image} alt="" className="h-16 w-16 shrink-0 rounded-full object-cover ring-2 ring-[var(--border)]" />
-          ) : (
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-[#4a3aa7]/15 text-2xl font-semibold text-[#4a3aa7]">
-              {user.name.slice(0, 1).toUpperCase()}
-            </div>
-          )}
+          <Avatar image={user.image} name={user.name} className="h-16 w-16 ring-2 ring-[var(--border)]" iconClassName="h-8 w-8" />
           <div className="min-w-0">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)]/60 px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-[0.1em] text-[var(--text-secondary)]">
               <span className="gradient-brand h-1.5 w-1.5 rounded-full" />

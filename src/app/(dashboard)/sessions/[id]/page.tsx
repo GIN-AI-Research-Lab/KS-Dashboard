@@ -7,6 +7,7 @@ import { StatCard } from "@/components/ui/StatCard";
 import { Badge } from "@/components/ui/Badge";
 import { SessionAnnotationForm } from "@/components/SessionAnnotationForm";
 import { SessionDiscussion } from "@/components/SessionDiscussion";
+import { UserChip } from "@/components/UserChip";
 import { formatNumber, formatUsd, formatDuration, formatRelativeTime } from "@/lib/format";
 import { getMetricHelp } from "@/lib/glossary";
 import { getT } from "@/i18n/server";
@@ -70,11 +71,13 @@ export default async function SessionDetailPage({ params }: { params: Promise<{ 
           <h1 className="mt-2 text-3xl font-semibold tracking-tight">
             <span className="gradient-text">{t("sessionDetail.titlePrefix")}</span> {s.projectLabel ?? t("sessionDetail.unknownProject")}
           </h1>
-          <p className="mt-1 text-sm text-[var(--text-secondary)]">
-            <Link href={`/users/${s.userId}`} className="transition-colors hover:text-accent hover:underline">{s.user.name}</Link>
-            {s.model ? ` · ${s.model}` : ""}
-            {s.user.department ? ` · ${s.user.department.name}` : ""}
-            {" · "}{t("sessionDetail.startedPrefix")} {formatRelativeTime(s.startedAt)}
+          <p className="mt-1 flex flex-wrap items-center gap-x-1.5 text-sm text-[var(--text-secondary)]">
+            <UserChip userId={s.userId} name={s.user.name} image={s.user.image} avatarClassName="h-5 w-5" />
+            <span>
+              {s.model ? `· ${s.model}` : ""}
+              {s.user.department ? ` · ${s.user.department.name}` : ""}
+              {` · ${t("sessionDetail.startedPrefix")} ${formatRelativeTime(s.startedAt)}`}
+            </span>
           </p>
         </div>
         <Badge variant={s.status === "ACTIVE" ? "good" : s.status === "IDLE" ? "warning" : "neutral"}>

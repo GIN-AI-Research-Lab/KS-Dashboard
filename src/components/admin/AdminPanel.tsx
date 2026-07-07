@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Card } from "@/components/ui/Card";
+import { Avatar } from "@/components/Avatar";
 import { useT } from "@/i18n/I18nProvider";
 import type { Translate } from "@/i18n/lookup";
 import type { Role } from "@prisma/client";
@@ -17,6 +18,7 @@ interface UserRow {
   email: string;
   role: Role;
   departmentId: string | null;
+  image: string | null;
   createdAt: string;
 }
 
@@ -180,7 +182,7 @@ function UsersTab({
       const { user } = await res.json();
       setUsers((prev) => [
         ...prev,
-        { id: user.id, name: user.name, email: user.email, role: user.role, departmentId: user.departmentId, createdAt: user.createdAt },
+        { id: user.id, name: user.name, email: user.email, role: user.role, departmentId: user.departmentId, image: user.image ?? null, createdAt: user.createdAt },
       ]);
       setForm({ name: "", email: "", password: "", role: "MEMBER", departmentId: "" });
     } else {
@@ -278,7 +280,12 @@ function UsersTab({
           <tbody>
             {users.map((u) => (
               <tr key={u.id} className="border-b border-[var(--gridline)] transition-colors last:border-0 hover:bg-black/[0.03] dark:hover:bg-white/5">
-                <td className="py-2 pr-3 font-medium">{u.name}</td>
+                <td className="py-2 pr-3 font-medium">
+                  <span className="inline-flex items-center gap-2">
+                    <Avatar image={u.image} name={u.name} className="h-6 w-6" iconClassName="h-3.5 w-3.5" />
+                    {u.name}
+                  </span>
+                </td>
                 <td className="py-2 pr-3 text-[var(--text-secondary)]">{u.email}</td>
                 <td className="py-2 pr-3">
                   <select

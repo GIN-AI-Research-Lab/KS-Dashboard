@@ -6,6 +6,7 @@ import { Badge, Tag } from "@/components/ui/Badge";
 import { LibraryComposer } from "@/components/library/LibraryComposer";
 import { LibraryFilters } from "@/components/library/LibraryFilters";
 import { LibraryStar } from "@/components/library/LibraryStar";
+import { Avatar } from "@/components/Avatar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { KIND_LABEL, KIND_VARIANT, parseTags } from "@/lib/library";
 import { markdownExcerpt, firstImage } from "@/lib/markdown";
@@ -82,9 +83,7 @@ export default async function LibraryPage({
                   <p className="line-clamp-2 text-sm text-[var(--text-secondary)]">{markdownExcerpt(it.body)}</p>
 
                   <div className="mt-1 flex items-center gap-2 text-xs text-[var(--text-muted)]">
-                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#4a3aa7]/15 text-[10px] font-semibold text-[#4a3aa7]">
-                      {it.author.name.slice(0, 1).toUpperCase()}
-                    </span>
+                    <Avatar image={it.author.image} name={it.author.name} className="h-6 w-6" iconClassName="h-3.5 w-3.5" />
                     <span>{it.author.name}</span>
                     <span>· {formatRelativeTime(it.createdAt)}</span>
                     <span className="ml-auto flex items-center gap-3">
