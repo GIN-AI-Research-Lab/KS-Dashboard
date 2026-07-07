@@ -158,11 +158,17 @@ initial-letter, rồi quyết định 1 component chung (ví dụ mở rộng `U
   dùng `LiveTable`) nên bỏ qua.
 - `rtk tsc` sạch, `npm run lint` sạch. grep `[À-ỹ]` còn lại chỉ là ký hiệu `· — → × ▲▼` + OG image (đã nêu).
 
+### Đã bổ sung (phiên 2026-07-07, đợt 2)
+- **Nhãn loại task** (`taskCategory.*`): research/code/planning/investigation/other — render qua
+  `t(\`taskCategory.${row.category}\`)` ở overview/insights/me (bỏ dùng `row.label` tiếng Việt).
+- **Huy hiệu** (`badges.<key>.label/desc` + `badgeCategory.<cat>`): toàn bộ ~35 badge + 8 category.
+  `getUserGamification` giờ chỉ trả `key/icon/earned/category`; label/desc/category-name resolve ở render
+  (`BadgeGrid`, `UserChip` tooltip). Bỏ `Badge.label/desc` + `BADGE_CATEGORY_LABEL` khỏi `stats.ts`.
+
 ### Còn lại (chưa làm)
-- **Nội dung huy hiệu**: `BADGE_CATEGORY_LABEL` + tên/mô tả badge sinh trong `getUserGamification` (`stats.ts`)
-  vẫn tiếng Việt. Cần refactor để nhận `t`/trả key (khối lượng vừa, ~8 category + ~30 badge).
-- **`opengraph-image.tsx`**: 1 dòng tiếng Việt (ảnh OG social preview).
+- **`opengraph-image.tsx`**: 1 dòng tiếng Việt (ảnh OG social preview; crawler không gửi cookie).
 - (Tuỳ chọn) avatar cho tác giả bình luận (`SessionDiscussion`/`LibraryComments`) — hiện chưa hiển thị avatar.
+- `TASK_CATEGORY_LABEL` + `TaskCategoryRow.label` trong `stats.ts` giờ thừa (không còn render) — có thể dọn.
 
 ## Sau khi xong cả 2 việc trên
 
