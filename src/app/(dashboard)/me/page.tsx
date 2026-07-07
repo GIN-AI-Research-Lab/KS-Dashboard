@@ -234,7 +234,7 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
               return (
                 <div key={row.category}>
                   <div className="mb-1 flex items-baseline justify-between text-sm">
-                    <span className="font-medium">{row.label}</span>
+                    <span className="font-medium">{t(`taskCategory.${row.category}`)}</span>
                     <span className="text-xs text-[var(--text-muted)]">
                       {row.sessions} {t("me.taskCategorySessionsSuffix")} · {formatPercent(pct)} · {formatUsd(row.costUsd)}
                     </span>

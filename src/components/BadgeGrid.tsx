@@ -1,5 +1,4 @@
 import type { Badge, BadgeCategory } from "@/lib/stats";
-import { BADGE_CATEGORY_LABEL } from "@/lib/stats";
 import { getT } from "@/i18n/server";
 
 const ORDER: BadgeCategory[] = ["streak", "volume", "money", "efficiency", "tools", "time", "community", "fun"];
@@ -29,13 +28,13 @@ export async function BadgeGrid({
       {ORDER.filter((c) => byCat.has(c)).map((cat) => (
         <div key={cat}>
           <div className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
-            {BADGE_CATEGORY_LABEL[cat]}
+            {t(`badgeCategory.${cat}`)}
           </div>
           <div className="flex flex-wrap gap-2">
             {byCat.get(cat)!.map((b) => (
               <div
                 key={b.key}
-                title={b.desc}
+                title={t(`badges.${b.key}.desc`)}
                 className={`flex items-center gap-2 rounded-xl border px-3 py-1.5 text-sm transition-all duration-150 ${
                   b.earned
                     ? "card-surface border-[var(--border)] shadow-[var(--shadow-xs)] hover:-translate-y-0.5 hover:shadow-[var(--shadow-sm)]"
@@ -43,7 +42,7 @@ export async function BadgeGrid({
                 }`}
               >
                 <span className="text-lg" aria-hidden>{b.icon}</span>
-                <span className="font-medium">{b.label}</span>
+                <span className="font-medium">{t(`badges.${b.key}.label`)}</span>
               </div>
             ))}
           </div>

@@ -458,18 +458,9 @@ export async function getActiveDayStreak(userId: string): Promise<number> {
 }
 
 export type BadgeCategory = "volume" | "money" | "efficiency" | "time" | "tools" | "streak" | "community" | "fun";
-export type Badge = { key: string; label: string; icon: string; earned: boolean; desc: string; category: BadgeCategory };
-
-export const BADGE_CATEGORY_LABEL: Record<BadgeCategory, string> = {
-  volume: "Khối lượng",
-  money: "Chi tiêu",
-  efficiency: "Hiệu quả",
-  time: "Thời gian",
-  tools: "Công cụ",
-  streak: "Chuyên cần",
-  community: "Cộng đồng",
-  fun: "Vui nhộn",
-};
+// label + desc are resolved at render from the i18n `badges.<key>` namespace;
+// category name from `badgeCategory.<category>`.
+export type Badge = { key: string; icon: string; earned: boolean; category: BadgeCategory };
 
 // Personal gamification: a rich badge set (a user can earn many) + a
 // "this week vs last week" recap. Tất cả tính từ dữ liệu đã có sẵn.
@@ -547,46 +538,46 @@ export async function getUserGamification(userId: string) {
   };
 
   const catalog: Badge[] = [
-    // Khối lượng
-    { key: "tokens1m", label: "Triệu token", icon: "💎", category: "volume", earned: lifetimeTokens >= 1_000_000, desc: "Đạt 1M token tích luỹ" },
-    { key: "tokens10m", label: "Đại gia token", icon: "🚀", category: "volume", earned: lifetimeTokens >= 10_000_000, desc: "Đạt 10M token tích luỹ" },
-    { key: "tokens100m", label: "Cá voi token", icon: "🐳", category: "volume", earned: lifetimeTokens >= 100_000_000, desc: "Đạt 100M token tích luỹ" },
-    { key: "turns1000", label: "Máy hỏi đáp", icon: "⌨️", category: "volume", earned: turnCount >= 1000, desc: "≥1000 lượt hỏi (turns)" },
-    { key: "sessions100", label: "Con thoi", icon: "🛰️", category: "volume", earned: sessionCount >= 100, desc: "≥100 phiên làm việc" },
-    // Chi tiêu
-    { key: "spender", label: "Đốt tiền", icon: "💸", category: "money", earned: lifetimeCost >= 20, desc: "Tiêu ≥ $20 chi phí Claude" },
-    { key: "bigSpender", label: "Ông trùm chi tiêu", icon: "🤑", category: "money", earned: lifetimeCost >= 100, desc: "Tiêu ≥ $100" },
-    { key: "whale", label: "Cá mập chi tiêu", icon: "🦈", category: "money", earned: lifetimeCost >= 500, desc: "Tiêu ≥ $500" },
-    { key: "thrifty", label: "Tiết kiệm", icon: "🪙", category: "money", earned: turnCount >= 50 && costPerTurn < 0.05, desc: "≥50 turns mà chi phí/turn < $0.05" },
-    // Hiệu quả
-    { key: "cacheKing", label: "Vua cache", icon: "⚡", category: "efficiency", earned: turnCount >= 20 && cacheHitRatio >= 0.9, desc: "Cache hit ≥ 90% (rất hiệu quả)" },
-    { key: "flawless", label: "Không tì vết", icon: "✨", category: "efficiency", earned: toolTotal >= 50 && errorRate === 0, desc: "≥50 lượt tool, 0 lỗi" },
-    // Công cụ
-    { key: "toolsmith", label: "Thợ công cụ", icon: "🛠️", category: "tools", earned: distinctTools >= 8, desc: "Dùng ≥8 loại công cụ" },
-    { key: "bashLord", label: "Cuồng Bash", icon: "🐚", category: "tools", earned: bashCount >= 100, desc: "≥100 lệnh Bash" },
-    { key: "codeSurgeon", label: "Bác sĩ code", icon: "🩺", category: "tools", earned: editWrites >= 100, desc: "≥100 lần sửa file (Edit/Write)" },
-    // Thời gian
-    { key: "nightowl", label: "Cú đêm", icon: "🦉", category: "time", earned: nightOwl, desc: "Làm việc lúc 0–5h sáng" },
-    { key: "earlybird", label: "Chào bình minh", icon: "🌅", category: "time", earned: earlyBird, desc: "Làm việc lúc 5–8h sáng" },
-    { key: "weekend", label: "Chiến binh cuối tuần", icon: "🏖️", category: "time", earned: weekend, desc: "Làm việc vào T7/CN" },
-    { key: "marathon", label: "Marathon", icon: "🏃", category: "time", earned: longestSessionMs >= 2 * 60 * 60 * 1000, desc: "Một phiên kéo dài ≥ 2 giờ" },
-    // Chuyên cần
-    { key: "streak7", label: "Chuỗi 7 ngày", icon: "🔥", category: "streak", earned: streak >= 7, desc: "Hoạt động 7 ngày liên tục" },
-    { key: "streak30", label: "Chuỗi 30 ngày", icon: "🏆", category: "streak", earned: streak >= 30, desc: "Hoạt động 30 ngày liên tục" },
-    { key: "streak100", label: "Huyền thoại", icon: "👑", category: "streak", earned: streak >= 100, desc: "Hoạt động 100 ngày liên tục" },
-    { key: "regular", label: "Chăm chỉ", icon: "📅", category: "streak", earned: activeDays >= 30, desc: "≥30 ngày có hoạt động" },
-    // Cộng đồng (Thư viện)
-    { key: "sharer", label: "Người chia sẻ", icon: "📤", category: "community", earned: libItems >= 1, desc: "Đăng ≥1 bài lên Thư viện" },
-    { key: "prolificSharer", label: "Kho tàng tri thức", icon: "📚", category: "community", earned: libItems >= 10, desc: "Đăng ≥10 bài" },
-    { key: "commenter", label: "Cây bình luận", icon: "💬", category: "community", earned: libComments >= 10, desc: "Viết ≥10 bình luận" },
-    { key: "reactor", label: "Vua thả tim", icon: "❤️", category: "community", earned: libReactions >= 20, desc: "Thả ≥20 react" },
-    { key: "collector", label: "Nhà sưu tầm", icon: "⭐", category: "community", earned: libBookmarks >= 10, desc: "Lưu ≥10 bài" },
-    // Vui nhộn / hài hước
-    { key: "newbie", label: "Lính mới", icon: "🐣", category: "fun", earned: turnCount >= 1 && turnCount < 20, desc: "Mới dùng (<20 turns)" },
-    { key: "verbose", label: "Nói nhiều", icon: "🗣️", category: "fun", earned: turnCount >= 20 && tokensPerTurn >= 30_000, desc: "Trung bình ≥30K token/turn (dài dòng)" },
-    { key: "errorProne", label: "Vua lỗi", icon: "💥", category: "fun", earned: toolTotal >= 20 && errorRate >= 0.2, desc: "≥20% lượt tool bị lỗi" },
-    { key: "burner", label: "Đốt token", icon: "🪫", category: "fun", earned: lifetimeTokens >= 5_000_000 && cacheHitRatio < 0.5, desc: "Xài nhiều token mà ít tận dụng cache" },
-    { key: "ghost", label: "Bóng ma", icon: "👻", category: "fun", earned: turnCount > 0 && (now - (turnTimes[0]?.createdAt.getTime() ?? now)) > 14 * DAY, desc: "Không hoạt động >14 ngày" },
+    // volume
+    { key: "tokens1m", icon: "💎", category: "volume", earned: lifetimeTokens >= 1_000_000 },
+    { key: "tokens10m", icon: "🚀", category: "volume", earned: lifetimeTokens >= 10_000_000 },
+    { key: "tokens100m", icon: "🐳", category: "volume", earned: lifetimeTokens >= 100_000_000 },
+    { key: "turns1000", icon: "⌨️", category: "volume", earned: turnCount >= 1000 },
+    { key: "sessions100", icon: "🛰️", category: "volume", earned: sessionCount >= 100 },
+    // money
+    { key: "spender", icon: "💸", category: "money", earned: lifetimeCost >= 20 },
+    { key: "bigSpender", icon: "🤑", category: "money", earned: lifetimeCost >= 100 },
+    { key: "whale", icon: "🦈", category: "money", earned: lifetimeCost >= 500 },
+    { key: "thrifty", icon: "🪙", category: "money", earned: turnCount >= 50 && costPerTurn < 0.05 },
+    // efficiency
+    { key: "cacheKing", icon: "⚡", category: "efficiency", earned: turnCount >= 20 && cacheHitRatio >= 0.9 },
+    { key: "flawless", icon: "✨", category: "efficiency", earned: toolTotal >= 50 && errorRate === 0 },
+    // tools
+    { key: "toolsmith", icon: "🛠️", category: "tools", earned: distinctTools >= 8 },
+    { key: "bashLord", icon: "🐚", category: "tools", earned: bashCount >= 100 },
+    { key: "codeSurgeon", icon: "🩺", category: "tools", earned: editWrites >= 100 },
+    // time
+    { key: "nightowl", icon: "🦉", category: "time", earned: nightOwl },
+    { key: "earlybird", icon: "🌅", category: "time", earned: earlyBird },
+    { key: "weekend", icon: "🏖️", category: "time", earned: weekend },
+    { key: "marathon", icon: "🏃", category: "time", earned: longestSessionMs >= 2 * 60 * 60 * 1000 },
+    // streak
+    { key: "streak7", icon: "🔥", category: "streak", earned: streak >= 7 },
+    { key: "streak30", icon: "🏆", category: "streak", earned: streak >= 30 },
+    { key: "streak100", icon: "👑", category: "streak", earned: streak >= 100 },
+    { key: "regular", icon: "📅", category: "streak", earned: activeDays >= 30 },
+    // community
+    { key: "sharer", icon: "📤", category: "community", earned: libItems >= 1 },
+    { key: "prolificSharer", icon: "📚", category: "community", earned: libItems >= 10 },
+    { key: "commenter", icon: "💬", category: "community", earned: libComments >= 10 },
+    { key: "reactor", icon: "❤️", category: "community", earned: libReactions >= 20 },
+    { key: "collector", icon: "⭐", category: "community", earned: libBookmarks >= 10 },
+    // fun
+    { key: "newbie", icon: "🐣", category: "fun", earned: turnCount >= 1 && turnCount < 20 },
+    { key: "verbose", icon: "🗣️", category: "fun", earned: turnCount >= 20 && tokensPerTurn >= 30_000 },
+    { key: "errorProne", icon: "💥", category: "fun", earned: toolTotal >= 20 && errorRate >= 0.2 },
+    { key: "burner", icon: "🪫", category: "fun", earned: lifetimeTokens >= 5_000_000 && cacheHitRatio < 0.5 },
+    { key: "ghost", icon: "👻", category: "fun", earned: turnCount > 0 && (now - (turnTimes[0]?.createdAt.getTime() ?? now)) > 14 * DAY },
   ];
 
   const earned = catalog.filter((b) => b.earned);

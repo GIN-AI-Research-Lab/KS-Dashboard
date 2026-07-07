@@ -12,7 +12,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   const gami = await getUserGamification(id);
   const badges = gami.badges
     .filter((b) => b.earned)
-    .map((b) => ({ key: b.key, label: b.label, icon: b.icon }));
+    .map((b) => ({ key: b.key, icon: b.icon }));
 
   return NextResponse.json({ badges, earnedCount: gami.earnedCount, totalCount: gami.totalCount });
 }

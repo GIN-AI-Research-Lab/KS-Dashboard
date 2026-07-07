@@ -6,7 +6,7 @@ import { createPortal } from "react-dom";
 import { Avatar } from "@/components/Avatar";
 import { useT } from "@/i18n/I18nProvider";
 
-type Badge = { key: string; label: string; icon: string };
+type Badge = { key: string; icon: string };
 type BadgeData = { badges: Badge[]; earnedCount: number; totalCount: number };
 
 // Cache badge data per user for the session so repeated hovers don't refetch.
@@ -90,11 +90,11 @@ export function UserChip({
                 {(data?.badges ?? []).map((b) => (
                   <span
                     key={b.key}
-                    title={b.label}
+                    title={t(`badges.${b.key}.desc`)}
                     className="inline-flex items-center gap-1 rounded-lg border border-[var(--border)] px-2 py-1 text-xs"
                   >
                     <span aria-hidden>{b.icon}</span>
-                    <span className="whitespace-nowrap">{b.label}</span>
+                    <span className="whitespace-nowrap">{t(`badges.${b.key}.label`)}</span>
                   </span>
                 ))}
                 {!data && <span className="text-xs text-[var(--text-muted)]">…</span>}

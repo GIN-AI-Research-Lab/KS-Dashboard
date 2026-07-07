@@ -160,7 +160,7 @@ export default async function InsightsPage({
                 <tbody>
                   {taskCat.rows.map((row) => (
                     <tr key={row.category} className="border-b border-[var(--border)] last:border-0">
-                      <td className="py-2 pr-4 font-medium">{row.label}</td>
+                      <td className="py-2 pr-4 font-medium">{t(`taskCategory.${row.category}`)}</td>
                       <td className="py-2 pr-4 text-right tabular-nums">{formatNumber(row.sessions)}</td>
                       <td className="py-2 pr-4 text-right tabular-nums text-[var(--text-secondary)]">
                         {formatPercent(row.sessions / taskCat.totalSessions)}
