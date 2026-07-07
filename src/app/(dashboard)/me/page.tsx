@@ -1,10 +1,11 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
-import { getUserStats, getUserGamification, getDepartmentAverages, getUserCodeStats, getTaskCategoryStats, type RangeKey } from "@/lib/stats";
+import { getUserStats, getUserGamification, getDepartmentAverages, getUserCodeStats, getTaskCategoryStats, getUserActivityHeatmap, type RangeKey } from "@/lib/stats";
 import { Card } from "@/components/ui/Card";
 import { StatCard } from "@/components/ui/StatCard";
 import { RangeSelector } from "@/components/RangeSelector";
 import { TrendChart } from "@/components/charts/lazy";
+import { ActivityHeatmap } from "@/components/charts/ActivityHeatmap";
 import { Tag } from "@/components/ui/Badge";
 import { BadgeGrid } from "@/components/BadgeGrid";
 import { Avatar } from "@/components/Avatar";
@@ -41,12 +42,13 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
   });
   if (!user) return null;
 
-  const [stats, gami, deptCmp, code, taskCat] = await Promise.all([
+  const [stats, gami, deptCmp, code, taskCat, heatmap] = await Promise.all([
     getUserStats(user.id, r),
     getUserGamification(user.id),
     user.departmentId ? getDepartmentAverages(user.departmentId, r) : Promise.resolve(null),
     getUserCodeStats(user.id, r),
     getTaskCategoryStats(r, user.id),
+    getUserActivityHeatmap(user.id, r),
   ]);
   const streak = gami.streak;
 
@@ -142,6 +144,10 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
             { key: "outputTokens", label: "Output", color: "#eb6834" },
           ]}
         />
+      </Card>
+
+      <Card title={t("overview.activityByHour")} titleTip={METRIC_HELP.turns}>
+        <ActivityHeatmap grid={heatmap.grid} max={heatmap.max} mode={heatmap.mode} />
       </Card>
 
       {deptCmp && (

@@ -3,11 +3,17 @@ import { requireSession } from "@/lib/api-helpers";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-// The public base URL to point telemetry at = the SAME origin the admin is
-// currently viewing the dashboard from (ngrok domain today, a real domain later).
-// Derived from the request so a colleague on ANY network/machine gets a reachable
-// endpoint -- never a hardcoded LAN IP (which only works inside the office LAN).
+// The public base URL to bake into the downloaded telemetry setup, in priority:
+//   1. DASHBOARD_PUBLIC_URL env (pin the canonical production domain), else
+//   2. NEXTAUTH_URL env (already the app's public URL), else
+//   3. the request origin (works behind ngrok / a proxy via forwarded headers).
+// So a colleague on ANY machine/network gets a reachable endpoint -- never a
+// hardcoded LAN IP. In production behind GCP set DASHBOARD_PUBLIC_URL to your
+// domain (e.g. https://dashboard.company.com).
 function publicBaseUrl(req: NextRequest): string {
+  const envUrl = (process.env.DASHBOARD_PUBLIC_URL || process.env.NEXTAUTH_URL || "").trim();
+  if (envUrl) return envUrl.replace(/\/+$/, "");
+
   const xfProto = req.headers.get("x-forwarded-proto")?.split(",")[0]?.trim();
   const xfHost = req.headers.get("x-forwarded-host")?.split(",")[0]?.trim();
   const host = xfHost || req.headers.get("host") || req.nextUrl.host;

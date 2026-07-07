@@ -950,8 +950,34 @@ export async function getToolStats(range: RangeKey) {
   });
 }
 
-// 7 x 24 grid of turn counts, bucketed by weekday (Mon..Sun) and hour of day.
+// Turn counts bucketed by hour of day. Shape adapts to the selected range so
+// the chart stays meaningful: a 24h range collapses the weekday dimension (only
+// one day of data) into a single hour-of-day row; longer ranges keep the
+// weekday x hour "punchcard" that reveals the weekly rhythm.
 // Uses the server runtime's local time -- fine for a single-region company.
+export type ActivityHeatmap = { grid: number[][]; max: number; mode: "hour" | "weekday" };
+
+function buildHeatmap(turns: { createdAt: Date }[], range: RangeKey): ActivityHeatmap {
+  if (range === "24h") {
+    const grid: number[][] = [new Array<number>(24).fill(0)];
+    let max = 0;
+    for (const t of turns) {
+      const v = ++grid[0][t.createdAt.getHours()];
+      if (v > max) max = v;
+    }
+    return { grid, max, mode: "hour" };
+  }
+  const grid: number[][] = Array.from({ length: 7 }, () => new Array<number>(24).fill(0));
+  let max = 0;
+  for (const t of turns) {
+    const d = t.createdAt;
+    const weekdayMon0 = (d.getDay() + 6) % 7; // JS 0=Sun -> our 0=Mon
+    const v = ++grid[weekdayMon0][d.getHours()];
+    if (v > max) max = v;
+  }
+  return { grid, max, mode: "weekday" };
+}
+
 export async function getActivityHeatmap(range: RangeKey) {
   return cached(`heatmap:${range}`, DASH_TTL, async () => {
   const since = rangeToDate(range);
@@ -959,17 +985,20 @@ export async function getActivityHeatmap(range: RangeKey) {
     where: since ? { createdAt: { gte: since } } : undefined,
     select: { createdAt: true },
   });
+  return buildHeatmap(turns, range);
+  });
+}
 
-  const grid: number[][] = Array.from({ length: 7 }, () => new Array<number>(24).fill(0));
-  let max = 0;
-  for (const t of turns) {
-    const d = t.createdAt;
-    const weekdayMon0 = (d.getDay() + 6) % 7; // JS 0=Sun -> our 0=Mon
-    const hour = d.getHours();
-    const v = ++grid[weekdayMon0][hour];
-    if (v > max) max = v;
-  }
-  return { grid, max };
+// Per-user variant for the personal page. Filters turns by userId (backed by the
+// [userId, createdAt] composite index).
+export async function getUserActivityHeatmap(userId: string, range: RangeKey) {
+  return cached(`heatmap:u:${userId}:${range}`, DASH_TTL, async () => {
+  const since = rangeToDate(range);
+  const turns = await prisma.turn.findMany({
+    where: since ? { userId, createdAt: { gte: since } } : { userId },
+    select: { createdAt: true },
+  });
+  return buildHeatmap(turns, range);
   });
 }
 

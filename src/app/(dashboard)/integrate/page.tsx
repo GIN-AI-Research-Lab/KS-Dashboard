@@ -35,23 +35,6 @@ export default async function IntegratePage() {
         <p className="mt-3 text-xs text-[var(--text-muted)]">{t("integrate.scriptNote")}</p>
       </Card>
 
-      <Card title={t("integrate.adminSetupTitle")}>
-        <ol className="flex list-decimal flex-col gap-2 pl-5 text-sm">
-          <li>
-            {t("integrate.adminStep1")}
-            <div className="mt-1">
-              <ExportLink href="/api/download/install-managed-settings.ps1" label={t("integrate.downloadInstaller")} />
-            </div>
-          </li>
-          <li>
-            {t("integrate.adminStep2")}
-            <pre className="mt-1 overflow-x-auto rounded-lg bg-black/[0.04] p-2 font-mono text-xs dark:bg-white/5">powershell -ExecutionPolicy Bypass -File install-managed-settings.ps1</pre>
-          </li>
-          <li>{t("integrate.adminStep3")}</li>
-        </ol>
-        <p className="mt-3 text-xs text-[var(--text-muted)]">{t("integrate.adminNote")}</p>
-      </Card>
-
       <Card title={t("integrate.noteTitle")}>
         <ul className="flex list-disc flex-col gap-1.5 pl-5 text-sm text-[var(--text-secondary)]">
           <li>{t("integrate.noteEndpoint")}</li>

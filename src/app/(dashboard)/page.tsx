@@ -249,7 +249,7 @@ async function HeatmapSection({ r, t }: { r: RangeKey; t: Translate }) {
   const METRIC_HELP = getMetricHelp(t);
   return (
     <Card title={t("overview.activityByHour")} titleTip={METRIC_HELP.turns}>
-      <ActivityHeatmap grid={heatmap.grid} max={heatmap.max} />
+      <ActivityHeatmap grid={heatmap.grid} max={heatmap.max} mode={heatmap.mode} />
     </Card>
   );
 }
