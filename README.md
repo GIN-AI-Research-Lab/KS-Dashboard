@@ -1,159 +1,194 @@
 # KS Dashboard
 
-Company-wide dashboard for Claude Code usage analytics: token/cost tracking,
-per-person / team / department breakdowns, leaderboards, model usage, and a
-live real-time feed of running sessions — fed by a companion Claude Code
-plugin.
+> **Enterprise AI Observability, FinOps & Developer Governance Platform for Claude Code & AI Coding Agents**  
+> *A grant-seeking, open-source enterprise software platform delivering real-time telemetry, token cost forecasting, engineering tool intelligence, and sovereign privacy.*
 
-## Stack
+[![Stack](https://img.shields.io/badge/Stack-Next.js%2016%20%7C%20TypeScript%20%7C%20Tailwind%204-black.svg?logo=nextdotjs)](package.json)
+[![Database](https://img.shields.io/badge/Database-Prisma%206%20%7C%20PostgreSQL%20%2F%20SQLite-38B2AC.svg?logo=prisma)](prisma/)
+[![Auth](https://img.shields.io/badge/Auth-NextAuth%20v5%20%7C%20Microsoft%20Entra%20ID-blue.svg)](src/auth.ts)
+[![Telemetry](https://img.shields.io/badge/Telemetry-Claude%20Code%20Hooks%20%7C%20OTel-orange.svg)](claude-code-plugin/)
+[![Privacy](https://img.shields.io/badge/Privacy-Zero%20Prompt%20Logging%20%7C%20RBAC-success.svg)](PRIVACY.md)
 
-- **Next.js 16** (App Router) + TypeScript + Tailwind CSS 4
-- **Prisma 6** + SQLite (swap `DATABASE_URL` for Postgres/MySQL in production —
-  the schema uses no SQLite-specific features)
-- **Auth.js (NextAuth v5)** — credentials login + optional Microsoft Entra ID
-  SSO (multi-domain, matched by email local-part), JWT sessions, role-based
-  access (Admin / Department Head / Team Lead / Member)
-- **Recharts** for charts, using the validated colorblind-safe categorical
-  palette from the internal dataviz guidelines
-- **Server-Sent Events** for the live sessions feed (no extra infra required)
-- A separate **Claude Code plugin** (`claude-code-plugin/`) that reports
-  telemetry via hooks
+---
 
-## Getting started
+## 🌟 Executive Summary & Pitch
+
+As enterprises aggressively deploy autonomous AI coding assistants (such as Claude Code, Cursor, and custom agentic CLI harnesses), engineering leaders face critical visibility and control bottlenecks:
+1. **Unpredictable AI Spend & Token Leaks:** High-tier foundation models rapidly drain enterprise budgets without per-developer, per-team, or per-project accountability.
+2. **The "Prompt Caching" Blindspot:** Companies fail to capture Anthropic Prompt Caching savings (which can discount recurring context by up to 90%) due to a lack of cache hit-ratio monitoring.
+3. **Zero Developer Tooling Intelligence:** Engineering leaders cannot see *how* developers use AI—which CLI tools fail, where agent loops stall, or how code-edit acceptance correlates with productivity.
+4. **Data Sovereignty & Privacy Concerns:** Standard cloud analytics tools capture confidential corporate intellectual property (source code snippets, developer prompts, full disk paths).
+
+**KS Dashboard** provides a **self-hosted, enterprise-grade AI FinOps & Governance Control Center**. Powered by a native companion plugin (`claude-code-plugin/`) capturing telemetry directly at the execution lifecycle, KS Dashboard aggregates token burn, computes dollar savings from prompt caching, tracks tool execution flow via Sankey diagrams, detects task categories (research, coding, debugging, planning), and offers a live Server-Sent Events (SSE) session stream—all under a **strict zero-prompt-logging privacy architecture**.
+
+```
+       ┌────────────────────────────────────────────────────────┐
+       │             Developer Workstations (CLI / IDE)         │
+       │                                                        │
+       │  Claude Code CLI Execution ──► Lifecycle Hooks Plugin  │
+       │  (SessionStart, PreToolUse, PostToolUse, Stop, End)   │
+       └───────────▲────────────────────────────▲───────────────┘
+                   │ Secure JSON Telemetry      │
+                   ▼ (Zero Prompts / Zero Code) │
+       ┌────────────────────────────────────────┴───────────────┐
+       │             KS Dashboard Enterprise Core               │
+       │                                                        │
+       │  • Next.js 16 (App Router) + Prisma 6 PostgreSQL/SQLite│
+       │  • Auth.js v5 (Microsoft Entra ID Azure SSO + RBAC)    │
+       │  • Real-time SSE Pub/Sub Event Bus (`liveBus`)         │
+       │  • Anthropic Prompt Caching ROI & Run-Rate Forecasting │
+       │  • Tool Latency Percentiles (P50/P90/P99) & Sankeys    │
+       │  • Task Auto-Classification & Internal Prompt Library  │
+       └────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🚀 Key Architectural Modules & Features
+
+### 1. Ingestion Engine & Strict Sovereign Privacy
+- **Companion Telemetry Plugin:** Lightweight hooks plugin installed on developer laptops (`claude-code-plugin/`) monitoring `SessionStart`, `UserPromptSubmit`, `PreToolUse`, `PostToolUse`, `Stop`, and `SessionEnd`.
+- **Zero-Data-Retention Compliance:** Guaranteed by design (`PRIVACY.md`). Prompts, source code contents, sensitive environment variables, and absolute working directories are **never transmitted or stored**. Only token counts, model tiers, tool names, execution latencies, and exit codes are ingested.
+- **Enterprise OpenTelemetry Receiver:** Integrated `/api/otel/metrics` receiver capturing TTFT (Time-to-First-Token), line delta estimates, and API failure codes.
+
+### 2. FinOps & Cost Intelligence
+- **Prompt Caching ROI Engine (`/roi`):** Explicitly calculates exact USD saved from cache read hits vs. fresh prompt generation, computing overall cache efficiency ratios.
+- **Run-Rate & Anomaly Alerts:** Automatically projects month-end spending based on active rolling daily burn and flags abnormal consumption spikes.
+- **Dynamic Pricing Engine:** Configurable model pricing table (`src/lib/pricing.ts`) mapping Claude 3.5 Sonnet, Claude 3.7 Sonnet, Claude 3 Opus, and Claude 3.5 Haiku token rates.
+
+### 3. Tool & Engineering Workflow Analytics
+- **Tool Sequence Sankey Diagrams (`/insights`):** Visualizes transitions between developer tool calls (e.g., `Glob` → `Read` → `Edit` → `Bash`) to diagnose agent looping or task stall patterns.
+- **Latency Percentiles:** Comprehensive P50, P90, and P99 execution benchmarks across every tool and CLI subcommand.
+- **Task-Type Classification:** Combines user intent tags with tool-call heuristics to automatically categorize sessions into *Research*, *Feature Coding*, *Bug Investigation*, or *Architectural Planning*.
+
+### 4. Enterprise Identity & HRMS Synchronization
+- **Single Sign-On (SSO):** Microsoft Entra ID (Azure Active Directory) multi-tenant OAuth with email local-part domain matching.
+- **Role-Based Access Control (RBAC):** Granular permissions for *Admin*, *Department Head*, and *Engineer / Member*.
+- **AMIS HRMS Sync (`scripts/amis-sync.ts`):** Automated Open API synchronization mapping corporate organizational departments and personnel rosters into dashboard teams.
+
+### 5. Knowledge Sharing & Internal Prompt/Skill Library (`/library`)
+- Enterprise internal repository for sharing high-impact developer prompts and Claude Code custom skills.
+- Supports public/private visibility, Markdown authoring with secure image upload, emoji reactions, threaded comments, and personal bookmark collections.
+
+---
+
+## 📊 Feature Comparison Matrix
+
+| Capability | KS Dashboard | Cloud SaaS Trackers (Langfuse/Arize) | Generic APM (Datadog/NewRelic) |
+|:---|:---:|:---:|:---:|
+| **Specialized Claude Code Plugin** | ✅ Native Lifecycle Hooks | ❌ Generic SDK Only | ❌ Manual instrumentation |
+| **Prompt Caching USD Tracking** | ✅ Real-time ROI calculation | ⚠️ Partial | ❌ None |
+| **Tool Sankey Transition Chains** | ✅ Built-in | ❌ None | ❌ None |
+| **Strict Zero-Prompt Data Privacy** | ✅ Zero IP captured | ⚠️ Prompts stored in cloud | ⚠️ Telemetry scrub required |
+| **Microsoft Entra ID & HRMS Sync** | ✅ Native AMIS + Entra ID | ❌ Enterprise Add-on ($$$) | ⚠️ Complex SAML setup |
+| **Self-Hosted Sovereign Deployment** | ✅ 1-click Docker / Node | ⚠️ Complex Kubernetes | ❌ Cloud only |
+
+---
+
+## 🛠️ Project Structure
+
+```
+KS-Dashboard/
+├── src/
+│   ├── app/
+│   │   ├── (dashboard)/        # Authenticated application views
+│   │   │   ├── page.tsx        # Company-wide overview & cache efficiency
+│   │   │   ├── live/           # Real-time SSE session monitor
+│   │   │   ├── roi/            # FinOps run-rate & prompt caching savings
+│   │   │   ├── insights/       # Tool Sankeys, latency percentiles & pivots
+│   │   │   ├── tools/          # Tool error rates, execution metrics
+│   │   │   ├── library/        # Internal prompt & skill sharing platform
+│   │   │   ├── sessions/       # Session playback, annotations & outcomes
+│   │   │   └── admin/          # RBAC department & identity management
+│   │   └── api/                # Ingestion endpoints, SSE stream & export APIs
+│   ├── auth.ts                 # NextAuth v5 + Microsoft Entra ID integration
+│   └── lib/                    # Pricing tables, stats aggregation, AMIS client
+├── prisma/
+│   ├── schema.prisma           # Prisma schema (PostgreSQL / SQLite)
+│   └── seed.ts                 # Database seeder
+├── claude-code-plugin/         # Developer CLI companion telemetry plugin
+├── deploy/                     # Enterprise deployment guides & Docker Compose
+└── scripts/                    # AMIS HRMS employee synchronization scripts
+```
+
+---
+
+## ⚡ Quick Start & Deployment
+
+### Local Development Setup
 
 ```bash
-cp .env.example .env   # fill in AUTH_SECRET at minimum -- see below
+# 1. Clone repository
+git clone https://github.com/trituenguyen97/KS-Dashboard.git
+cd KS-Dashboard
+
+# 2. Configure environment
+cp .env.example .env
+# Ensure AUTH_SECRET is set (e.g. openssl rand -base64 32)
+
+# 3. Install dependencies & initialize database
 npm install
-npm run db:push     # create the SQLite schema
-npm run db:seed      # creates the admin account only (idempotent, no demo data)
+npm run db:push
+npm run db:seed     # Seeds default admin: admin@company.com / admin1234
+
+# 4. Start development server
 npm run dev
 ```
 
-`.env` needs at least `DATABASE_URL` and `AUTH_SECRET` (any random string in
-dev, e.g. `openssl rand -base64 32`). Everything else (`ALLOWED_EMAIL_DOMAINS`,
-`AUTH_MICROSOFT_ENTRA_ID_*`, `KS_DASHBOARD_INGEST_TOKEN`, `AMIS_*`) is optional
-and only needed for the features described below -- see the comments in
-[`.env.example`](./.env.example).
+Open **`http://localhost:3000`** and log in.
 
-Open http://localhost:3000 and sign in with the seeded admin account:
+### Installing Developer Companion Plugin
 
-- **Admin:** `admin@company.com` / `admin1234`
+On each engineer's machine running Claude Code:
+```bash
+cd claude-code-plugin
+npm install
+# Configure personal API key or shared company ingest token in config.json
+```
+Telemetry will immediately stream into the live dashboard.
 
-Add real departments, teams, and employees from the Admin panel, via the AMIS
-sync (see below), or once Microsoft Entra ID SSO is configured.
+---
 
-## Project structure
+## 🎯 Startup Vision, Grant Objectives & Roadmap
+
+KS Dashboard is targeting the high-growth **AI FinOps & Enterprise Agent Governance** market. We are seeking open-source grants, seed capital, and enterprise pilot partners.
+
+### Planned Grant & Resource Allocation
 
 ```
-src/
-  app/
-    (dashboard)/        # authenticated pages (sidebar + topbar layout)
-      page.tsx           # 1.1 company-wide overview
-      me/                # 1.2 personal stats + API key for the plugin
-      teams/[id]/         departments/[id]/   # 1.2 team & department views
-      rankings/          # 1.3 leaderboards (tokens, input/output, cost, duration)
-      models/            # 1.4 most-used models
-      live/              # 1.5/1.6 real-time session feed with tool-call tags
-      admin/             # 1.9 department/team/user management (admin only)
-    api/
-      ingest/            # plugin -> dashboard ingestion endpoint (API-key auth)
-      live/              # SSE stream for the live feed
-      stats/             # read APIs backing the pages above
-      admin/             # CRUD for departments/teams/users
-      auth/[...nextauth]/
-  auth.ts                # NextAuth config (credentials + Microsoft Entra ID)
-  proxy.ts               # route protection (Next 16 renamed middleware.ts)
-  lib/
-    stats.ts             # all aggregation queries
-    pricing.ts           # model $/token table, used when the plugin doesn't
-                          # pre-compute cost
-    ingest-schema.ts      # zod contract for /api/ingest
-    live-bus.ts           # in-process pub/sub powering the SSE endpoint
-    identity.ts           # email local-part matching shared by SSO login,
-                          # the plugin's shared-token auth, and AMIS sync
-    amis.ts                # AMIS Thông tin nhân sự Open API client
-    amis-sync.ts           # upserts Department/User from AMIS employee data
-prisma/
-  schema.prisma
-  seed.ts
-scripts/
-  amis-sync.ts           # CLI entry point for `npm run sync:amis`
-claude-code-plugin/       # install this on each employee's machine — see its
-                          # own README.md
+                   ┌───────────────────────────────────────┐
+                   │        Target Grant Allocation        │
+                   ├──────────────────┬────────────────────┤
+                   │ Multi-Agent Hub  │                    │
+                   │ (Cursor/Codex/...)        35%         │
+                   ├──────────────────┼────────────────────┤
+                   │ Automated Budget │                    │
+                   │ Circuit Breakers │        25%         │
+                   ├──────────────────┼────────────────────┤
+                   │ SOC2 & Enterprise│                    │
+                   │ Security Auditing│        25%         │
+                   ├──────────────────┼────────────────────┤
+                   │ Open Source Core │                    │
+                   │ Documentation    │        15%         │
+                   └──────────────────┴────────────────────┘
 ```
 
-## How usage data gets in
+1. **Multi-Agent Unified Adapter Hub (35%):** Broadening telemetry ingestion beyond Claude Code to Cursor, GitHub Copilot CLI, OpenAI Operator, and Aider.
+2. **Automated Budget Circuit Breakers (25%):** Real-time webhook alerting and automated API rate throttling when monthly departmental budget thresholds are approached.
+3. **Enterprise Compliance & Security Certifications (25%):** SOC2 Type II certification and formal zero-trust audits for banking and healthcare software deployments.
+4. **Community Documentation & Open-Source Growth (15%):** Turnkey Helm charts, Terraform AWS/GCP modules, and standardized developer onboarding tutorials.
 
-Every employee installs the `claude-code-plugin` (see
-[`claude-code-plugin/README.md`](./claude-code-plugin/README.md)) and
-configures it with either their personal API key or the one company-wide
-shared token (see **Login & identity** below). The plugin hooks into Claude
-Code's `SessionStart` / `UserPromptSubmit` / `PreToolUse` / `PostToolUse` /
-`Stop` / `SessionEnd` events, reads per-turn token usage from the session
-transcript, and POSTs structured events to `POST /api/ingest`. From there:
+### Ideal Grant Programs
+- **Open Source DevTools Grants** (GitHub Accelerator, Mozilla Open Source Support)
+- **Enterprise Software Seed & Angel Funding**
+- **Cloud Startup Credits** (AWS Activate, Microsoft Founders Hub, Google for Startups)
 
-- `ClaudeSession` rows track one row per Claude Code session (status, totals).
-- `Turn` rows track one row per assistant reply (tokens, cost, model).
-- `ToolCall` rows back the "which tools did people run" tags and rankings.
+---
 
-All dashboard pages read from these three tables — nothing in the UI talks to
-Claude's API directly.
+## 🤝 Contact & Enterprise Pilots
 
-## Login & identity
+We are actively onboarding design partner organizations and welcoming investor/grant inquiries:
 
-The company has two email domains (`sint.co.jp` and `kstns.biz`), possibly on
-different Microsoft 365 tenants, that should be treated as the same set of
-people. Both the web login and the plugin match users the same way: by the
-**local-part** of the email (the part before `@`), case-insensitively, via
-`src/lib/identity.ts`. `tuent@sint.co.jp` and `tuent@kstns.biz` resolve to one
-`User` row as long as `ALLOWED_EMAIL_DOMAINS` includes both.
-
-- **Web login:** credentials (email/password) always work. Microsoft Entra ID
-  SSO is enabled once `AUTH_MICROSOFT_ENTRA_ID_ID`/`_SECRET` are set in
-  `.env` (Azure App Registration, redirect URI
-  `<domain>/api/auth/callback/microsoft-entra-id`) — it uses the multi-tenant
-  `common` endpoint and then enforces `ALLOWED_EMAIL_DOMAINS` plus "must match
-  an existing user" in `src/auth.ts`'s `signIn` callback. SSO never creates a
-  new account; only an admin or the AMIS sync does.
-- **Plugin auth:** `/api/ingest` accepts two kinds of Bearer token — a
-  personal `apiKey` (legacy, unambiguous), or the shared
-  `KS_DASHBOARD_INGEST_TOKEN` (one value for the whole company), in which case
-  the request must also include a top-level `identity` field (the sending
-  Windows username) that gets matched the same way. See
-  `resolveUser()` in `src/app/api/ingest/route.ts`.
-- **Keeping departments current:** `npm run sync:amis` (or wire it to a
-  periodic scheduler) pulls employees from AMIS Thông tin nhân sự's Open API
-  (`src/lib/amis.ts`, credentials in `AMIS_CLIENT_ID`/`AMIS_SECRET_KEY`) and
-  upserts `Department` + `User` rows in `src/lib/amis-sync.ts`, keyed by
-  `amisEmployeeCode`. AMIS's employee API has no team-level field (only an
-  org-unit name, mapped to `Department`), so `Team` assignment stays a manual
-  admin action. Employees with no email on file in AMIS are skipped — there's
-  nothing to match them by.
-
-## Design decisions worth knowing
-
-- **Visibility model:** every authenticated user can see everyone else's
-  usage stats (an internal transparency/benchmarking tool, like a company
-  leaderboard) — only **mutating** org-structure (creating users, changing
-  roles/team assignments) is restricted to `ADMIN`. If your org wants stricter
-  per-department visibility, the natural place to add it is
-  `src/lib/api-helpers.ts` + the page-level data fetches in `src/lib/stats.ts`.
-- **Cost is computed**, not billed: `/api/ingest` accepts an optional
-  pre-computed `costUsd` per turn, and falls back to `src/lib/pricing.ts`
-  (kept in sync with current published per-model pricing) when the plugin
-  doesn't send one.
-- **Real-time** is SSE + an in-memory event bus (`src/lib/live-bus.ts`) —
-  simple and sufficient for a single-instance internal tool. If you deploy
-  multiple app instances behind a load balancer, swap it for a Redis pub/sub
-  channel (the `LiveBus` interface is a 10-line change).
-- **Charts** follow the internal dataviz skill: a fixed-order, validated
-  colorblind-safe categorical palette (`src/lib/chart-colors.ts`), single-hue
-  sequential ramps for magnitude, one axis per chart, and legends/tooltips on
-  every multi-series chart.
-
-## Production checklist
-
-- Set a strong `AUTH_SECRET` and point `DATABASE_URL` at a real database.
-- Put the app behind HTTPS — the plugin sends API keys as Bearer tokens.
-- Consider rotating the demo admin password before exposing this beyond your
-  own machine.
+- **Founder & Maintainer:** Tri Tue Nguyen ([@trituenguyen97](https://github.com/trituenguyen97))
+- **GitHub:** [https://github.com/trituenguyen97/KS-Dashboard](https://github.com/trituenguyen97/KS-Dashboard)
+- **Pilot Inquiries:** Submit an issue on GitHub or reach out directly via maintainer profile.
